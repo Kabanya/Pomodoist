@@ -30,8 +30,8 @@ final class CalendarPeriod {
 
 final class CalendarSettings {
   CalendarSettings({
-    this.mode = CalendarMode.week,
-    this.mobileMode = CalendarMobileMode.day,
+    this.mode = CalendarMode.routine,
+    this.mobileMode = CalendarMobileMode.routine,
     this.routineName = '',
     List<CalendarPeriod>? periods,
   }) : periods = List.unmodifiable(periods ?? defaultPeriods) {
@@ -113,12 +113,12 @@ final class CalendarSettings {
         }
       }
       return CalendarSettings(
-        mode: mode ?? CalendarMode.week,
+        mode: mode ?? CalendarMode.routine,
         mobileMode:
             CalendarMobileMode.values
                 .where((value) => value.name == decoded['mobileMode'])
                 .firstOrNull ??
-            CalendarMobileMode.day,
+            CalendarMobileMode.routine,
         routineName: decoded['routineName'] is String
             ? decoded['routineName'] as String
             : '',

@@ -108,12 +108,19 @@ class FilesRepository implements FilesRepositoryContract {
 
   @override
   Future<void> pickAndUpload(FileTarget target) async {
-    _checkSession();
-    final file = await service.pick();
-    _checkSession();
+    final file = await pickFile();
     if (file != null) await upload(target, file);
   }
 
+  @override
+  Future<XFile?> pickFile() async {
+    _checkSession();
+    final file = await service.pick();
+    _checkSession();
+    return file;
+  }
+
+  @override
   Future<void> upload(FileTarget target, XFile file) async {
     _checkSession();
     if (_uploads[target]?.busy == true) return;

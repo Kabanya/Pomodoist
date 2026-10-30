@@ -283,6 +283,9 @@ class FocusPresets extends Table {
   BoolColumn get allowPause => boolean().withDefault(const Constant(true))();
   BoolColumn get strictMode => boolean().withDefault(const Constant(false))();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+  BoolColumn get distractionProfileConfigured =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get distractionProfileId => text().nullable()();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -573,12 +576,27 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      if (from < 15) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(
+            focusPresets,
+            focusPresets.distractionProfileConfigured,
+          ),
+          alreadyAppliedMessage:
+              'duplicate column name: distraction_profile_configured',
+        );
+        await _runResumableMigrationStep(
+          () => m.addColumn(focusPresets, focusPresets.distractionProfileId),
+          alreadyAppliedMessage:
+              'duplicate column name: distraction_profile_id',
+        );
+      }
       if (from < 14) {
         await _runResumableMigrationStep(
           () => m.addColumn(tasks, tasks.isFocusEstimateManual),

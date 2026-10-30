@@ -1,9 +1,9 @@
 {
   "uuid": "pomo@pomodoist.com",
   "name": "Pomodoist Pomo",
-  "description": "GNOME-authoritative placement and pointer bridge for Pomodoist companion windows.",
+  "description": "GNOME bridge for Pomodoist companion placement and optional foreground distraction protection.",
   "shell-version": ["46", "50", "51"],
   "session-modes": ["user", "unlock-dialog"],
-  "version": 1,
+  "version": 2,
   "url": "https://github.com/Kabanya/Pomodoist"
 }

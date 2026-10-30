@@ -27,6 +27,7 @@ class DriftFocusRepository implements FocusRepository {
     KanbanTransitionCoordinator? kanbanTransitions,
     void Function(FocusRunCompletionEvent event)? onRunCompleted,
     this.onIntervalCompleted,
+    Set<String>? serverOwnedRunIds,
   }) : _db = db,
        _soundPlayer = soundPlayer,
        _onRunCompleted = onRunCompleted,
@@ -34,7 +35,7 @@ class DriftFocusRepository implements FocusRepository {
            kanbanTransitions ??
            KanbanTransitionCoordinator(db, _syncQueue, uuid: uuid),
        _uuid = uuid ?? const Uuid(),
-       _focus = FocusLocalService(db);
+       _focus = FocusLocalService(db, serverOwnedRunIds: serverOwnedRunIds);
 
   final void Function(LocalCompletionEvent)? onIntervalCompleted;
   final AppDatabase _db;
@@ -187,6 +188,35 @@ class DriftFocusRepository implements FocusRepository {
           );
         }),
       );
+
+  @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) => Result.capture(
+    () => ownerBoundTransaction(_db, _syncQueue, () async {
+      if (await _presetById(presetId) == null) {
+        throw StateError('Focus preset is unavailable.');
+      }
+      await _focus.updatePreset(
+        presetId,
+        FocusPresetsCompanion(
+          distractionProfileConfigured: const Value(true),
+          distractionProfileId: Value(profileId),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+      await _syncQueue.enqueue(
+        type: 'focus.preset.update',
+        clientId: presetId,
+        payload: {
+          'id': presetId,
+          'distractionProfileConfigured': true,
+          'distractionProfileId': profileId,
+        },
+      );
+    }),
+  );
 
   @override
   Future<Result<void>> deletePreset(String id) =>
@@ -1009,6 +1039,8 @@ class DriftFocusRepository implements FocusRepository {
     allowPause: row.allowPause,
     strictMode: row.strictMode,
     isDefault: row.isDefault,
+    distractionProfileConfigured: row.distractionProfileConfigured,
+    distractionProfileId: row.distractionProfileId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   );

@@ -5,6 +5,7 @@ import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/platform/watch_companion.dart';
+import 'package:pomodoist/domain/models/platform/apple_widget_snapshot.dart';
 
 const watchCompanionChannelName = 'pomodoist/watch_companion';
 const watchTaskCreateQuickAdd = 'task.createQuickAdd';
@@ -77,6 +78,7 @@ class WatchCompanionService {
   final MethodChannel _channel;
   final _subscriptions = <StreamSubscription<Object?>>[];
   Timer? _pushTimer;
+  Timer? _dayTimer;
   bool _started = false;
   bool _disposed = false;
 
@@ -88,12 +90,14 @@ class WatchCompanionService {
       _subscriptions.add(stream.listen((_) => _schedulePushSnapshot()));
     }
     unawaited(pushSnapshot());
+    _scheduleDayRefresh();
   }
 
   void dispose() {
     _disposed = true;
     _started = false;
     _pushTimer?.cancel();
+    _dayTimer?.cancel();
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
@@ -156,6 +160,16 @@ class WatchCompanionService {
       () => unawaited(pushSnapshot()),
     );
   }
+
+  void _scheduleDayRefresh() {
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day + 1);
+    _dayTimer = Timer(midnight.difference(now), () {
+      if (_disposed) return;
+      unawaited(pushSnapshot());
+      _scheduleDayRefresh();
+    });
+  }
 }
 
 WatchCommand _decodeCommand(Map<String, Object?> command) {
@@ -196,6 +210,7 @@ WatchCommand _decodeCommand(Map<String, Object?> command) {
     presetId: _optionalString(command, 'presetId'),
     replaceActive: command['replaceActive'] == true,
     locale: command['locale'] as String?,
+    expectedIntervalId: _optionalString(command, 'expectedIntervalId'),
     drafts: action == WatchAction.commitDrafts
         ? [
             for (final draft in _draftMaps(command['tasks']))
@@ -228,6 +243,40 @@ Map<String, Object?> _encodeSnapshot(WatchSnapshot snapshot) => {
       _projectMap(project, snapshot.projectCounts[project.id] ?? 0),
   ],
   'sync': {'appliedCommandIds': snapshot.appliedCommandIds},
+  'widgets': _widgetMap(snapshot.widgets),
+};
+
+Map<String, Object?> _widgetMap(AppleWidgetSnapshot snapshot) => {
+  'day': _dateString(snapshot.day),
+  'focusTaskTitle': snapshot.focusTaskTitle,
+  'tasks': snapshot.tasks.map(_widgetTaskMap).toList(),
+  'agenda': snapshot.agenda.map(_widgetTaskMap).toList(),
+  'habits': [
+    for (final row in snapshot.habits)
+      {
+        'id': row.habit.id,
+        'title': row.habit.title,
+        'count': row.count,
+        'target': row.target,
+        'completed': row.completed,
+      },
+  ],
+  'totalHabits': snapshot.totalHabits,
+  'completedHabits': snapshot.completedHabits,
+  'completedTasks': snapshot.completedTasks,
+  'week': [
+    for (final day in snapshot.week)
+      {
+        'day': _dateString(day.localDate),
+        'focusSeconds': day.totalFocusSeconds,
+      },
+  ],
+};
+
+Map<String, Object?> _widgetTaskMap(TaskItem task) => {
+  'id': task.id,
+  'title': task.content,
+  'start': task.schedule?.start?.toUtc().toIso8601String(),
 };
 
 Map<String, Object?> _encodeResult(WatchCommandResult result) => {

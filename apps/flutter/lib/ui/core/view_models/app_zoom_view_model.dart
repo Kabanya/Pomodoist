@@ -22,23 +22,43 @@ final appZoomBindingsProvider = Provider(
 
 class AppZoomController extends Notifier<int> {
   bool _locallyChanged = false;
+  late Future<void> ready;
+  Object? loadError;
 
   @override
   int build() {
-    unawaited(_load());
+    ready = _load();
+    unawaited(ready);
     return 100;
+  }
+
+  Future<void> refresh() async {
+    await ready;
+    _locallyChanged = false;
+    await _load();
   }
 
   Future<void> _load() async {
     try {
       final saved = (await ref.read(appZoomRepositoryProvider).read())
           .getOrThrow();
-      if (ref.mounted && !_locallyChanged && saved is int) {
-        state = saved.clamp(appZoomMinimum, appZoomMaximum);
+      loadError = null;
+      if (ref.mounted && !_locallyChanged) {
+        state = (saved ?? 100).clamp(appZoomMinimum, appZoomMaximum);
       }
     } catch (error) {
+      loadError = error;
       debugPrint('Could not load interface zoom: $error');
     }
+  }
+
+  Future<void> setPercent(int percent) async {
+    if (percent < appZoomMinimum || percent > appZoomMaximum) {
+      throw ArgumentError.value(percent, 'percent');
+    }
+    (await ref.read(appZoomRepositoryProvider).write(percent)).getOrThrow();
+    _locallyChanged = true;
+    if (ref.mounted) state = percent;
   }
 
   Future<void> apply(AppZoomCommand command) async {

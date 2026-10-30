@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
@@ -14,7 +16,8 @@ import 'app_shell/view_shell_overrides.dart';
 /// Replaces `runApp`. Internally calls `runWidget` with a `ViewCollection` root
 /// that manages every OS window in a single Flutter engine and isolate.
 ///
-/// Returns nothing; the call does not complete until the process exits.
+/// Completes after the first window is registered. Native setup failures reach
+/// the caller, including when the OS attaches its window after startup.
 ///
 /// ```dart
 /// void main() {
@@ -26,13 +29,17 @@ import 'app_shell/view_shell_overrides.dart';
 ///
 /// `home` is rendered in the initial (main) OS window. Additional windows are
 /// opened via `openWindow`.
-void runMultiApp({
+Future<void> runMultiApp({
   required Widget Function(BuildContext globalScopeContext, int publicId) home,
   Widget Function(Widget child)? globalScope,
   MultiAppConfig? config,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
-  runWidget(await createMultiViewRoot(home, globalScope, config ?? MultiAppConfig._defaultConfig()));
+  final ready = Completer<void>();
+  // Warm-up rendering may fail before runWidget returns; await it below.
+  ready.future.ignore();
+  runWidget(await createMultiViewRoot(home, globalScope, config ?? MultiAppConfig._defaultConfig(), initialWindowReady: ready));
+  await ready.future;
 }
 
 /// Application-wide settings passed to `runMultiApp`.

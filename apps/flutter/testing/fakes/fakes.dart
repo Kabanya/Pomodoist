@@ -24,7 +24,6 @@ export 'fake_notification_scheduler.dart';
 export 'fake_notifiers.dart';
 export 'fake_outbox_service.dart';
 export 'fake_project_repository.dart';
-export 'fake_quick_add_hint.dart';
 export 'fake_recorded_recognizer.dart';
 export 'fake_startup_monitor.dart';
 export 'fake_sync_repository.dart';

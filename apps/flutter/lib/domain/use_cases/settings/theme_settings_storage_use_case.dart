@@ -18,19 +18,33 @@ final class ThemeSettingsStorageUseCase {
     required Map<String, Uint8List> pendingImages,
     String? legacyBackup,
     bool verifyRetainedImages = false,
+    bool Function()? isCurrent,
+    Future<void> Function()? beforeWrite,
   }) => _images.protect(() async {
+    void checkCurrent() {
+      if (isCurrent != null && !isCurrent()) {
+        throw StateError('Settings session expired');
+      }
+    }
+
+    checkCurrent();
+    await beforeWrite?.call();
+    checkCurrent();
     if (legacyBackup != null &&
         (await _settings.readBackup()).getOrThrow() == null) {
+      checkCurrent();
       (await _settings.writeBackup(legacyBackup)).getOrThrow();
     }
     for (final id in retainedImageIds) {
       final bytes = pendingImages[id];
       if (bytes != null) {
+        checkCurrent();
         await _images.write(id, bytes);
       } else if (verifyRetainedImages && await _images.read(id) == null) {
         throw StateError('A background image is no longer available');
       }
     }
+    checkCurrent();
     (await _settings.write(value)).getOrThrow();
     try {
       await _images.retain(retainedImageIds);

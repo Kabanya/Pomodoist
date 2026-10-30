@@ -328,7 +328,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'Читать и изменять задачи, привычки, проекты, пользовательские метки и канбан.';
+      'Читать и изменять задачи, привычки, проекты, пользовательские метки и канбан. Читать и менять горячие клавиши и оформление на выбранном устройстве в сети.';
 
   @override
   String get oauthConsentReadInsights =>
@@ -1213,7 +1213,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addTask => 'Добавить задачу';
 
   @override
-  String get quickAddHint => 'Написать sync engine завтра p1 #App @coding 4p';
+  String get quickAddHint => 'Название задачи завтра p2 #Проект @метка 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4619,4 +4619,406 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsSyncRecoveryFailed =>
       'Восстановление локальных данных не завершено. Архив сохранён. Попробуйте перезапустить синхронизацию ещё раз.';
+
+  @override
+  String get aiQuotaTitle => 'Лимит AI';
+
+  @override
+  String get aiQuotaUnavailable => 'Не удалось загрузить лимит AI.';
+
+  @override
+  String aiQuotaUsage(int used, int limit, int remaining) {
+    return 'Использовано $used из $limit · осталось $remaining';
+  }
+
+  @override
+  String aiQuotaReset(String date) {
+    return 'Обновится $date';
+  }
+
+  @override
+  String get aiQuotaExplanation =>
+      'Разбор задач и новые автоматические категории расходуют общий месячный лимит. Категории из кеша и ручные исправления бесплатны.';
+
+  @override
+  String get distractionTitle => 'Блокировка отвлечений';
+
+  @override
+  String get distractionDescription =>
+      'Выберите, что блокировать во время Focus. Неопределённые ресурсы разрешены до назначения категории.';
+
+  @override
+  String get distractionProfile => 'Профиль ограничений';
+
+  @override
+  String get distractionBeforeStart =>
+      'Выбранный профиль применяется к следующему Focus. Категории и исключения можно исправлять в любое время.';
+
+  @override
+  String get distractionNone => 'Без ограничений';
+
+  @override
+  String get distractionAddProfile => 'Добавить профиль';
+
+  @override
+  String get distractionEditProfile => 'Изменить профиль';
+
+  @override
+  String get distractionProfileName => 'Название профиля';
+
+  @override
+  String get distractionStrictExit => 'Выход из строгого Focus';
+
+  @override
+  String get distractionStrictDescription =>
+      'Применяется, если в пресете Focus включён строгий режим.';
+
+  @override
+  String get distractionWait60 => 'Подождать 60 секунд';
+
+  @override
+  String get distractionConfirmImmediately => 'Немедленное подтверждение';
+
+  @override
+  String get distractionDiscovery => 'Обнаруживать приложения';
+
+  @override
+  String get distractionDiscoveryPrivacy =>
+      'Только идентификаторы и названия используемых приложений сохраняются локально. Без сканирования диска, названий документов и окон.';
+
+  @override
+  String get distractionAttempts => 'Сохранять попытки отвлечься';
+
+  @override
+  String get distractionAttemptsPrivacy =>
+      'Необязательные локальные события с устранением повторов. Время использования и содержимое страниц не записываются.';
+
+  @override
+  String get distractionAutomatic => 'Автоматические категории';
+
+  @override
+  String get distractionAutomaticDescription =>
+      'Поиск определяет категорию. Ручной выбор важнее.';
+
+  @override
+  String get distractionLocal => 'Локальный Focus · этот компьютер';
+
+  @override
+  String get distractionShared => 'Общий Focus · подключено';
+
+  @override
+  String get distractionOffline =>
+      'Нет связи · защита действует до подтверждённого срока';
+
+  @override
+  String get distractionNativeApplied => 'Ограничения приложений применены';
+
+  @override
+  String get distractionNativeReady => 'Ограничения приложений доступны';
+
+  @override
+  String get distractionNativeUnavailable => 'Блокировка приложений недоступна';
+
+  @override
+  String get distractionChrome => 'Расширение Chrome';
+
+  @override
+  String get distractionPairDescription =>
+      'Включите защиту в Chrome и подключите этот компьютер одноразовым кодом. Код действует две минуты.';
+
+  @override
+  String get distractionPair => 'Показать код подключения';
+
+  @override
+  String distractionPairCode(String code, int port) {
+    return 'Код $code · порт $port';
+  }
+
+  @override
+  String get distractionConflict =>
+      'На другом устройстве уже идёт общий Focus. Выберите, какую сессию продолжить.';
+
+  @override
+  String get distractionJoinShared => 'Присоединиться к общему Focus';
+
+  @override
+  String get distractionFinishLocal => 'Завершить локальный Focus';
+
+  @override
+  String get distractionStopEverywhere => 'Завершить Focus на всех устройствах';
+
+  @override
+  String get distractionResources => 'Ресурсы и исключения';
+
+  @override
+  String get distractionAddSite => 'Добавить сайт';
+
+  @override
+  String get distractionNoResources =>
+      'Включите обнаружение приложений или добавьте сайт. Chrome обнаруживает домены только после предоставления разрешения.';
+
+  @override
+  String get distractionCategory => 'Категория';
+
+  @override
+  String get distractionException => 'Исключение профиля';
+
+  @override
+  String get distractionUseCategory => 'По категории';
+
+  @override
+  String get distractionAllow => 'Всегда разрешать';
+
+  @override
+  String get distractionBlock => 'Всегда блокировать';
+
+  @override
+  String get distractionClassify => 'Определить категорию · Pro';
+
+  @override
+  String get distractionAutomaticSource =>
+      'Автоматическая категория · ручные исправления важнее';
+
+  @override
+  String get distractionDetached => 'Защита здесь отключена';
+
+  @override
+  String distractionLastSeen(String date) {
+    return 'Последнее подтверждение: $date';
+  }
+
+  @override
+  String get distractionInvalidDomain =>
+      'Введите публичный домен, например youtube.com.';
+
+  @override
+  String get distractionOnPause => 'Блокировать на паузе';
+
+  @override
+  String get distractionOnShortBreak => 'Блокировать на коротком перерыве';
+
+  @override
+  String get distractionOnLongBreak => 'Блокировать на длинном перерыве';
+
+  @override
+  String get distractionExitTitle => 'Завершить строгий Focus?';
+
+  @override
+  String distractionExitCountdown(int seconds) {
+    return 'До выхода $seconds сек. Можно отменить и вернуться к Focus.';
+  }
+
+  @override
+  String get distractionExitConfirm =>
+      'Интервал будет прерван без награды за завершение.';
+
+  @override
+  String get distractionExitConfirmButton => 'Подтвердить выход';
+
+  @override
+  String get distractionExitCancel => 'Продолжить Focus';
+
+  @override
+  String get distractionSocial => 'Соцсети';
+
+  @override
+  String get distractionMessaging => 'Мессенджеры';
+
+  @override
+  String get distractionVideo => 'Видео';
+
+  @override
+  String get distractionMusic => 'Музыка';
+
+  @override
+  String get distractionGames => 'Игры';
+
+  @override
+  String get distractionNews => 'Новости';
+
+  @override
+  String get distractionShopping => 'Покупки';
+
+  @override
+  String get distractionEducation => 'Обучение';
+
+  @override
+  String get distractionDevelopment => 'Разработка';
+
+  @override
+  String get distractionProductivity => 'Рабочие инструменты';
+
+  @override
+  String get distractionOther => 'Другое';
+
+  @override
+  String get distractionUnclassified => 'Не определено';
+
+  @override
+  String get distractionConnected => 'Подключено';
+
+  @override
+  String get distractionDisconnected => 'Нет связи';
+
+  @override
+  String get distractionProtected => 'Защищено · правила подтверждены';
+
+  @override
+  String get distractionNotConfirmed => 'Применение правил не подтверждено';
+
+  @override
+  String distractionIncognito(String status) {
+    return 'Доступ в инкогнито: $status';
+  }
+
+  @override
+  String get blockingTitle => 'Блокировки';
+
+  @override
+  String get blockingDescription =>
+      'Рабочий ритм и его ограничения — в одном месте.';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '$work мин фокус · $short мин перерыв · $long мин длинный после $count интервалов';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return 'Используют пресеты: $presets. Изменения профиля общие для них.';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      'Назначенный профиль недоступен. Загрузите его снова или выберите другой.';
+
+  @override
+  String get blockingWhatToClose => 'Что закрыть';
+
+  @override
+  String get blockingWhatToKeep => 'Что оставить доступным';
+
+  @override
+  String get blockingBehavior => 'Поведение профиля';
+
+  @override
+  String get blockingApps => 'Приложения';
+
+  @override
+  String get blockingEnabled => 'Включено';
+
+  @override
+  String get blockingDisabled => 'Выключено';
+
+  @override
+  String get blockingDevices => 'Этот компьютер и Chrome';
+
+  @override
+  String get blockingDeviceDetails => 'Устройства и конфиденциальность';
+
+  @override
+  String get blockingSaving => 'Сохранение…';
+
+  @override
+  String get blockingCurrentFocus => 'К текущему Focus';
+
+  @override
+  String get blockingReady => 'Готов к запуску';
+
+  @override
+  String get shortcutHintsTitle => 'Подсказки клавиш';
+
+  @override
+  String get shortcutHintsNavigation => 'Переходы';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$key удерживается · Отпустите, чтобы скрыть';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'Сначала отпустите $key, чтобы использовать эти клавиши';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => 'Переключить вид Фокуса';
+
+  @override
+  String get shortcutHintsNavigate => 'Навигация';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => 'Принять подсказку';
+
+  @override
+  String get blockingShowAllPresets => 'Показать все';
+
+  @override
+  String get blockingCollapsePresets => 'Свернуть';
+
+  @override
+  String get taskNew => 'Новая задача';
+
+  @override
+  String get taskCreateAction => 'Создать задачу';
+
+  @override
+  String get taskDescription => 'Описание';
+
+  @override
+  String get taskExpandEditor => 'Развернуть редактор';
+
+  @override
+  String get taskCollapseEditor => 'Свернуть редактор';
+
+  @override
+  String get taskVisibleToYou => 'Видна только вам';
+
+  @override
+  String get taskVisibleToTeam => 'Видна участникам команды';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'Задача создана. Повторите загрузку оставшихся файлов или удалите их из списка, чтобы завершить.';
+
+  @override
+  String get taskFormatBold => 'Жирный (Markdown)';
+
+  @override
+  String get taskFormatItalic => 'Курсив (Markdown)';
+
+  @override
+  String get taskFormatList => 'Маркированный список';
+
+  @override
+  String get taskFormatLink => 'Ссылка (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Включить / выключить Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'Таймер в строке меню';
+
+  @override
+  String get settingsMenuBarTimerClassic => 'Старый';
+
+  @override
+  String get settingsMenuBarTimerModern => 'Новый';
+
+  @override
+  String get settingsMenuBarTimerError =>
+      'Не удалось обновить таймер в строке меню. Попробуйте ещё раз.';
+
+  @override
+  String get quickAddEnterEstimate => 'Ввести число';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '$minutes мин фокуса';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return 'По $minutes минут';
+  }
 }

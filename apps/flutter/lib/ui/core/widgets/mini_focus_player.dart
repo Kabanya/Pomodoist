@@ -1,4 +1,3 @@
-import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
@@ -19,14 +18,9 @@ import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 
 class MiniFocusPlayer extends ConsumerWidget {
-  const MiniFocusPlayer({
-    this.floating = false,
-    this.dailyContext = false,
-    super.key,
-  });
+  const MiniFocusPlayer({this.floating = false, super.key});
 
   final bool floating;
-  final bool dailyContext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,89 +39,6 @@ class MiniFocusPlayer extends ConsumerWidget {
     final l10n = context.l10n;
     final colors = context.appColors;
     final task = run.taskId == null ? null : state.task;
-    if (dailyContext) {
-      final title = InkWell(
-        onTap: task == null ? null : () => openTaskDetails(context, task.id),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${l10n.todayFocusingOn} · '
-                '${ready ? '${l10n.readyShort} · ' : ''}${_intervalLabel(context, interval)}',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(color: colors.secondaryText),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                task?.content ?? l10n.navFocus,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              if (task != null) TaskHierarchySummary(task: task, compact: true),
-            ],
-          ),
-        ),
-      );
-      final controls = Wrap(
-        spacing: 12,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            formatDurationCompact(remaining),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.merge(AppTheme.monoTextStyle),
-          ),
-          IconButton(
-            tooltip: ready
-                ? l10n.startInterval
-                : (paused ? l10n.resume : l10n.pause),
-            onPressed: ready
-                ? () => unawaited(_startReadyInterval(context, viewModel.start))
-                : (preset?.allowPause ?? false)
-                ? () => unawaited(
-                    _toggleFocusPause(context, viewModel.togglePause),
-                  )
-                : null,
-            icon: Icon(ready || paused ? LucideIcons.play : LucideIcons.pause),
-          ),
-          TextButton(
-            onPressed: () => context.go('/focus'),
-            child: Text(l10n.openFocus),
-          ),
-        ],
-      );
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surfaceTint,
-          border: Border.all(color: colors.border),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: LayoutBuilder(
-            builder: (context, constraints) => constraints.maxWidth >= 600
-                ? Row(
-                    children: [
-                      Expanded(child: title),
-                      const SizedBox(width: 16),
-                      Flexible(child: controls),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [title, const SizedBox(height: 4), controls],
-                  ),
-          ),
-        ),
-      );
-    }
     if (viewMode == FocusViewMode.minimal) {
       return _MinimalMiniFocusPlayer(
         interval: interval,

@@ -4,12 +4,13 @@ const readTools = [
   'list_habits', 'get_habit', 'list_tasks', 'get_task', 'list_projects', 'list_labels', 'get_kanban_board',
   'list_focus_history', 'get_productivity_report', 'get_achievements',
   'openclaw_get_focus', 'openclaw_get_task',
+  'openclaw_list_app_devices', 'openclaw_get_app_settings', 'openclaw_get_app_settings_request',
 ];
 const writeTools = [
   'create_habit', 'update_habit', 'add_habit_check_in', 'complete_habit', 'undo_habit_check_in', 'finish_habit', 'reopen_habit', 'delete_habit',
   'create_task', 'update_task', 'complete_task', 'restore_task', 'delete_task',
   'create_project', 'update_project', 'delete_project', 'create_label', 'delete_label',
-  'focus', 'set_task_details',
+  'focus', 'set_task_details', 'set_app_shortcut', 'set_app_appearance',
 ].map(name => `openclaw_${name}`);
 
 /** Generate one server definition, without reading or writing credentials. */

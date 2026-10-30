@@ -8,7 +8,7 @@ abstract interface class TaskPreferencesRepository {
 
   /// Later updates only; the repository owns and closes the source stream.
   Stream<TaskPreferences> watch();
-  Future<Result<void>> load();
+  Future<Result<void>> load({bool reload = false});
   Future<Result<void>> setReengagementEnabled(bool enabled);
   Future<Result<void>> setQuickAddMinutes(int minutes);
   Future<Result<void>> setTimeDisplayMode(TaskTimeDisplayMode mode);

@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -35,6 +36,7 @@ class _AppContextMenuRegionState extends State<AppContextMenuRegion> {
   Offset? _position;
   ({ShadAnchorAuto anchor, double maxHeight})? _placement;
   bool _restoreBrowserMenu = false;
+  bool _menuOpen = false;
 
   @override
   void initState() {
@@ -62,6 +64,9 @@ class _AppContextMenuRegionState extends State<AppContextMenuRegion> {
 
   void _updatePlacement() {
     if (!mounted) return;
+    if (_menuOpen != _controller.isOpen) {
+      setState(() => _menuOpen = _controller.isOpen);
+    }
     if (!_controller.isOpen) {
       _position = null;
       return;
@@ -100,39 +105,44 @@ class _AppContextMenuRegionState extends State<AppContextMenuRegion> {
     if (_controller.isOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _updatePlacement());
     }
-    return ShadContextMenu(
-      controller: _controller,
-      anchor: _placement?.anchor,
-      items: scrollableActionMenuItems(
-        context,
-        widget.items,
-        maxHeight: _placement?.maxHeight,
-      ),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => _controller.hide(),
-        onSecondaryTapDown: (details) async {
-          if (kIsWeb && BrowserContextMenu.enabled) {
-            _restoreBrowserMenu = true;
-            await BrowserContextMenu.disableContextMenu();
-          }
-          if (mounted && defaultTargetPlatform != TargetPlatform.windows) {
-            _show(details.globalPosition);
-          }
-        },
-        onSecondaryTapUp: (details) {
-          if (defaultTargetPlatform == TargetPlatform.windows) {
-            _show(details.globalPosition);
-          }
-          if (_restoreBrowserMenu) {
-            _restoreBrowserMenu = false;
-            BrowserContextMenu.enableContextMenu();
-          }
-        },
-        onLongPressStart: widget.enableLongPress
-            ? (details) => _show(details.globalPosition)
-            : null,
-        child: widget.child,
+    return ShortcutHintsScope(
+      modal: _menuOpen,
+      enabled: false,
+      hints: const [],
+      child: ShadContextMenu(
+        controller: _controller,
+        anchor: _placement?.anchor,
+        items: scrollableActionMenuItems(
+          context,
+          widget.items,
+          maxHeight: _placement?.maxHeight,
+        ),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => _controller.hide(),
+          onSecondaryTapDown: (details) async {
+            if (kIsWeb && BrowserContextMenu.enabled) {
+              _restoreBrowserMenu = true;
+              await BrowserContextMenu.disableContextMenu();
+            }
+            if (mounted && defaultTargetPlatform != TargetPlatform.windows) {
+              _show(details.globalPosition);
+            }
+          },
+          onSecondaryTapUp: (details) {
+            if (defaultTargetPlatform == TargetPlatform.windows) {
+              _show(details.globalPosition);
+            }
+            if (_restoreBrowserMenu) {
+              _restoreBrowserMenu = false;
+              BrowserContextMenu.enableContextMenu();
+            }
+          },
+          onLongPressStart: widget.enableLongPress
+              ? (details) => _show(details.globalPosition)
+              : null,
+          child: widget.child,
+        ),
       ),
     );
   }

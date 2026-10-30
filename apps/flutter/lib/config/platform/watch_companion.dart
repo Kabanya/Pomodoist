@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/config/habit_dependencies.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
 import 'package:pomodoist/data/services/platform/watch_companion_service.dart';
@@ -18,12 +19,13 @@ final watchCompanionServiceProvider = Provider<WatchCompanionService>((ref) {
   final voiceQuickAdd = VoiceQuickAddUseCase(
     quickAdd: ref.watch(quickAddUseCaseProvider),
     runLocalTransaction: ref.watch(localTransactionProvider),
-    hints: ref.watch(quickAddHintRepositoryProvider),
   );
   final actions = WatchCompanionUseCase(
     taskRepository: ref.watch(taskRepositoryProvider),
     projectRepository: ref.watch(projectRepositoryProvider),
     focusRepository: ref.watch(focusRepositoryProvider),
+    habitRepository: ref.watch(habitRepositoryProvider),
+    productivityRepository: ref.watch(productivityRepositoryProvider),
     quickAddService: ref.watch(quickAddUseCaseProvider),
     voiceQuickAdd: voiceQuickAdd,
     taskDecomposer: ref.watch(taskDecomposerProvider),

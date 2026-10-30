@@ -1,18 +1,22 @@
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
+import Shell from 'gi://Shell';
+import Meta from 'gi://Meta';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import {BridgeCore} from './core.js';
+import {APP_IDS, BridgeCore} from './core.js';
 import {shellDisplays} from './displays.js';
 import {SessionTransport} from './transport.js';
+import {DistractionCore} from './distractions.js';
 
 const BUS_NAME = 'com.pomodoist.Pomo.Gnome1';
 const BUS_PATH = '/com/pomodoist/Pomo/Gnome1';
 const IFACE = BUS_NAME;
 const INTERFACE_XML = `<node><interface name="${IFACE}">
+<method name="Distractions"><arg direction="in" type="s" name="request"/><arg direction="out" type="s" name="result"/></method>
 <method name="GetCapabilities"><arg direction="out" type="s" name="capabilities"/></method>
 <method name="RegisterWindow"><arg direction="in" type="s" name="token"/><arg direction="in" type="s" name="role"/><arg direction="out" type="s" name="result"/></method>
 <method name="Command"><arg direction="in" type="s" name="token"/><arg direction="in" type="s" name="method"/><arg direction="in" type="s" name="payload"/><arg direction="out" type="s" name="result"/></method>
@@ -43,9 +47,39 @@ export default class PomoExtension extends Extension {
             },
         };
         this._core = new BridgeCore(this._shell, Config.PACKAGE_VERSION);
-        this._transport = new SessionTransport(this._core, sender => this._resolvePid(sender));
+        this._distractions = new DistractionCore({
+            windows: () => [...this._windows.values()],
+            foreground: () => {
+                if (Main.sessionMode.isLocked || Main.sessionMode.isGreeter) return null;
+                const window = global.display.focus_window;
+                if (!window || window.get_window_type() !== Meta.WindowType.NORMAL || window.skip_taskbar) return null;
+                if ([...this._windows.values()].some(own => own.pid === window.get_pid() && APP_IDS.has(own.appId))) return null;
+                const app = Shell.WindowTracker.get_default().get_window_app(window);
+                const id = app?.get_id() || window.get_gtk_application_id() || window.get_wm_class();
+                if (!id || id.startsWith('com.finchforge.pomodoist') || ['org.gnome.Shell', 'org.gnome.Settings', 'org.kde.polkit-kde-authentication-agent-1'].includes(id)) return null;
+                return {id: `linux:${id.replace(/\.desktop$/, '')}`, name: app?.get_name() || id,
+                    platform: 'linux', key: String(window.get_stable_sequence()), window};
+            },
+            minimize: app => {
+                if (app.window.minimized || !app.window.can_minimize()) return false;
+                app.window.minimize(); return true;
+            },
+            restore: app => {
+                if (global.get_window_actors().some(actor => actor.meta_window === app.window) && app.window.minimized)
+                    app.window.unminimize();
+            },
+        }, () => Date.now(), active => {
+            if (active && !this._distractionTimer) {
+                this._distractionTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+                    this._distractions.tick(); return GLib.SOURCE_CONTINUE;
+                });
+            } else if (!active && this._distractionTimer) {
+                GLib.Source.remove(this._distractionTimer); this._distractionTimer = 0;
+            }
+        });
+        this._transport = new SessionTransport(this._core, sender => this._resolvePid(sender), this._distractions);
         const implementation = {};
-        for (const method of ['GetCapabilities', 'RegisterWindow', 'Command', 'SetFollowing'])
+        for (const method of ['GetCapabilities', 'RegisterWindow', 'Command', 'SetFollowing', 'Distractions'])
             implementation[`${method}Async`] = (args, invocation) => this._dispatch(method, args, invocation);
         try {
             this._exported = Gio.DBusExportedObject.wrapJSObject(INTERFACE_XML, implementation);
@@ -259,6 +293,7 @@ export default class PomoExtension extends Extension {
     }
 
     disable() {
+        if (this._distractionTimer) { GLib.Source.remove(this._distractionTimer); this._distractionTimer = 0; }
         if (!this._active)
             return;
         this._active = false;

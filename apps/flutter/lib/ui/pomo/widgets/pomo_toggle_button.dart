@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
+import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 
 class PomoToggleButton extends ConsumerStatefulWidget {
@@ -22,7 +24,7 @@ class _PomoToggleButtonState extends ConsumerState<PomoToggleButton> {
     if (_saving || controller.busy || controller.closing) return;
     setState(() => _saving = true);
     try {
-      await controller.setEnabled(!controller.prefs.enabled);
+      await controller.toggleEnabled();
       if (controller.error != null) throw controller.error!;
     } catch (_) {
       if (mounted) {
@@ -50,28 +52,34 @@ class _PomoToggleButtonState extends ConsumerState<PomoToggleButton> {
         : context.l10n.commandSearchEnablePomo;
     return Semantics(
       toggled: enabled,
-      child: IconButton(
-        tooltip: label,
-        onPressed: _saving || controller.busy || controller.closing
-            ? null
-            : _toggle,
-        style: IconButton.styleFrom(
-          minimumSize: const Size(44, 44),
-          maximumSize: const Size(44, double.infinity),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          foregroundColor: enabled ? colors.accent : colors.secondaryText,
-          backgroundColor: enabled ? colors.accentTint : Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: ShortcutHintBadge(
+        command: AppShortcutCommand.togglePomo,
+        outside: true,
+        child: IconButton(
+          tooltip: label,
+          onPressed: _saving || controller.busy || controller.closing
+              ? null
+              : _toggle,
+          style: IconButton.styleFrom(
+            minimumSize: const Size(44, 44),
+            maximumSize: const Size(44, double.infinity),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor: enabled ? colors.accent : colors.secondaryText,
+            backgroundColor: enabled ? colors.accentTint : Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          icon: _saving
+              ? SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colors.secondaryText,
+                  ),
+                )
+              : const ExcludeSemantics(child: _TomatoIcon()),
         ),
-        icon: _saving
-            ? SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.secondaryText,
-                ),
-              )
-            : const ExcludeSemantics(child: _TomatoIcon()),
       ),
     );
   }

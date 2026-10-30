@@ -316,7 +316,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oauthConsentManagePlanning =>
-      'タスク、習慣、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。';
+      'タスク、習慣、プロジェクト、ユーザーラベル、カンバンの読み取りと管理。 オンラインの選択したデバイスでショートカットと外観を確認・変更する。';
 
   @override
   String get oauthConsentReadInsights => '完了した集中履歴、生産性レポート、実績の読み取り。';
@@ -1163,7 +1163,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addTask => 'タスクを追加';
 
   @override
-  String get quickAddHint => '同期機能を作る 明日 p1 #App @coding 4p';
+  String get quickAddHint => 'タスク名 明日 p2 #プロジェクト @ラベル 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4453,4 +4453,404 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settingsSyncRecoveryFailed =>
       'ローカルデータの復元が完了していません。アーカイブは保持されています。同期を再起動してください。';
+
+  @override
+  String get aiQuotaTitle => 'AI usage';
+
+  @override
+  String get aiQuotaUnavailable => 'Could not load the AI limit.';
+
+  @override
+  String aiQuotaUsage(int used, int limit, int remaining) {
+    return '$used of $limit requests used · $remaining remaining';
+  }
+
+  @override
+  String aiQuotaReset(String date) {
+    return 'Resets $date';
+  }
+
+  @override
+  String get aiQuotaExplanation =>
+      'Task analysis and new automatic categories share this monthly limit. Cached categories and manual corrections are free.';
+
+  @override
+  String get distractionTitle => 'Distraction blocking';
+
+  @override
+  String get distractionDescription =>
+      'Choose what to block during Focus. Unknown resources stay allowed until you assign a category.';
+
+  @override
+  String get distractionProfile => 'Protection profile';
+
+  @override
+  String get distractionBeforeStart =>
+      '選択したプロファイルは次のFocusに適用されます。カテゴリと例外はいつでも変更できます。';
+
+  @override
+  String get distractionNone => 'No blocking profile';
+
+  @override
+  String get distractionAddProfile => 'Add profile';
+
+  @override
+  String get distractionEditProfile => 'Edit profile';
+
+  @override
+  String get distractionProfileName => 'Profile name';
+
+  @override
+  String get distractionStrictExit => 'Strict Focus exit';
+
+  @override
+  String get distractionStrictDescription =>
+      'Used when the selected Focus preset has strict mode enabled.';
+
+  @override
+  String get distractionWait60 => 'Wait 60 seconds';
+
+  @override
+  String get distractionConfirmImmediately => 'Confirm immediately';
+
+  @override
+  String get distractionDiscovery => 'Discover used apps';
+
+  @override
+  String get distractionDiscoveryPrivacy =>
+      'Only foreground app identities and product names are stored locally. No disk scan, document names or window titles.';
+
+  @override
+  String get distractionAttempts => 'Save distraction attempts';
+
+  @override
+  String get distractionAttemptsPrivacy =>
+      'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
+
+  @override
+  String get distractionAutomatic => '自動カテゴリ';
+
+  @override
+  String get distractionAutomaticDescription => '検索でカテゴリを判定します。手動の選択が優先されます。';
+
+  @override
+  String get distractionLocal => 'Local Focus · this computer';
+
+  @override
+  String get distractionShared => 'Shared Focus · connected';
+
+  @override
+  String get distractionOffline =>
+      'Offline · protection ends at the confirmed deadline';
+
+  @override
+  String get distractionNativeApplied => 'Application protection applied';
+
+  @override
+  String get distractionNativeReady => 'Application protection available';
+
+  @override
+  String get distractionNativeUnavailable =>
+      'Application protection unavailable';
+
+  @override
+  String get distractionChrome => 'Chrome extension';
+
+  @override
+  String get distractionPairDescription =>
+      'Enable protection in Chrome and pair this desktop using a one-time code. The code expires after two minutes.';
+
+  @override
+  String get distractionPair => 'Show pairing code';
+
+  @override
+  String distractionPairCode(String code, int port) {
+    return 'Code $code · port $port';
+  }
+
+  @override
+  String get distractionConflict =>
+      'A shared Focus is already running on another device. Choose which session to continue.';
+
+  @override
+  String get distractionJoinShared => 'Join shared Focus';
+
+  @override
+  String get distractionFinishLocal => 'Finish local Focus';
+
+  @override
+  String get distractionStopEverywhere => 'End Focus on all devices';
+
+  @override
+  String get distractionResources => 'Resources and exceptions';
+
+  @override
+  String get distractionAddSite => 'Add site';
+
+  @override
+  String get distractionNoResources =>
+      'Enable app discovery or add a site. Chrome discovers domains only after you grant permission.';
+
+  @override
+  String get distractionCategory => 'Category';
+
+  @override
+  String get distractionException => 'Profile exception';
+
+  @override
+  String get distractionUseCategory => 'Use category';
+
+  @override
+  String get distractionAllow => 'Always allow';
+
+  @override
+  String get distractionBlock => 'Always block';
+
+  @override
+  String get distractionClassify => 'Find category · Pro';
+
+  @override
+  String get distractionAutomaticSource =>
+      'Automatic category · manual corrections take priority';
+
+  @override
+  String get distractionDetached => 'Protection disabled here';
+
+  @override
+  String distractionLastSeen(String date) {
+    return 'Last confirmation: $date';
+  }
+
+  @override
+  String get distractionInvalidDomain =>
+      'Enter a public domain, such as youtube.com.';
+
+  @override
+  String get distractionOnPause => 'Block during pauses';
+
+  @override
+  String get distractionOnShortBreak => 'Block during short breaks';
+
+  @override
+  String get distractionOnLongBreak => 'Block during long breaks';
+
+  @override
+  String get distractionExitTitle => 'End strict Focus?';
+
+  @override
+  String distractionExitCountdown(int seconds) {
+    return 'Exit available in $seconds seconds. You can cancel and return to Focus.';
+  }
+
+  @override
+  String get distractionExitConfirm =>
+      'The interval will be interrupted without a completion reward.';
+
+  @override
+  String get distractionExitConfirmButton => 'Confirm exit';
+
+  @override
+  String get distractionExitCancel => 'Keep focusing';
+
+  @override
+  String get distractionSocial => 'Social media';
+
+  @override
+  String get distractionMessaging => 'Messaging';
+
+  @override
+  String get distractionVideo => 'Video';
+
+  @override
+  String get distractionMusic => 'Music';
+
+  @override
+  String get distractionGames => 'Games';
+
+  @override
+  String get distractionNews => 'News';
+
+  @override
+  String get distractionShopping => 'Shopping';
+
+  @override
+  String get distractionEducation => 'Education';
+
+  @override
+  String get distractionDevelopment => 'Development';
+
+  @override
+  String get distractionProductivity => 'Work tools';
+
+  @override
+  String get distractionOther => 'Other';
+
+  @override
+  String get distractionUnclassified => 'Unclassified';
+
+  @override
+  String get distractionConnected => 'Connected';
+
+  @override
+  String get distractionDisconnected => 'Disconnected';
+
+  @override
+  String get distractionProtected => 'Protected · rules confirmed';
+
+  @override
+  String get distractionNotConfirmed => 'Rules not confirmed';
+
+  @override
+  String distractionIncognito(String status) {
+    return 'Incognito access: $status';
+  }
+
+  @override
+  String get blockingTitle => 'ブロック';
+
+  @override
+  String get blockingDescription => '作業リズムと制限を一か所で管理。';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '集中$work分 · 休憩$short分 · $count回ごとに$long分の長い休憩';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return '使用中のプリセット：$presets。プロファイルの変更はすべてに適用されます。';
+  }
+
+  @override
+  String get blockingProfileMissing =>
+      '設定されたプロファイルを利用できません。再読み込みするか別のものを選んでください。';
+
+  @override
+  String get blockingWhatToClose => '閉じるもの';
+
+  @override
+  String get blockingWhatToKeep => '利用を許可するもの';
+
+  @override
+  String get blockingBehavior => 'プロファイルの動作';
+
+  @override
+  String get blockingApps => 'アプリ';
+
+  @override
+  String get blockingEnabled => '有効';
+
+  @override
+  String get blockingDisabled => '無効';
+
+  @override
+  String get blockingDevices => 'このコンピューターとChrome';
+
+  @override
+  String get blockingDeviceDetails => 'デバイスとプライバシー';
+
+  @override
+  String get blockingSaving => '保存中…';
+
+  @override
+  String get blockingCurrentFocus => '現在のFocusへ';
+
+  @override
+  String get blockingReady => '開始の準備完了';
+
+  @override
+  String get shortcutHintsTitle => 'キーボードヒント';
+
+  @override
+  String get shortcutHintsNavigation => '移動';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '$keyを長押し中 · 離すと非表示';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return 'これらのキーを使う前に$keyを離してください';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => '集中の表示を切り替え';
+
+  @override
+  String get shortcutHintsNavigate => '移動';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => '候補を確定';
+
+  @override
+  String get blockingShowAllPresets => 'すべて表示';
+
+  @override
+  String get blockingCollapsePresets => '折りたたむ';
+
+  @override
+  String get taskNew => '新しいタスク';
+
+  @override
+  String get taskCreateAction => 'タスクを作成';
+
+  @override
+  String get taskDescription => '説明';
+
+  @override
+  String get taskExpandEditor => 'エディターを拡大';
+
+  @override
+  String get taskCollapseEditor => 'エディターを縮小';
+
+  @override
+  String get taskVisibleToYou => '自分のみ表示';
+
+  @override
+  String get taskVisibleToTeam => 'チームメンバーに表示';
+
+  @override
+  String get taskCreatedFilesPending =>
+      'タスクを作成しました。残りのファイルを再送信するか、リストから削除して完了してください。';
+
+  @override
+  String get taskFormatBold => '太字 (Markdown)';
+
+  @override
+  String get taskFormatItalic => '斜体 (Markdown)';
+
+  @override
+  String get taskFormatList => '箇条書き';
+
+  @override
+  String get taskFormatLink => 'リンク (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => 'Pomo を有効／無効にする';
+
+  @override
+  String get settingsMenuBarTimerTitle => 'メニューバーのタイマー';
+
+  @override
+  String get settingsMenuBarTimerClassic => '旧スタイル';
+
+  @override
+  String get settingsMenuBarTimerModern => '新スタイル';
+
+  @override
+  String get settingsMenuBarTimerError => 'メニューバーのタイマーを更新できませんでした。もう一度お試しください。';
+
+  @override
+  String get quickAddEnterEstimate => '数値を入力';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '集中時間 $minutes 分';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '1回 $minutes 分';
+  }
 }

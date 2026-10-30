@@ -53,7 +53,28 @@ class AppIconSettingsViewModel extends Notifier<AppIconSettingsState> {
     }
   }
 
-  Future<void> select(AppIconChoice choice) async {
+  Future<void> refresh() async {
+    if (state.isSaving) throw StateError('Icon is busy');
+    final values = (await _preferences.read(['app.icon'])).getOrThrow();
+    final choice = AppIconChoice.fromId(values['app.icon']);
+    if (!state.isLoaded || choice != state.choice) await load();
+  }
+
+  Future<void> selectStrict(
+    AppIconChoice choice, {
+    bool Function()? isCurrent,
+  }) async {
+    if (!state.isLoaded || state.isSaving) throw StateError('Icon is busy');
+    await select(choice, isCurrent: isCurrent);
+    if (!ref.mounted) throw StateError('Icon controller disposed');
+    if (state.error != null) throw state.error!;
+    if (state.choice != choice) throw StateError('Icon was not applied');
+  }
+
+  Future<void> select(
+    AppIconChoice choice, {
+    bool Function()? isCurrent,
+  }) async {
     if (!state.isLoaded || state.isSaving || choice == state.choice) return;
     final previous = state.choice;
     state = AppIconSettingsState(
@@ -64,6 +85,9 @@ class AppIconSettingsViewModel extends Notifier<AppIconSettingsState> {
     try {
       await _platform.apply(choice);
       try {
+        if (isCurrent != null && !isCurrent()) {
+          throw StateError('Settings session expired');
+        }
         (await _preferences.write({'app.icon': choice.id})).getOrThrow();
       } catch (_) {
         await _platform.apply(previous);

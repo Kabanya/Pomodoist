@@ -34,7 +34,6 @@ class TodayViewModel extends Notifier<TodayState> {
 
 typedef TodayContextState = ({
   bool showSummary,
-  bool showFocus,
   int tasks,
   int plannedIntervals,
   int focusSeconds,
@@ -59,7 +58,6 @@ class TodayContextViewModel extends Notifier<TodayContextState> {
           !summary.isLoading &&
           !summary.hasError &&
           summary.hasValue,
-      showFocus: ref.watch(todayFocusStripVisibleProvider),
       tasks: tasks.value?.length ?? 0,
       plannedIntervals: summary.value?.plannedFocusIntervals ?? 0,
       focusSeconds: summary.value?.totalFocusSeconds ?? 0,

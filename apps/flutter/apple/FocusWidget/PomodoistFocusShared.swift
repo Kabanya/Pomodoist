@@ -1,4 +1,8 @@
 import Foundation
+#if os(iOS)
+import ActivityKit
+import AppIntents
+#endif
 
 func pomodoistLocalized(_ key: String, locale: String? = nil) -> String {
   let requested = locale.map { [$0] } ?? Locale.preferredLanguages
@@ -32,6 +36,42 @@ enum PomodoistTimerColor: String, CaseIterable {
   case purple
 }
 
+enum PomodoistOverviewKind: String {
+  case tasks, habits, day, progress
+}
+
+struct PomodoistWidgetPomoState: Hashable {
+  enum Pose: String, CaseIterable { case calm, focus, happy, rest }
+  let pose: Pose
+  private let event: String
+
+  init(focus: PomodoistFocusSnapshot) {
+    if !focus.isActive || focus.interval?.status == "paused" {
+      pose = .calm
+    } else {
+      pose = focus.interval?.type == "work" ? .focus : .rest
+    }
+    event = "\(focus.run?.id ?? "")/\(focus.interval?.id ?? "")/\(focus.interval?.status ?? "")"
+  }
+
+  init(kind: PomodoistOverviewKind, data: PomodoistWidgetSnapshot) {
+    switch kind {
+    case .tasks:
+      pose = data.tasks.isEmpty ? .happy : .focus
+      event = "\(data.day)/\(data.completedTasks)/\(data.tasks.first?.id ?? "")"
+    case .habits:
+      pose = data.totalHabits > 0 && data.completedHabits >= data.totalHabits ? .happy : .calm
+      event = "\(data.day)/\(data.completedHabits)/\(data.totalHabits)"
+    case .day:
+      pose = data.agenda.isEmpty ? .calm : .focus
+      event = "\(data.day)/\(data.agenda.first?.id ?? "")/\(data.agenda.first?.start ?? "")"
+    case .progress:
+      pose = data.completedTasks > 0 || data.focusSeconds > 0 ? .happy : .calm
+      event = "\(data.day)/\(data.completedTasks)/\(data.focusSeconds)"
+    }
+  }
+}
+
 enum PomodoistDateCoding {
   static func string(from date: Date) -> String {
     let formatter = ISO8601DateFormatter()
@@ -54,6 +94,7 @@ struct PomodoistSnapshot: Codable, Equatable {
   var generatedAt: String?
   var focus: PomodoistFocusSnapshot
   var locale: String? = nil
+  var widgets: PomodoistWidgetSnapshot? = nil
 
   static let empty = PomodoistSnapshot(
     version: 1,
@@ -79,6 +120,160 @@ struct PomodoistSnapshot: Codable, Equatable {
     return try? JSONDecoder().decode(PomodoistSnapshot.self, from: data)
   }
 }
+
+struct PomodoistWidgetSnapshot: Codable, Equatable {
+  var day: String
+  var focusTaskTitle: String?
+  var tasks: [PomodoistWidgetTask]
+  var agenda: [PomodoistWidgetTask]
+  var habits: [PomodoistWidgetHabit]
+  var totalHabits: Int
+  var completedHabits: Int
+  var completedTasks: Int
+  var week: [PomodoistWidgetDay]
+
+  func isCurrent(on date: Date, calendar: Calendar = Calendar(identifier: .gregorian)) -> Bool {
+    let parts = calendar.dateComponents([.year, .month, .day], from: date)
+    return day == String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+  }
+
+  var focusSeconds: Int { week.reduce(0) { $0 + max(0, $1.focusSeconds) } }
+}
+
+struct PomodoistWidgetTask: Codable, Equatable, Identifiable {
+  var id: String
+  var title: String
+  var start: String?
+}
+
+struct PomodoistWidgetHabit: Codable, Equatable, Identifiable {
+  var id: String
+  var title: String
+  var count: Int
+  var target: Int
+  var completed: Bool
+}
+
+struct PomodoistWidgetDay: Codable, Equatable, Identifiable {
+  var day: String
+  var focusSeconds: Int
+  var id: String { day }
+
+  var date: Date? {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: day)
+  }
+}
+
+func pomodoistWidgetURL(screen: String, taskID: String? = nil) -> URL? {
+  var components = URLComponents()
+  components.scheme = pomodoistFocusURLScheme
+  components.host = "widget"
+  components.queryItems = [URLQueryItem(name: "screen", value: screen)]
+  if let taskID { components.queryItems?.append(URLQueryItem(name: "task", value: taskID)) }
+  return components.url
+}
+
+#if os(iOS)
+@available(iOS 16.2, *)
+struct PomodoistFocusActivityAttributes: ActivityAttributes {
+  var runID: String
+
+  struct ContentState: Codable, Hashable {
+    var title: String
+    var label: String
+    var intervalID: String
+    var end: Date?
+    var seconds: Int
+    var completed: Int
+    var target: Int
+    var progress: Double
+    var canPause: Bool
+    var paused: Bool
+
+    init?(snapshot: PomodoistSnapshot, now: Date) {
+      let focus = snapshot.focus
+      guard focus.isActive, let interval = focus.interval, let run = focus.run else { return nil }
+      title = snapshot.widgets?.focusTaskTitle ?? focus.presetName ?? "Pomodoist"
+      label = PomodoistFocusDisplay.stateLabel(focus: focus, locale: snapshot.locale)
+      intervalID = interval.id
+      end = PomodoistFocusDisplay.intervalEndDate(now: now, interval: interval)
+      seconds = PomodoistFocusDisplay.remainingSeconds(now: now, interval: interval)
+      completed = max(0, run.completedWorkIntervals)
+      target = max(1, run.targetWorkIntervals)
+      progress = PomodoistFocusDisplay.progress(now: now, focus: focus)
+      canPause = focus.preset?.allowPause == true && focus.preset?.strictMode != true
+        && ["running", "paused"].contains(interval.status)
+      paused = interval.status == "paused"
+    }
+  }
+}
+
+@MainActor
+enum PomodoistWidgetCommands {
+  static var handler: (([String: Any], @escaping ([String: Any]) -> Void) -> Void)?
+
+  static func send(type: String, taskID: String? = nil, intervalID: String? = nil) async throws {
+    // The foreground intent can arrive while Flutter's engine is starting.
+    for _ in 0..<20 where handler == nil {
+      try await Task.sleep(nanoseconds: 250_000_000)
+    }
+    guard let handler else { throw commandError() }
+    var command = PomodoistFocusCommand.make(type: type)
+    command["taskId"] = taskID
+    command["expectedIntervalId"] = intervalID
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+      handler(command) { reply in
+        if reply["ok"] as? Bool == true {
+          continuation.resume()
+        } else {
+          continuation.resume(throwing: commandError())
+        }
+      }
+    }
+  }
+
+  private static func commandError() -> NSError {
+    NSError(domain: "PomodoistWidget", code: 1,
+      userInfo: [NSLocalizedDescriptionKey: pomodoistLocalized("Open Pomodoist to update")])
+  }
+}
+
+@available(iOS 17.0, *)
+struct PomodoistFocusPlaybackIntent: LiveActivityIntent {
+  static var title: LocalizedStringResource = "Pause or resume focus"
+  static var openAppWhenRun = true
+  @Parameter(title: "Interval") var intervalID: String
+  @Parameter(title: "Resume") var resume: Bool
+
+  init() {}
+  init(intervalID: String, resume: Bool) { self.intervalID = intervalID; self.resume = resume }
+
+  func perform() async throws -> some IntentResult {
+    try await PomodoistWidgetCommands.send(
+      type: resume ? PomodoistFocusCommand.resume : PomodoistFocusCommand.pause,
+      intervalID: intervalID)
+    return .result()
+  }
+}
+
+@available(iOS 17.0, *)
+struct PomodoistCompleteTaskIntent: AppIntent {
+  static var title: LocalizedStringResource = "Complete task"
+  static var openAppWhenRun = true
+  @Parameter(title: "Task") var taskID: String
+
+  init() {}
+  init(taskID: String) { self.taskID = taskID }
+  func perform() async throws -> some IntentResult {
+    try await PomodoistWidgetCommands.send(type: "task.complete", taskID: taskID)
+    return .result()
+  }
+}
+#endif
 
 struct PomodoistFocusSnapshot: Codable, Equatable {
   var active: Bool
@@ -150,8 +345,8 @@ struct PomodoistFocusSnapshotStore {
   }
 
   func save(dictionary: [String: Any]) {
-    guard JSONSerialization.isValidJSONObject(dictionary),
-      let data = try? JSONSerialization.data(withJSONObject: dictionary)
+    guard let snapshot = PomodoistSnapshot.decode(from: dictionary),
+      let data = try? JSONEncoder().encode(snapshot)
     else {
       return
     }

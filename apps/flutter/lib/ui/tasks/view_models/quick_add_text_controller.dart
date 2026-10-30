@@ -24,7 +24,9 @@ class QuickAddTextController extends TextEditingController {
     if (input.isEmpty) {
       return TextSpan(style: style, text: input);
     }
-    final matches = _parser.analyze(input, now: _now()).matches;
+    final analysis = _parser.analyze(input, now: _now());
+    final matches = analysis.matches;
+    final colors = context.appColors;
     final composing = value.composing;
     final hasComposing =
         withComposing &&
@@ -60,7 +62,12 @@ class QuickAddTextController extends TextEditingController {
       );
       var segmentStyle = match == null
           ? const TextStyle()
-          : _tokenStyle(context, match.kind);
+          : colors.quickAddStyle(
+              colors.quickAddTokenColor(
+                match.kind,
+                priority: analysis.parsed.priority ?? 4,
+              ),
+            );
       if (hasComposing && start >= composing.start && end <= composing.end) {
         segmentStyle = segmentStyle.merge(
           const TextStyle(decoration: TextDecoration.underline),
@@ -71,19 +78,5 @@ class QuickAddTextController extends TextEditingController {
       );
     }
     return TextSpan(style: style, children: children);
-  }
-
-  TextStyle _tokenStyle(BuildContext context, QuickAddTokenKind kind) {
-    final colors = context.appColors;
-    final color = switch (kind) {
-      QuickAddTokenKind.project || QuickAddTokenKind.section => colors.info,
-      QuickAddTokenKind.label => colors.warning,
-      QuickAddTokenKind.date ||
-      QuickAddTokenKind.time ||
-      QuickAddTokenKind.duration ||
-      QuickAddTokenKind.focusEstimate => colors.accent,
-      QuickAddTokenKind.priority => Theme.of(context).colorScheme.tertiary,
-    };
-    return TextStyle(color: color);
   }
 }

@@ -66,7 +66,7 @@ class ImageCITest(unittest.TestCase):
             if url.endswith('/config.js'):
                 return SimpleNamespace(read=lambda: (
                     b'https://app-test.pomodoist.com https://supabase-test.pomodoist.com '
-                    b'https://app.pomodoist.com https://supabase-test.pomodoist.com'))
+                    b'https://app.pomodoist.com https://pomodoist.supabase.co'))
             raise ci.urllib.error.HTTPError(url, 404, 'absent', {}, None)
         responses = [ConnectionResetError('nginx starting'),
                      {'environment': 'staging', 'release': SHA},

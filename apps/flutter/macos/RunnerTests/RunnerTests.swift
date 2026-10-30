@@ -5,6 +5,131 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
+  func testStatusItemStyleDefaultsAndRestoresSelection() {
+    let suite = "status-style-\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suite)!
+    defer { defaults.removePersistentDomain(forName: suite) }
+    let controller = statusStyleController(defaults: defaults)
+    XCTAssertEqual(controller.style, .classic)
+    XCTAssertEqual(controller.statusItem.button?.attributedTitle.string, "\u{25EF} 25:00")
+    XCTAssertNil(controller.statusItem.button?.image)
+
+    for value in ["modern", "classic"] {
+      controller.handleStyleCall(FlutterMethodCall(methodName: "setStyle", arguments: value)) { reply in
+        XCTAssertEqual(reply as? String, value)
+      }
+      XCTAssertEqual(defaults.string(forKey: "focus.statusItem.style"), value)
+      let restored = statusStyleController(defaults: defaults)
+      XCTAssertEqual(restored.style.rawValue, value)
+      XCTAssertEqual(restored.statusItem.button?.image != nil, value == "modern")
+      XCTAssertEqual(restored.statusItem.button?.attributedTitle.string,
+        value == "classic" ? "\u{25EF} 25:00" : "25:00")
+    }
+    defaults.set("unknown", forKey: "focus.statusItem.style")
+    XCTAssertEqual(statusStyleController(defaults: defaults).style, .classic)
+  }
+
+  func testStatusItemStyleRejectsMalformedInputAndPreservesColor() {
+    let suite = "status-style-\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suite)!
+    defer { defaults.removePersistentDomain(forName: suite) }
+    defaults.set("blue", forKey: pomodoistTimerColorDefaultsKey)
+    let controller = statusStyleController(defaults: defaults)
+    for value: Any in ["unknown", 12, ["style": "modern"]] {
+      controller.handleStyleCall(FlutterMethodCall(methodName: "setStyle", arguments: value)) { reply in
+        XCTAssertEqual((reply as? FlutterError)?.code, "invalid_style")
+      }
+      XCTAssertEqual(controller.style, .classic)
+      XCTAssertNil(defaults.object(forKey: "focus.statusItem.style"))
+    }
+    controller.handleStyleCall(FlutterMethodCall(methodName: "setStyle", arguments: "modern")) { _ in }
+    controller.handleStyleCall(FlutterMethodCall(methodName: "getStyle", arguments: nil)) { reply in
+      XCTAssertEqual(reply as? String, "modern")
+    }
+    XCTAssertEqual(defaults.string(forKey: pomodoistTimerColorDefaultsKey), "blue")
+    XCTAssertEqual(controller.statusItem.button?.attributedTitle.attribute(.foregroundColor, at: 0,
+      effectiveRange: nil) as? NSColor, .systemBlue)
+    controller.menuWillOpen(controller.statusItem.menu!)
+    let styleMenu = controller.statusItem.menu!.items.first { $0.submenu?.items.first?.representedObject as? String == "classic" }!.submenu!
+    XCTAssertEqual(styleMenu.items.map(\.state), [.off, .on])
+    NSApp.sendAction(styleMenu.items[0].action!, to: styleMenu.items[0].target, from: styleMenu.items[0])
+    XCTAssertEqual(controller.style, .classic)
+    XCTAssertNil(controller.statusItem.button?.image)
+  }
+
+  func testStatusItemStyleSwitchKeepsRunningAndPausedSnapshots() throws {
+    let suite = "status-style-\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suite)!
+    defer { defaults.removePersistentDomain(forName: suite) }
+    defaults.set("automatic", forKey: pomodoistTimerColorDefaultsKey)
+    for status in ["running", "paused"] {
+      let timestamp = PomodoistDateCoding.string(from: Date())
+      let focus = activeFocus(interval: interval(
+        type: "work", status: status, plannedSeconds: 25 * 60,
+        startedAt: timestamp, pausedAt: status == "paused" ? timestamp : nil
+      ))
+      let snapshot = PomodoistSnapshot(version: 1, generatedAt: timestamp, focus: focus)
+      let data = try JSONEncoder().encode(snapshot)
+      defaults.set(data, forKey: pomodoistFocusSnapshotDefaultsKey)
+      defaults.set("classic", forKey: "focus.statusItem.style")
+      let controller = statusStyleController(defaults: defaults)
+      XCTAssertTrue(controller.statusItem.button!.attributedTitle.string.hasPrefix("\u{25EF} "))
+      controller.handleStyleCall(FlutterMethodCall(methodName: "setStyle", arguments: "modern")) { _ in }
+      XCTAssertFalse(controller.statusItem.button!.attributedTitle.string.hasPrefix("\u{25EF} "))
+      if status == "paused" {
+        XCTAssertEqual(controller.statusItem.button?.attributedTitle.string, "25:00")
+      }
+      XCTAssertEqual(controller.statusItem.button?.attributedTitle.attribute(.foregroundColor, at: 0,
+        effectiveRange: nil) as? NSColor, .labelColor)
+      XCTAssertNotNil(controller.statusItem.button?.accessibilityValue())
+      XCTAssertEqual(PomodoistFocusSnapshotStore(defaults: defaults, fileURL: nil).load(), snapshot)
+      controller.handleStyleCall(FlutterMethodCall(methodName: "setStyle", arguments: "classic")) { _ in }
+      XCTAssertNil(controller.statusItem.button?.image)
+      XCTAssertEqual(defaults.data(forKey: pomodoistFocusSnapshotDefaultsKey), data)
+    }
+  }
+
+  private func statusStyleController(defaults: UserDefaults) -> FocusStatusItemController {
+    _ = NSApplication.shared
+    let viewController = FlutterViewController()
+    let messenger = viewController.engine.binaryMessenger
+    return FocusStatusItemController(
+      channel: FlutterMethodChannel(name: UUID().uuidString, binaryMessenger: messenger),
+      styleChannel: FlutterMethodChannel(name: UUID().uuidString, binaryMessenger: messenger),
+      store: PomodoistFocusSnapshotStore(defaults: defaults, fileURL: nil),
+      defaults: defaults
+    )
+  }
+
+  func testDistractionShieldAllowsKeyFocusAndConsumesDismissalShortcuts() {
+    _ = NSApplication.shared
+    let panel = DistractionShieldPanel(frame: NSRect(x: 0, y: 0, width: 640, height: 480))
+    defer { panel.close() }
+    XCTAssertTrue(panel.canBecomeKey)
+    XCTAssertFalse(panel.styleMask.contains(.nonactivatingPanel))
+    XCTAssertFalse(panel.becomesKeyOnlyIfNeeded)
+    XCTAssertTrue(panel.hidesOnDeactivate)
+    let close = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [.command],
+      timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+      characters: "w", charactersIgnoringModifiers: "w", isARepeat: false, keyCode: 13)!
+    XCTAssertTrue(panel.performKeyEquivalent(with: close))
+    let escape = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+      timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+      characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53)!
+    XCTAssertTrue(panel.performKeyEquivalent(with: escape))
+    for (text, code, modifiers) in [
+      ("\t", UInt16(48), NSEvent.ModifierFlags()),
+      ("\t", UInt16(48), NSEvent.ModifierFlags.shift),
+      ("\r", UInt16(36), NSEvent.ModifierFlags()),
+      ("q", UInt16(12), NSEvent.ModifierFlags.command),
+    ] {
+      let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers,
+        timestamp: 0, windowNumber: panel.windowNumber, context: nil,
+        characters: text, charactersIgnoringModifiers: text, isARepeat: false, keyCode: code)!
+      XCTAssertFalse(panel.performKeyEquivalent(with: event))
+    }
+  }
+
   func testQuickAddGlobalShortcutDefaultsAndRoundTrips() {
     let defaults = UserDefaults(suiteName: UUID().uuidString)!
     let expected = QuickAddGlobalShortcut.default

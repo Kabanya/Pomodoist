@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="336" height="240" viewBox="0 0 336 240" role="img" aria-label="Self-hosted. Your infrastructure. Your control. Fully free to run on your infrastructure. Use your own accounts and provider credentials. Infrastructure and provider costs are yours. Official hosted services are not included. Self-hosting guide.">
+  <title>Self-hosted. Your infrastructure. Your control. Fully free to run on your infrastructure. Use your own accounts and provider credentials. Infrastructure and provider costs are yours. Official hosted services are not included. Self-hosting guide.</title>
+  <rect x="4.5" y="4.5" width="327" height="231" rx="10" fill="#151e2b" stroke="#334155"/>
+  <g transform="translate(24 25)" fill="none" stroke="#f5ede0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="24" height="10" rx="3"/><rect x="2" y="16" width="24" height="10" rx="3"/><path d="M7 7h.01M7 21h.01m6-14h8m-8 14h8"/></g>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <text x="64" y="39" fill="#fff7eb" font-size="18" font-weight="600">Self-hosted</text>
+    <text x="24" y="77" fill="#a9b6c8" font-size="12">Your infrastructure. Your control.</text>
+    <text x="24" y="105" fill="#c3cddc" font-size="12">Fully free to run on your infrastructure.</text>
+    <text x="24" y="125" fill="#c3cddc" font-size="12">Use your own accounts and provider credentials.</text>
+    <text x="24" y="145" fill="#c3cddc" font-size="12">Infrastructure and provider costs are yours.</text>
+    <text x="24" y="165" fill="#c3cddc" font-size="12">Official hosted services are not included.</text>
+    <text x="24" y="214" fill="#f07b6e" font-size="13" font-weight="600">Self-hosting guide</text>
+  </g>
+  <path d="M24 188h288" stroke="#334155"/>
+  <path d="M294 210h12m-5-5 5 5-5 5" fill="none" stroke="#f07b6e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

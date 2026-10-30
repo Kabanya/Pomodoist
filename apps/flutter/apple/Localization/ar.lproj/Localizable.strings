@@ -53,3 +53,28 @@
 "Classic" = "كلاسيكي";
 "Deep Work" = "عمل عميق";
 "Short Sprint" = "دفعة قصيرة";
+
+"Tasks" = "المهام";
+"Habits" = "العادات";
+"Day" = "اليوم";
+"Progress" = "التقدم";
+"Next" = "التالي";
+"No tasks" = "لا توجد مهام";
+"No habits today" = "لا توجد عادات اليوم";
+"Nothing scheduled" = "لا يوجد شيء مجدول";
+"Open Pomodoist to update" = "افتح Pomodoist للتحديث";
+"Focus this week" = "التركيز هذا الأسبوع";
+"%d tasks today" = "مهام اليوم: %d";
+"All day" = "طوال اليوم";
+"Shows your next tasks." = "يعرض مهامك التالية.";
+"Shows today's habits." = "يعرض عادات اليوم.";
+"Shows today's schedule." = "يعرض جدول اليوم.";
+"Shows this week's progress." = "يعرض تقدم هذا الأسبوع.";
+"Complete task" = "إكمال المهمة";
+"Pause or resume focus" = "إيقاف التركيز مؤقتًا أو استئنافه";
+"Interval" = "الفترة";
+"Task" = "المهمة";
+
+"Appearance" = "المظهر";
+"Old" = "القديم";
+"New" = "الجديد";

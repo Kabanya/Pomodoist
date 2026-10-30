@@ -79,6 +79,11 @@ class KeyboardShortcutsViewModel extends Notifier<KeyboardShortcutsState> {
     );
   }
 
+  Future<void> reload() async {
+    await _global?.reload();
+    _refreshGlobalState();
+  }
+
   Future<void> waitUntilReady() async {
     await _global?.ready;
     _refreshGlobalState();
@@ -116,13 +121,19 @@ class KeyboardShortcutsViewModel extends Notifier<KeyboardShortcutsState> {
   ) =>
       ref.read(keyboardShortcutsProvider.notifier).setBinding(command, binding);
 
-  Future<void> setGlobalEnabled(bool enabled) async {
-    await _global!.setEnabled(enabled);
+  Future<void> setGlobalEnabled(
+    bool enabled, {
+    bool Function()? isCurrent,
+  }) async {
+    await _global!.setEnabled(enabled, isCurrent: isCurrent);
     _refreshGlobalState();
   }
 
-  Future<void> setGlobalShortcut(GlobalShortcutBinding binding) async {
-    await _global!.setShortcut(binding);
+  Future<void> setGlobalShortcut(
+    GlobalShortcutBinding binding, {
+    bool Function()? isCurrent,
+  }) async {
+    await _global!.setShortcut(binding, isCurrent: isCurrent);
     _refreshGlobalState();
   }
 

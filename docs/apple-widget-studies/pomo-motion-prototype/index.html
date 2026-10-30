@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pomodoist — two seconds of life</title>
+  <style>
+    :root { color-scheme: light; --page: #f6f5f1; --surface: #fff; --ink: #20201e; --muted: #777771; --line: #e4e3dd; --accent: #d83b2e; --soft: #fceeea; --track: #ededeb; --shadow: #25241913; }
+    :root[data-theme="dark"] { color-scheme: dark; --page: #171817; --surface: #252725; --ink: #f5f4ee; --muted: #aaaca4; --line: #3b3e38; --accent: #ff7867; --soft: #46302b; --track: #3d403b; --shadow: #0004; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    .shell { width: min(1280px, calc(100% - 72px)); margin: auto; }
+    header { border-bottom: 1px solid var(--line); }
+    .header-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { font-weight: 650; letter-spacing: -.5px; font-size: 17px; }
+    .brand span { color: var(--accent); font-size: 24px; vertical-align: -1px; margin-right: 6px; }
+    .header-note { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); margin-left: 20px; font-weight: 500; }
+    .theme { background: none; border: 1px solid var(--line); border-radius: 30px; min-height: 44px; padding: 0 17px; font-size: 12px; }
+    .hero { padding: 57px 0 35px; display: flex; justify-content: space-between; align-items: end; gap: 35px; }
+    .eyebrow { margin: 0 0 16px; font-size: 10px; letter-spacing: 1.7px; color: var(--accent); font-weight: 650; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(35px, 4vw, 56px); line-height: 1.07; font-weight: 450; letter-spacing: -2.5px; }
+    h1 em { font-family: Georgia, serif; font-weight: 400; }
+    .intro { max-width: 340px; color: var(--muted); font-size: 13px; line-height: 1.8; margin: 0 0 2px; }
+    .toolbar { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 0; display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+    .play { border: 0; background: var(--ink); color: var(--page); border-radius: 8px; padding: 0 18px; min-height: 44px; font-size: 12px; font-weight: 550; }
+    .reduce { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 12px; color: var(--muted); cursor: pointer; }
+    input { accent-color: var(--accent); width: 17px; height: 17px; }
+    #announcement { margin-left: auto; font-size: 11px; color: var(--muted); min-height: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 28px; padding: 35px 0 46px; }
+    article { min-width: 0; }
+    .card-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; gap: 10px; }
+    h2 { margin: 0; font-size: 15px; font-weight: 550; letter-spacing: -.3px; }
+    .index { font-family: ui-monospace, Menlo, monospace; color: var(--accent); font-size: 10px; margin-right: 8px; }
+    .state-tag { color: var(--muted); font-size: 10px; }
+    .widget { container-type: inline-size; width: 100%; aspect-ratio: 338 / 354; border-radius: 28px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 10px 24px -10px var(--shadow); position: relative; overflow: hidden; padding: 22px; }
+    .widget-content { position: relative; z-index: 2; pointer-events: none; }
+    .metric { font-size: 18cqw; font-weight: 700; letter-spacing: -1.2cqw; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .mono { font-variant-numeric: tabular-nums; }
+    .muted { color: var(--muted); }
+    .small { font-size: 3.8cqw; line-height: 1.4; }
+    .focus-top { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; align-items: center; }
+    .focus-top .metric { font-size: 17cqw; }
+    .focus-meta { border-left: 1px solid var(--line); padding-left: 12px; font-size: 4.1cqw; line-height: 1.5; }
+    .focus-meta strong { display: block; font-size: 4.5cqw; line-height: 1.15; margin-bottom: 8px; }
+    .widget-footer { position: absolute; left: 22px; right: 22px; bottom: 23px; z-index: 2; }
+    .bar { margin-top: 10px; height: 5px; background: var(--track); border-radius: 6px; overflow: hidden; }
+    .bar > span { display: block; width: 74.8%; height: 100%; background: var(--accent); border-radius: inherit; }
+    .task-heading { display: flex; gap: 11px; align-items: start; font-size: 7cqw; font-weight: 650; letter-spacing: -.5px; line-height: 1.15; }
+    .check { flex: 0 0 22px; width: 22px; height: 22px; border: 1.5px solid var(--accent); border-radius: 50%; margin-top: 3px; }
+    .next { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 13px; }
+    .next-label { font-size: 3cqw; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+    .task-row { padding: 9px 0; font-size: 4.5cqw; border-bottom: 1px solid var(--line); }
+    .habits-top { display: grid; grid-template-columns: .85fr 1.25fr; gap: 16px; }
+    .habits-metric { border-right: 1px solid var(--line); }
+    .habits-metric .metric { font-size: 18cqw; white-space: nowrap; }
+    .habit-list { padding-top: 1px; }
+    .habit-row { display: flex; align-items: center; gap: 7px; font-size: 4.2cqw; padding: 7px 0; border-bottom: 1px solid var(--line); }
+    .habit-row:last-child { border-bottom: 0; }
+    .habit-row > small { margin-left: auto; color: var(--muted); font-size: 3.5cqw; }
+    .habit-check { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--muted); flex-shrink: 0; display: grid; place-items: center; font-size: 11px; }
+    .habit-check.done { color: white; background: var(--accent); border-color: var(--accent); }
+    .agenda-title { font-size: 6.5cqw; font-weight: 650; letter-spacing: -.6px; margin: 0 0 17px; }
+    .agenda-row { display: grid; grid-template-columns: 48px 2px 1fr; gap: 12px; align-items: center; margin-bottom: 12px; font-size: 4.3cqw; min-height: 26px; }
+    .agenda-row time { font-size: 3.8cqw; color: var(--muted); }
+    .agenda-row i { align-self: stretch; border-radius: 2px; background: var(--accent); }
+    .agenda-row.completed { color: var(--muted); }
+    .agenda-row.completed i { background: var(--track); }
+    .progress-label { font-size: 3.4cqw; color: var(--muted); margin-top: 7px; }
+    .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; height: 95px; margin-top: 17px; }
+    .chart-col { display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 6px; font-size: 3cqw; color: var(--muted); }
+    .chart-col i { width: 100%; height: var(--height); min-height: 3px; background: var(--accent); border-radius: 3px; }
+    .chart-col i.zero { background: var(--track); }
+    .progress-total { font-size: 3.8cqw; color: var(--muted); margin-top: 15px; }
+    .pomo { position: absolute; z-index: 1; width: 45%; aspect-ratio: 1; right: 10px; bottom: 34px; transform-origin: 50% 88%; }
+    .pomo::after { content: ""; position: absolute; bottom: 6%; left: 24%; width: 54%; height: 5%; border-radius: 50%; background: #00000012; filter: blur(4px); z-index: -1; }
+    .pomo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    article:not([data-widget="focus"]) .pomo { bottom: 7px; }
+    [data-widget="habits"] .pomo { right: 22%; }
+    .demo-controls { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 15px; }
+    .demo-controls button { min-height: 44px; border: 1px solid var(--line); background: none; border-radius: 8px; font-size: 11px; padding: 0 11px; }
+    .demo-controls button:hover { background: var(--surface); border-color: var(--muted); }
+    .demo-controls .primary { color: var(--accent); border-color: var(--accent); }
+    .caption { font-size: 11px; line-height: 1.7; color: var(--muted); margin: 11px 0 0; }
+    .runtime { display: flex; gap: 7px; align-items: center; margin-top: 10px; font-size: 10px; color: var(--muted); height: 17px; }
+    .runtime i { width: 5px; height: 5px; border-radius: 50%; background: var(--line); }
+    article[data-playing="true"] .runtime { color: var(--accent); }
+    article[data-playing="true"] .runtime i { background: var(--accent); }
+    .details { border-top: 1px solid var(--line); padding: 27px 0 38px; display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+    .details h2 { margin-bottom: 12px; }
+    .details p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.8; max-width: 510px; }
+    @media (max-width: 1080px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .header-note { display: none; } }
+    @media (max-width: 680px) {
+      .shell { width: calc(100% - 36px); }
+      .hero { display: block; padding-top: 37px; }
+      .intro { margin-top: 22px; }
+      .grid { grid-template-columns: 1fr; gap: 32px; }
+      .widget { max-width: 390px; margin-inline: auto; }
+      #announcement { width: 100%; margin-left: 0; }
+      .details { grid-template-columns: 1fr; gap: 24px; }
+      h1 { letter-spacing: -1.5px; }
+    }
+    @media (max-width: 360px) { .widget { padding: 17px; } .habits-top { gap: 11px; } .focus-meta { padding-left: 8px; } .focus-top { gap: 8px; } }
+  </style>
+</head>
+<body>
+  <header><div class="shell header-inner"><div class="brand"><span aria-hidden="true">◔</span>pomodoist <span class="header-note">Motion study / large widgets</span></div><button id="theme" class="theme" type="button" aria-pressed="false" aria-label="Dark appearance">Light appearance</button></div></header>
+  <main class="shell">
+    <div class="hero"><div><p class="eyebrow">Quiet typography · interactive prototype</p><h1>Two seconds.<br>A little <em>more alive.</em></h1></div><p class="intro">Pomo reacts to a moment, then settles.<br>Try the controls below each widget to explore a brief movement and a new expression.</p></div>
+    <div class="toolbar"><button class="play" id="play-all" type="button">▶ Play all reactions</button><label class="reduce"><input id="reduce" type="checkbox"> Preview Reduce Motion</label><span id="announcement" role="status" aria-live="polite">Ready. Nothing loops or starts automatically.</span></div>
+    <div class="grid">
+      <article data-widget="focus" data-playing="false">
+        <div class="card-heading"><h2><span class="index">01</span>Focus</h2><span class="state-tag" id="focus-tag">Thinking</span></div>
+        <div class="widget">
+          <div class="widget-content focus-top"><div class="metric mono" id="focus-time">18:42</div><div class="focus-meta"><strong>Design review</strong><span class="muted" id="focus-state">Focus</span><br><span class="muted mono">2 / 4</span></div></div>
+          <div class="pomo"><img src="../../../apps/flutter/assets/pomo/focus-still.webp" alt="" width="384" height="384"></div>
+          <div class="widget-footer"><div class="small muted" id="focus-next">Next: Short break</div><div class="bar"><span id="focus-bar"></span></div></div>
+        </div>
+        <div class="demo-controls"><button type="button" class="primary" data-event="focus">Start focus</button><button type="button" data-event="break">Break</button><button type="button" data-event="pause">Pause</button></div>
+        <div class="runtime"><i></i><span>Still · waiting for an event</span></div><p class="caption">A small attentive tilt, a relaxed sway, or a quiet pause.</p>
+      </article>
+      <article data-widget="tasks" data-playing="false">
+        <div class="card-heading"><h2><span class="index">02</span>Tasks</h2><span class="state-tag" id="tasks-tag">Thinking</span></div>
+        <div class="widget"><div class="widget-content"><div class="task-heading"><span class="check" aria-hidden="true"></span><span id="task-title">Design review</span></div><div class="next"><div class="next-label">NEXT</div><div class="task-row" id="task-next">Send proposal</div><div class="task-row">Plan launch</div></div></div><div class="pomo"><img src="../../../apps/flutter/assets/pomo/focus-still.webp" alt="" width="384" height="384"></div></div>
+        <div class="demo-controls"><button type="button" class="primary" data-event="task">Complete task</button><button type="button" data-reset="tasks">Reset</button></div>
+        <div class="runtime"><i></i><span>Still · waiting for an event</span></div><p class="caption">One happy hop when a task is done. The next task takes its place.</p>
+      </article>
+      <article data-widget="habits" data-playing="false">
+        <div class="card-heading"><h2><span class="index">03</span>Habits</h2><span class="state-tag" id="habits-tag">Calm</span></div>
+        <div class="widget"><div class="widget-content habits-top"><div class="habits-metric"><div class="metric mono" id="habit-total">2 / 3</div><div class="small muted" style="margin-top:9px">Habits</div></div><div class="habit-list"><div class="habit-row"><span class="habit-check done" aria-hidden="true">✓</span>Read</div><div class="habit-row"><span class="habit-check done" aria-hidden="true">✓</span>Move</div><div class="habit-row"><span class="habit-check" id="water-check" aria-hidden="true"></span>Water<small class="mono" id="water-count">6/8</small></div></div></div><div class="pomo"><img src="../../../apps/flutter/assets/pomo/calm-still.webp" alt="" width="384" height="384"></div></div>
+        <div class="demo-controls"><button type="button" class="primary" data-event="habit">Finish Water</button><button type="button" data-reset="habits">Reset</button></div>
+        <div class="runtime"><i></i><span>Still · waiting for an event</span></div><p class="caption">A small celebration when the last daily habit is complete.</p>
+      </article>
+      <article data-widget="day" data-playing="false">
+        <div class="card-heading"><h2><span class="index">04</span>Day plan</h2><span class="state-tag" id="day-tag">Calm</span></div>
+        <div class="widget"><div class="widget-content"><div class="agenda-title">Thu, Oct 29</div><div class="agenda-row" id="first-event"><time>09:30</time><i></i><span>Design review</span></div><div class="agenda-row"><time>11:00</time><i></i><span>Send proposal</span></div><div class="agenda-row"><time>14:00</time><i></i><span>Plan launch</span></div></div><div class="pomo"><img src="../../../apps/flutter/assets/pomo/calm-still.webp" alt="" width="384" height="384"></div></div>
+        <div class="demo-controls"><button type="button" class="primary" data-event="day">Next event</button><button type="button" data-reset="day">Reset</button></div>
+        <div class="runtime"><i></i><span>Still · waiting for an event</span></div><p class="caption">Pomo becomes attentive as the day moves to the next event.</p>
+      </article>
+      <article data-widget="progress" data-playing="false">
+        <div class="card-heading"><h2><span class="index">05</span>Progress</h2><span class="state-tag" id="progress-tag">Calm</span></div>
+        <div class="widget"><div class="widget-content"><div class="metric mono">4h20m</div><div class="progress-label">Focus this week</div><div class="chart" role="img" aria-label="Weekly focus: Monday 2 hours, Tuesday 2 hours 20 minutes, remaining days zero"><div class="chart-col"><i style="--height:54px"></i><span>M</span></div><div class="chart-col"><i style="--height:63px"></i><span>T</span></div><div class="chart-col"><i class="zero" style="--height:3px"></i><span>W</span></div><div class="chart-col"><i class="zero" style="--height:3px"></i><span>T</span></div><div class="chart-col"><i class="zero" style="--height:3px"></i><span>F</span></div><div class="chart-col"><i class="zero" style="--height:3px"></i><span>S</span></div><div class="chart-col"><i class="zero" style="--height:3px"></i><span>S</span></div></div><div class="progress-total" id="progress-total">8 tasks today</div></div><div class="pomo"><img src="../../../apps/flutter/assets/pomo/calm-still.webp" alt="" width="384" height="384"></div></div>
+        <div class="demo-controls"><button type="button" class="primary" data-event="progress">Another task done</button><button type="button" data-reset="progress">Reset</button></div>
+        <div class="runtime"><i></i><span>Still · waiting for an event</span></div><p class="caption">A brief proud bounce, with the numbers staying easy to read.</p>
+      </article>
+    </div>
+    <div class="details"><div><h2>A motion sketch, not a native widget</h2><p>This prototype moves existing Pomo stills and switches expressions. It does not play skeletal 3D animation, animate facial features, or prove WidgetKit playback. The mock controls are outside the widgets and change sample data only. <a href="../pomo-large-2026-10-28/index.html">View the placement studies.</a></p></div><div><h2>One event. One finite reaction.</h2><p>Every motion lasts exactly two seconds and settles into a still pose. A new event cancels the previous reaction. Changing appearance never replays motion. System Reduce Motion and the preview checkbox stop movement immediately; the new expression and data still appear. WidgetKit timing and supported transitions require a separate native check.</p></div></div>
+  </main>
+  <script src="prototype.js"></script>
+</body>
+</html>

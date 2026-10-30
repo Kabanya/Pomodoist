@@ -388,5 +388,290 @@
   },
   "break_over_ready_to_focus": {
     "message": "Pausa encerrada. Pronto para focar?"
+  },
+  "protection_129": {
+    "message": "Contagem de 60 segundos"
+  },
+  "protection_130": {
+    "message": "Nuvem da conta"
+  },
+  "protection_131": {
+    "message": "Allow access to the desktop bridge."
+  },
+  "protection_132": {
+    "message": "Allow website access to enable protection."
+  },
+  "protection_133": {
+    "message": "Sempre permitir"
+  },
+  "protection_134": {
+    "message": "Sempre bloquear"
+  },
+  "protection_135": {
+    "message": "Bloquear em pausas longas"
+  },
+  "protection_136": {
+    "message": "Bloquear em pausas curtas"
+  },
+  "protection_137": {
+    "message": "Bloquear durante pausa"
+  },
+  "protection_138": {
+    "message": "Categorias bloqueadas"
+  },
+  "protection_139": {
+    "message": "Cancelar saída"
+  },
+  "protection_140": {
+    "message": "Categoria"
+  },
+  "protection_141": {
+    "message": "Confirmar imediatamente"
+  },
+  "protection_142": {
+    "message": "Desktop account or app environment does not match."
+  },
+  "protection_143": {
+    "message": "Desktop app unavailable. Local protection expires at the last confirmed deadline."
+  },
+  "protection_144": {
+    "message": "Porta do desktop"
+  },
+  "protection_145": {
+    "message": "Desktop response too large."
+  },
+  "protection_146": {
+    "message": "Proteção contra distrações"
+  },
+  "protection_147": {
+    "message": "Domínio"
+  },
+  "protection_148": {
+    "message": "Editar perfil"
+  },
+  "protection_149": {
+    "message": "Liberação de emergência neste navegador"
+  },
+  "protection_150": {
+    "message": "Ativar proteção de sites e descoberta de domínios"
+  },
+  "protection_151": {
+    "message": "Encerrar o Foco estrito agora?"
+  },
+  "protection_152": {
+    "message": "Enter a profile name."
+  },
+  "protection_153": {
+    "message": "Enter a valid desktop port."
+  },
+  "protection_154": {
+    "message": "Enter a valid domain."
+  },
+  "protection_155": {
+    "message": "Enter the desktop pairing code."
+  },
+  "protection_156": {
+    "message": "Focus belongs to another account."
+  },
+  "protection_157": {
+    "message": "O Foco é compartilhado com seu desktop. A proteção continua ao fechar este painel."
+  },
+  "protection_158": {
+    "message": "Origem do Foco"
+  },
+  "protection_159": {
+    "message": "Modo anônimo permitido"
+  },
+  "protection_160": {
+    "message": "Modo anônimo não ativado"
+  },
+  "protection_161": {
+    "message": "Invalid Focus command."
+  },
+  "protection_162": {
+    "message": "Invalid Focus deadline."
+  },
+  "protection_163": {
+    "message": "Invalid Focus response."
+  },
+  "protection_164": {
+    "message": "Invalid Focus server clock."
+  },
+  "protection_165": {
+    "message": "Invalid Focus session."
+  },
+  "protection_166": {
+    "message": "Invalid Focus source."
+  },
+  "protection_167": {
+    "message": "Invalid desktop protection lease."
+  },
+  "protection_168": {
+    "message": "Novo perfil"
+  },
+  "protection_169": {
+    "message": "Sem perfil de bloqueio"
+  },
+  "protection_170": {
+    "message": "Abra a proteção no desktop para obter um código de uso único. Use a mesma conta e ambiente."
+  },
+  "protection_171": {
+    "message": "Parear"
+  },
+  "protection_172": {
+    "message": "Parear desktop para Foco offline"
+  },
+  "protection_173": {
+    "message": "Pair the desktop app first."
+  },
+  "protection_174": {
+    "message": "Desktop pareado"
+  },
+  "protection_175": {
+    "message": "Código de pareamento"
+  },
+  "protection_176": {
+    "message": "Nome do perfil"
+  },
+  "protection_177": {
+    "message": "Exceção do perfil"
+  },
+  "protection_178": {
+    "message": "Perfis e domínios"
+  },
+  "protection_179": {
+    "message": "A proteção terminou. Volte à página quando quiser."
+  },
+  "protection_180": {
+    "message": "Perfil de proteção"
+  },
+  "protection_181": {
+    "message": "Liberar só neste navegador? O Foco compartilhado continuará."
+  },
+  "protection_182": {
+    "message": "Liberar a proteção estrita neste navegador agora?"
+  },
+  "protection_183": {
+    "message": "Retomar"
+  },
+  "protection_184": {
+    "message": "Voltar à tarefa"
+  },
+  "protection_185": {
+    "message": "Volte à sua tarefa."
+  },
+  "protection_186": {
+    "message": "Salvar domínio"
+  },
+  "protection_187": {
+    "message": "Salvar perfil"
+  },
+  "protection_188": {
+    "message": "Sign in or pair the desktop app."
+  },
+  "protection_189": {
+    "message": "Parar em todos os dispositivos"
+  },
+  "protection_190": {
+    "message": "Foco estrito"
+  },
+  "protection_191": {
+    "message": "Saída do modo estrito"
+  },
+  "protection_192": {
+    "message": "Contagem de saída do modo estrito ativa."
+  },
+  "protection_193": {
+    "message": "Strict exit countdown is active. Keep protection enabled until it finishes."
+  },
+  "protection_194": {
+    "message": "Hora de focar"
+  },
+  "protection_195": {
+    "message": "Too many website rules. Reduce profile assignments before enabling protection."
+  },
+  "protection_196": {
+    "message": "Domínios desconhecidos são permitidos. Só as classificações salvas são sincronizadas; a descoberta fica neste navegador."
+  },
+  "protection_197": {
+    "message": "Usar categoria"
+  },
+  "protection_198": {
+    "message": "Acesso a sites permitido · proteção inativa"
+  },
+  "protection_199": {
+    "message": "Permissão de sites necessária"
+  },
+  "protection_200": {
+    "message": "Proteção de sites ativa"
+  },
+  "protection_201": {
+    "message": "Sua página foi preservada. A mídia continua pausada."
+  },
+  "protection_202": {
+    "message": "Desenvolvimento"
+  },
+  "protection_203": {
+    "message": "Educação"
+  },
+  "protection_204": {
+    "message": "Jogos"
+  },
+  "protection_205": {
+    "message": "Mensagens"
+  },
+  "protection_206": {
+    "message": "Música"
+  },
+  "protection_207": {
+    "message": "Notícias"
+  },
+  "protection_208": {
+    "message": "Outros"
+  },
+  "protection_209": {
+    "message": "Produtividade"
+  },
+  "protection_210": {
+    "message": "Compras"
+  },
+  "protection_211": {
+    "message": "Redes sociais"
+  },
+  "protection_212": {
+    "message": "Sem classificação"
+  },
+  "protection_213": {
+    "message": "Vídeo"
+  },
+  "protection_214": {
+    "message": "Uso de IA indisponível."
+  },
+  "protection_215": {
+    "message": "Categorias automáticas exigem Pro."
+  },
+  "protection_216": {
+    "message": "Classificação automática indisponível. Escolha uma categoria manualmente."
+  },
+  "protection_217": {
+    "message": "Categorizar novos domínios automaticamente (Pro)"
+  },
+  "protection_218": {
+    "message": "Escolha um perfil para a regra de domínio."
+  },
+  "protection_219": {
+    "message": "Invalid AI quota response."
+  },
+  "protection_220": {
+    "message": "Atualizar uso de IA"
+  },
+  "protection_221": {
+    "message": "Análise de tarefas e novas categorias automáticas compartilham o limite mensal de IA. Categorias em cache e correções manuais são grátis."
+  },
+  "protection_222": {
+    "message": "{used} de {limit} solicitações de IA usadas · renova em {date}"
+  },
+  "website_protection_unavailable": {
+    "message": "A proteção de sites está indisponível. Atualize ou recarregue o Pomodoist em chrome://extensions."
   }
 }

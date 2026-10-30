@@ -1,0 +1,1 @@
+enum StatusItemStyle { classic, modern }

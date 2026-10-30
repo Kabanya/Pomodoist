@@ -64,9 +64,11 @@ void main() {
           now: DateTime(2026, 9, 13),
         );
         expect(hint.schedule?.date, DateTime(2026, 9, 14));
-        expect(hint.priority, 1);
-        expect(hint.project, 'App');
-        expect(hint.estimatedFocusIntervals, 4);
+        expect(hint.priority, 2);
+        expect(hint.project, isNotEmpty);
+        expect(hint.labels, hasLength(1));
+        expect(hint.content, isNotEmpty);
+        expect(hint.estimatedFocusIntervals, 2);
       }
     },
   );

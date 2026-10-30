@@ -230,10 +230,8 @@ schema readers and migration-only adapters are not architecture requirements.
 
 ### Implemented ownership boundaries
 
-- `QuickAddHintRepository` owns saved hints, refresh thresholds, entitlement-aware
-  scheduling and retry state. Services only perform source I/O and serialization;
-  providers observe repository snapshots. Composition forwards committed manual
-  task-creation events to the hint repository and disposes its subscriptions.
+- Quick Add hints are permanent localized syntax examples, with no task-history
+  access, generation, saved suggestion state or task-creation bookkeeping.
   `QuickAddUseCase` resolves the selected/default focus preset through
   `FocusRepository`; composition does not query or map preset database rows.
 - `BillingRepository` / `AppBillingRepository` is the shared owner of catalog,

@@ -682,7 +682,7 @@ abstract class AppLocalizations {
   /// No description provided for @oauthConsentManagePlanning.
   ///
   /// In en, this message translates to:
-  /// **'Read and manage tasks, habits, projects, user labels, and Kanban.'**
+  /// **'Read and manage tasks, habits, projects, user labels, and Kanban. Read and change shortcuts and appearance on a selected online device.'**
   String get oauthConsentManagePlanning;
 
   /// No description provided for @oauthConsentReadInsights.
@@ -2260,7 +2260,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddHint.
   ///
   /// In en, this message translates to:
-  /// **'Write sync engine tomorrow p1 #App @coding 4p'**
+  /// **'Task name tomorrow p2 #Project @label 2p'**
   String get quickAddHint;
 
   /// No description provided for @couldNotAddTask.
@@ -7910,6 +7910,726 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Local data recovery is incomplete. The archive has been preserved. Try restarting synchronization again.'**
   String get settingsSyncRecoveryFailed;
+
+  /// No description provided for @aiQuotaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI usage'**
+  String get aiQuotaTitle;
+
+  /// No description provided for @aiQuotaUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the AI limit.'**
+  String get aiQuotaUnavailable;
+
+  /// No description provided for @aiQuotaUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit} requests used · {remaining} remaining'**
+  String aiQuotaUsage(int used, int limit, int remaining);
+
+  /// No description provided for @aiQuotaReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {date}'**
+  String aiQuotaReset(String date);
+
+  /// No description provided for @aiQuotaExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Task analysis and new automatic categories share this monthly limit. Cached categories and manual corrections are free.'**
+  String get aiQuotaExplanation;
+
+  /// No description provided for @distractionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Distraction blocking'**
+  String get distractionTitle;
+
+  /// No description provided for @distractionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what to block during Focus. Unknown resources stay allowed until you assign a category.'**
+  String get distractionDescription;
+
+  /// No description provided for @distractionProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection profile'**
+  String get distractionProfile;
+
+  /// No description provided for @distractionBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile selection applies to the next Focus. Categories and exceptions can be corrected at any time.'**
+  String get distractionBeforeStart;
+
+  /// No description provided for @distractionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocking profile'**
+  String get distractionNone;
+
+  /// No description provided for @distractionAddProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add profile'**
+  String get distractionAddProfile;
+
+  /// No description provided for @distractionEditProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get distractionEditProfile;
+
+  /// No description provided for @distractionProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile name'**
+  String get distractionProfileName;
+
+  /// No description provided for @distractionStrictExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Strict Focus exit'**
+  String get distractionStrictExit;
+
+  /// No description provided for @distractionStrictDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Used when the selected Focus preset has strict mode enabled.'**
+  String get distractionStrictDescription;
+
+  /// No description provided for @distractionWait60.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait 60 seconds'**
+  String get distractionWait60;
+
+  /// No description provided for @distractionConfirmImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm immediately'**
+  String get distractionConfirmImmediately;
+
+  /// No description provided for @distractionDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover used apps'**
+  String get distractionDiscovery;
+
+  /// No description provided for @distractionDiscoveryPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Only foreground app identities and product names are stored locally. No disk scan, document names or window titles.'**
+  String get distractionDiscoveryPrivacy;
+
+  /// No description provided for @distractionAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Save distraction attempts'**
+  String get distractionAttempts;
+
+  /// No description provided for @distractionAttemptsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.'**
+  String get distractionAttemptsPrivacy;
+
+  /// No description provided for @distractionAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic categories'**
+  String get distractionAutomatic;
+
+  /// No description provided for @distractionAutomaticDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Search determines the category. Manual choices take priority.'**
+  String get distractionAutomaticDescription;
+
+  /// No description provided for @distractionLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Focus · this computer'**
+  String get distractionLocal;
+
+  /// No description provided for @distractionShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Focus · connected'**
+  String get distractionShared;
+
+  /// No description provided for @distractionOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · protection ends at the confirmed deadline'**
+  String get distractionOffline;
+
+  /// No description provided for @distractionNativeApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Application protection applied'**
+  String get distractionNativeApplied;
+
+  /// No description provided for @distractionNativeReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Application protection available'**
+  String get distractionNativeReady;
+
+  /// No description provided for @distractionNativeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Application protection unavailable'**
+  String get distractionNativeUnavailable;
+
+  /// No description provided for @distractionChrome.
+  ///
+  /// In en, this message translates to:
+  /// **'Chrome extension'**
+  String get distractionChrome;
+
+  /// No description provided for @distractionPairDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable protection in Chrome and pair this desktop using a one-time code. The code expires after two minutes.'**
+  String get distractionPairDescription;
+
+  /// No description provided for @distractionPair.
+  ///
+  /// In en, this message translates to:
+  /// **'Show pairing code'**
+  String get distractionPair;
+
+  /// No description provided for @distractionPairCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {code} · port {port}'**
+  String distractionPairCode(String code, int port);
+
+  /// No description provided for @distractionConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'A shared Focus is already running on another device. Choose which session to continue.'**
+  String get distractionConflict;
+
+  /// No description provided for @distractionJoinShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Join shared Focus'**
+  String get distractionJoinShared;
+
+  /// No description provided for @distractionFinishLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish local Focus'**
+  String get distractionFinishLocal;
+
+  /// No description provided for @distractionStopEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'End Focus on all devices'**
+  String get distractionStopEverywhere;
+
+  /// No description provided for @distractionResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources and exceptions'**
+  String get distractionResources;
+
+  /// No description provided for @distractionAddSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add site'**
+  String get distractionAddSite;
+
+  /// No description provided for @distractionNoResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable app discovery or add a site. Chrome discovers domains only after you grant permission.'**
+  String get distractionNoResources;
+
+  /// No description provided for @distractionCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get distractionCategory;
+
+  /// No description provided for @distractionException.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile exception'**
+  String get distractionException;
+
+  /// No description provided for @distractionUseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Use category'**
+  String get distractionUseCategory;
+
+  /// No description provided for @distractionAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Always allow'**
+  String get distractionAllow;
+
+  /// No description provided for @distractionBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Always block'**
+  String get distractionBlock;
+
+  /// No description provided for @distractionClassify.
+  ///
+  /// In en, this message translates to:
+  /// **'Find category · Pro'**
+  String get distractionClassify;
+
+  /// No description provided for @distractionAutomaticSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic category · manual corrections take priority'**
+  String get distractionAutomaticSource;
+
+  /// No description provided for @distractionDetached.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection disabled here'**
+  String get distractionDetached;
+
+  /// No description provided for @distractionLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last confirmation: {date}'**
+  String distractionLastSeen(String date);
+
+  /// No description provided for @distractionInvalidDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a public domain, such as youtube.com.'**
+  String get distractionInvalidDomain;
+
+  /// No description provided for @distractionOnPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Block during pauses'**
+  String get distractionOnPause;
+
+  /// No description provided for @distractionOnShortBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Block during short breaks'**
+  String get distractionOnShortBreak;
+
+  /// No description provided for @distractionOnLongBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Block during long breaks'**
+  String get distractionOnLongBreak;
+
+  /// No description provided for @distractionExitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End strict Focus?'**
+  String get distractionExitTitle;
+
+  /// No description provided for @distractionExitCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit available in {seconds} seconds. You can cancel and return to Focus.'**
+  String distractionExitCountdown(int seconds);
+
+  /// No description provided for @distractionExitConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The interval will be interrupted without a completion reward.'**
+  String get distractionExitConfirm;
+
+  /// No description provided for @distractionExitConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm exit'**
+  String get distractionExitConfirmButton;
+
+  /// No description provided for @distractionExitCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep focusing'**
+  String get distractionExitCancel;
+
+  /// No description provided for @distractionSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Social media'**
+  String get distractionSocial;
+
+  /// No description provided for @distractionMessaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging'**
+  String get distractionMessaging;
+
+  /// No description provided for @distractionVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get distractionVideo;
+
+  /// No description provided for @distractionMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Music'**
+  String get distractionMusic;
+
+  /// No description provided for @distractionGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get distractionGames;
+
+  /// No description provided for @distractionNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get distractionNews;
+
+  /// No description provided for @distractionShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get distractionShopping;
+
+  /// No description provided for @distractionEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Education'**
+  String get distractionEducation;
+
+  /// No description provided for @distractionDevelopment.
+  ///
+  /// In en, this message translates to:
+  /// **'Development'**
+  String get distractionDevelopment;
+
+  /// No description provided for @distractionProductivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Work tools'**
+  String get distractionProductivity;
+
+  /// No description provided for @distractionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get distractionOther;
+
+  /// No description provided for @distractionUnclassified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclassified'**
+  String get distractionUnclassified;
+
+  /// No description provided for @distractionConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get distractionConnected;
+
+  /// No description provided for @distractionDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get distractionDisconnected;
+
+  /// No description provided for @distractionProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected · rules confirmed'**
+  String get distractionProtected;
+
+  /// No description provided for @distractionNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules not confirmed'**
+  String get distractionNotConfirmed;
+
+  /// No description provided for @distractionIncognito.
+  ///
+  /// In en, this message translates to:
+  /// **'Incognito access: {status}'**
+  String distractionIncognito(String status);
+
+  /// No description provided for @blockingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking'**
+  String get blockingTitle;
+
+  /// No description provided for @blockingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your work rhythm and its boundaries, together.'**
+  String get blockingDescription;
+
+  /// No description provided for @blockingRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'{work} min focus · {short} min break · {long} min long break after {count} intervals'**
+  String blockingRhythm(int work, int short, int long, int count);
+
+  /// No description provided for @blockingSharedPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by: {presets}. Profile changes apply to all of them.'**
+  String blockingSharedPresets(String presets);
+
+  /// No description provided for @blockingProfileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The assigned profile is unavailable. Reload or choose another profile.'**
+  String get blockingProfileMissing;
+
+  /// No description provided for @blockingWhatToClose.
+  ///
+  /// In en, this message translates to:
+  /// **'What to close'**
+  String get blockingWhatToClose;
+
+  /// No description provided for @blockingWhatToKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'What to keep available'**
+  String get blockingWhatToKeep;
+
+  /// No description provided for @blockingBehavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile behavior'**
+  String get blockingBehavior;
+
+  /// No description provided for @blockingApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get blockingApps;
+
+  /// No description provided for @blockingEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get blockingEnabled;
+
+  /// No description provided for @blockingDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get blockingDisabled;
+
+  /// No description provided for @blockingDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer and Chrome'**
+  String get blockingDevices;
+
+  /// No description provided for @blockingDeviceDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices and privacy'**
+  String get blockingDeviceDetails;
+
+  /// No description provided for @blockingSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get blockingSaving;
+
+  /// No description provided for @blockingCurrentFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to current Focus'**
+  String get blockingCurrentFocus;
+
+  /// No description provided for @blockingReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to focus'**
+  String get blockingReady;
+
+  /// No description provided for @shortcutHintsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard hints'**
+  String get shortcutHintsTitle;
+
+  /// No description provided for @shortcutHintsNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get shortcutHintsNavigation;
+
+  /// No description provided for @shortcutHintsHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'{key} held · Release to hide'**
+  String shortcutHintsHeld(String key);
+
+  /// No description provided for @shortcutHintsRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Release {key} first to use these keys'**
+  String shortcutHintsRelease(String key);
+
+  /// No description provided for @shortcutHintsSwitchFocusView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Focus view'**
+  String get shortcutHintsSwitchFocusView;
+
+  /// No description provided for @shortcutHintsNavigate.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get shortcutHintsNavigate;
+
+  /// No description provided for @shortcutHintsAcceptSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept suggestion'**
+  String get shortcutHintsAcceptSuggestion;
+
+  /// No description provided for @blockingShowAllPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get blockingShowAllPresets;
+
+  /// No description provided for @blockingCollapsePresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get blockingCollapsePresets;
+
+  /// No description provided for @taskNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get taskNew;
+
+  /// No description provided for @taskCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create task'**
+  String get taskCreateAction;
+
+  /// No description provided for @taskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get taskDescription;
+
+  /// No description provided for @taskExpandEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand editor'**
+  String get taskExpandEditor;
+
+  /// No description provided for @taskCollapseEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse editor'**
+  String get taskCollapseEditor;
+
+  /// No description provided for @taskVisibleToYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible only to you'**
+  String get taskVisibleToYou;
+
+  /// No description provided for @taskVisibleToTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to team members'**
+  String get taskVisibleToTeam;
+
+  /// No description provided for @taskCreatedFilesPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Task created. Retry uploading the remaining files, or remove them to finish.'**
+  String get taskCreatedFilesPending;
+
+  /// No description provided for @taskFormatBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold (Markdown)'**
+  String get taskFormatBold;
+
+  /// No description provided for @taskFormatItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic (Markdown)'**
+  String get taskFormatItalic;
+
+  /// No description provided for @taskFormatList.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulleted list'**
+  String get taskFormatList;
+
+  /// No description provided for @taskFormatLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link (Markdown)'**
+  String get taskFormatLink;
+
+  /// No description provided for @settingsShortcutsTogglePomo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable / disable Pomo'**
+  String get settingsShortcutsTogglePomo;
+
+  /// No description provided for @settingsMenuBarTimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu bar timer'**
+  String get settingsMenuBarTimerTitle;
+
+  /// No description provided for @settingsMenuBarTimerClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Old'**
+  String get settingsMenuBarTimerClassic;
+
+  /// No description provided for @settingsMenuBarTimerModern.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get settingsMenuBarTimerModern;
+
+  /// No description provided for @settingsMenuBarTimerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the menu bar timer. Please try again.'**
+  String get settingsMenuBarTimerError;
+
+  /// No description provided for @quickAddEnterEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter number'**
+  String get quickAddEnterEstimate;
+
+  /// No description provided for @quickAddEstimateTotalTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min focus'**
+  String quickAddEstimateTotalTime(String minutes);
+
+  /// No description provided for @quickAddEstimateInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min each'**
+  String quickAddEstimateInterval(String minutes);
 }
 
 class _AppLocalizationsDelegate

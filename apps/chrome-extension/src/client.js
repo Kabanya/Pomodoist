@@ -18,13 +18,13 @@ export class Client {
   constructor(config, store, fetcher = fetch.bind(globalThis)) {
     this.config = config; this.store = store; this.fetcher = fetcher; this.refreshing = null;
   }
-  async raw(path, body, token, auth = false, prefer) {
+  async raw(path, body, token, auth = false, prefer, timeout = 12000) {
     let response;
     try {
       response = await this.fetcher(`${this.config.apiUrl}${path}`, {
         method: 'POST', headers: { apikey: this.config.anonKey, 'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(prefer ? { Prefer: prefer } : {}) },
-        body: JSON.stringify(body), signal: AbortSignal.timeout(12000), redirect: 'error', credentials: 'omit', cache: 'no-store',
+        body: JSON.stringify(body), signal: AbortSignal.timeout(timeout), redirect: 'error', credentials: 'omit', cache: 'no-store',
       });
     } catch { throw new Error('Cannot reach the server. Check your connection and retry.'); }
     if (!response.ok) throw new ApiError(response.status, auth);
@@ -62,11 +62,11 @@ export class Client {
       throw error;
     }
   }
-  async authorized(path, body, prefer) {
-    try { return await this.raw(path, body, await this.token(), false, prefer); }
+  async authorized(path, body, prefer, timeout) {
+    try { return await this.raw(path, body, await this.token(), false, prefer, timeout); }
     catch (error) {
       if (error.status !== 401) throw error;
-      try { return await this.raw(path, body, await this.token(true), false, prefer); }
+      try { return await this.raw(path, body, await this.token(true), false, prefer, timeout); }
       catch (retryError) {
         if (retryError.status === 401) await this.store.save({ session: null });
         throw retryError;
@@ -74,9 +74,10 @@ export class Client {
     }
   }
   rpc(name, body = {}) {
-    if (!['push_changes', 'pull_changes', 'get_account_overview'].includes(name)) throw new Error('Unsupported API call.');
+    if (!['push_changes', 'pull_changes', 'get_account_overview', 'pomodoist_focus', 'get_usage_period'].includes(name)) throw new Error('Unsupported API call.');
     return this.authorized(`/rest/v1/rpc/${name}`, body);
   }
+  classifyResource(id) {return this.authorized('/functions/v1/pomodoist-ai',{apiVersion:1,command:{type:'resource.classify',resource:{kind:'domain',id}}},undefined,35000);}
   overview() { return this.rpc('get_account_overview'); }
   registerInstall() {
     return this.authorized('/rest/v1/user_app_installs?on_conflict=user_id,app_id,device_id', {

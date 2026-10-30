@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -83,15 +85,20 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                           container: true,
                           label: context.l10n.focusSwitchToFullView,
                           excludeSemantics: true,
-                          child: IconButton(
-                            tooltip: context.l10n.focusSwitchToFullView,
-                            constraints: const BoxConstraints.tightFor(
-                              width: 48,
-                              height: 48,
+                          child: ShortcutHintBadge(
+                            command: AppShortcutCommand.focus,
+                            outside: true,
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              tooltip: context.l10n.focusSwitchToFullView,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 48,
+                                height: 48,
+                              ),
+                              color: context.appColors.secondaryText,
+                              onPressed: () => _setViewMode(FocusViewMode.full),
+                              icon: const Icon(LucideIcons.maximize, size: 18),
                             ),
-                            color: context.appColors.secondaryText,
-                            onPressed: () => _setViewMode(FocusViewMode.full),
-                            icon: const Icon(LucideIcons.maximize, size: 18),
                           ),
                         ),
                     ],

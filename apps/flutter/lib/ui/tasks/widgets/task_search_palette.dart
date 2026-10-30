@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -112,7 +113,7 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
       try {
         if (id == 'pomo') {
           final pomo = ref.read(pomoControllerProvider);
-          await pomo.setEnabled(!pomo.prefs.enabled);
+          await pomo.toggleEnabled();
           if (pomo.error != null) throw pomo.error!;
         } else {
           await ref
@@ -219,135 +220,153 @@ class _TaskSearchPaletteState extends ConsumerState<_TaskSearchPalette> {
       ),
     );
 
-    return PopScope(
-      canPop: !_busy,
-      child: Dialog(
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 640,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * .8,
-            ),
-            child: Focus(
-              onKeyEvent: _onKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ShadInput(
-                      controller: _controller,
-                      focusNode: _inputFocus,
-                      autofocus: true,
-                      enabled: !_busy,
-                      placeholder: Text(l10n.commandSearchPlaceholder),
-                      leading: const Icon(LucideIcons.search, size: 18),
-                      onChanged: (_) => setState(() {
-                        _selected = null;
-                        _selectFirstOnBuild = true;
-                        _error = null;
-                      }),
-                    ),
-                  ),
-                  if (_busy || palette.loading) const LinearProgressIndicator(),
-                  Flexible(
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: [
-                        if (palette.hasError)
-                          ListTile(
-                            title: Text(l10n.taskListLoadError),
-                            trailing: TextButton(
-                              onPressed: ref
-                                  .read(
-                                    taskSearchPaletteViewModelProvider.notifier,
-                                  )
-                                  .retry,
-                              child: Text(l10n.commonRetry),
-                            ),
-                          ),
-                        if (query.trim().isNotEmpty &&
-                            results.isEmpty &&
-                            !palette.loading)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(l10n.commandSearchNoMatches),
-                          ),
-                        if (results.any(
-                          (result) => result.id.startsWith('task:'),
-                        ))
-                          heading(l10n.commandSearchTasks),
-                        for (final result in results.where(
-                          (result) => result.id.startsWith('task:'),
-                        ))
-                          row(result.id, result.title, LucideIcons.circle),
-                        if (results.any(
-                          (result) => result.id.startsWith('project:'),
-                        ))
-                          heading(l10n.navProjects),
-                        for (final result in results.where(
-                          (result) => result.id.startsWith('project:'),
-                        ))
-                          row(result.id, result.title, LucideIcons.folder),
-                        heading(l10n.commandSearchActions),
-                        row(
-                          'create',
-                          query.trim().isEmpty
-                              ? l10n.addTask
-                              : l10n.searchCreateTask,
-                          LucideIcons.plus,
-                        ),
-                        row(
-                          'dictate',
-                          l10n.commandSearchDictateTask,
-                          LucideIcons.mic,
-                        ),
-                        row(
-                          'focus',
-                          palette.focusRunning
-                              ? l10n.openFocus
-                              : l10n.startFocus,
-                          LucideIcons.timer,
-                        ),
-                        row(
-                          'all',
-                          l10n.commandSearchAllResults,
-                          LucideIcons.search,
-                        ),
-                        if (pomo != null)
-                          row(
-                            'pomo',
-                            pomo.prefs.enabled
-                                ? l10n.commandSearchDisablePomo
-                                : l10n.commandSearchEnablePomo,
-                            LucideIcons.power,
-                          ),
-                        if (_error != null)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Semantics(
-                              liveRegion: true,
-                              child: Text(
-                                _error!,
-                                style: TextStyle(color: colors.error),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      l10n.commandSearchHint,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colors.secondaryText,
+    return ShortcutHintsScope(
+      modal: true,
+      identity: (
+        _busy,
+        _selected != null,
+        _controller.value.composing.isCollapsed,
+      ),
+      hints: [
+        if (!_busy && _controller.value.composing.isCollapsed) ...[
+          ShortcutHint(l10n.commonClose, 'Esc'),
+          ShortcutHint(l10n.shortcutHintsNavigate, '↑ ↓'),
+          if (_selected != null) ShortcutHint(l10n.commonOpen, 'Enter'),
+        ],
+      ],
+      child: PopScope(
+        canPop: !_busy,
+        child: Dialog(
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            width: 640,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * .8,
+              ),
+              child: Focus(
+                onKeyEvent: _onKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const ShortcutHintsBar(),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ShadInput(
+                        controller: _controller,
+                        focusNode: _inputFocus,
+                        autofocus: true,
+                        enabled: !_busy,
+                        placeholder: Text(l10n.commandSearchPlaceholder),
+                        leading: const Icon(LucideIcons.search, size: 18),
+                        onChanged: (_) => setState(() {
+                          _selected = null;
+                          _selectFirstOnBuild = true;
+                          _error = null;
+                        }),
                       ),
                     ),
-                  ),
-                ],
+                    if (_busy || palette.loading)
+                      const LinearProgressIndicator(),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          if (palette.hasError)
+                            ListTile(
+                              title: Text(l10n.taskListLoadError),
+                              trailing: TextButton(
+                                onPressed: ref
+                                    .read(
+                                      taskSearchPaletteViewModelProvider
+                                          .notifier,
+                                    )
+                                    .retry,
+                                child: Text(l10n.commonRetry),
+                              ),
+                            ),
+                          if (query.trim().isNotEmpty &&
+                              results.isEmpty &&
+                              !palette.loading)
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(l10n.commandSearchNoMatches),
+                            ),
+                          if (results.any(
+                            (result) => result.id.startsWith('task:'),
+                          ))
+                            heading(l10n.commandSearchTasks),
+                          for (final result in results.where(
+                            (result) => result.id.startsWith('task:'),
+                          ))
+                            row(result.id, result.title, LucideIcons.circle),
+                          if (results.any(
+                            (result) => result.id.startsWith('project:'),
+                          ))
+                            heading(l10n.navProjects),
+                          for (final result in results.where(
+                            (result) => result.id.startsWith('project:'),
+                          ))
+                            row(result.id, result.title, LucideIcons.folder),
+                          heading(l10n.commandSearchActions),
+                          row(
+                            'create',
+                            query.trim().isEmpty
+                                ? l10n.addTask
+                                : l10n.searchCreateTask,
+                            LucideIcons.plus,
+                          ),
+                          row(
+                            'dictate',
+                            l10n.commandSearchDictateTask,
+                            LucideIcons.mic,
+                          ),
+                          row(
+                            'focus',
+                            palette.focusRunning
+                                ? l10n.openFocus
+                                : l10n.startFocus,
+                            LucideIcons.timer,
+                          ),
+                          row(
+                            'all',
+                            l10n.commandSearchAllResults,
+                            LucideIcons.search,
+                          ),
+                          if (pomo != null)
+                            row(
+                              'pomo',
+                              pomo.prefs.enabled
+                                  ? l10n.commandSearchDisablePomo
+                                  : l10n.commandSearchEnablePomo,
+                              LucideIcons.power,
+                            ),
+                          if (_error != null)
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  _error!,
+                                  style: TextStyle(color: colors.error),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        l10n.commandSearchHint,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: colors.secondaryText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

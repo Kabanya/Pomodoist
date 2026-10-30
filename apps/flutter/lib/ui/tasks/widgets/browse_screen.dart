@@ -84,99 +84,166 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  _SectionHeading(
-                    title: l10n.productivityTitle,
-                    action: Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: context.appColors.surface,
+                      border: Border.all(color: context.appColors.border),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        IntrinsicWidth(
-                          child: ShadTabs<BrowsePeriod>(
-                            value: period,
-                            onChanged: (value) => ref
-                                .read(
-                                  browseViewModelProvider(_identity).notifier,
-                                )
-                                .setPeriod(value),
-                            tabs: [
-                              ShadTab(
-                                value: BrowsePeriod.today,
-                                child: Text(l10n.today),
+                        LayoutBuilder(
+                          builder: (context, constraints) => Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 16,
+                            runSpacing: 8,
+                            children: [
+                              Wrap(
+                                spacing: 16,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: constraints.maxWidth,
+                                    ),
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: IntrinsicWidth(
+                                        child: ShadTabs<BrowsePeriod>(
+                                          value: period,
+                                          onChanged: (value) => ref
+                                              .read(
+                                                browseViewModelProvider(
+                                                  _identity,
+                                                ).notifier,
+                                              )
+                                              .setPeriod(value),
+                                          tabs: [
+                                            ShadTab(
+                                              value: BrowsePeriod.today,
+                                              child: Text(l10n.today),
+                                            ),
+                                            ShadTab(
+                                              value: BrowsePeriod.sevenDays,
+                                              child: Text(l10n.browseSevenDays),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    MaterialLocalizations.of(
+                                      context,
+                                    ).formatFullDate(viewState.today),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color:
+                                              context.appColors.secondaryText,
+                                        ),
+                                  ),
+                                ],
                               ),
-                              ShadTab(
-                                value: BrowsePeriod.sevenDays,
-                                child: Text(l10n.browseSevenDays),
+                              ShadButton.ghost(
+                                onPressed: () => context.go('/reports'),
+                                leading: const Icon(
+                                  LucideIcons.chartNoAxesColumn,
+                                  size: 16,
+                                ),
+                                trailing: const Icon(
+                                  LucideIcons.arrowRight,
+                                  size: 16,
+                                ),
+                                child: Text(l10n.reportsTitle),
                               ),
                             ],
                           ),
                         ),
-                        ShadButton.ghost(
-                          onPressed: () => context.go('/reports'),
-                          trailing: const Icon(
-                            LucideIcons.arrowRight,
-                            size: 16,
+                        _LoadStatus(
+                          value: summary,
+                          keyPrefix: 'browse-productivity',
+                          errorText: l10n.failedToLoadReports,
+                          onRetry: () => ref
+                              .read(browseViewModelProvider(_identity).notifier)
+                              .retry(),
+                        ),
+                        const SizedBox(height: 20),
+                        AnimatedSwitcher(
+                          duration: AppMotion.duration(
+                            context,
+                            AppMotion.state,
                           ),
-                          child: Text(l10n.reportsTitle),
+                          switchInCurve: AppMotion.curve,
+                          switchOutCurve: AppMotion.curve,
+                          child: LayoutBuilder(
+                            key: ValueKey(period),
+                            builder: (context, constraints) {
+                              final scale =
+                                  MediaQuery.textScalerOf(context).scale(14) /
+                                  14;
+                              final columns = math.min(
+                                constraints.maxWidth >= 640 ? 4 : 2,
+                                math.max(
+                                  1,
+                                  (constraints.maxWidth / (140 * scale))
+                                      .floor(),
+                                ),
+                              );
+                              final width =
+                                  (constraints.maxWidth - (columns - 1) * 16) /
+                                  columns;
+                              return Wrap(
+                                spacing: 16,
+                                runSpacing: 24,
+                                children: [
+                                  _Metric(
+                                    width: width,
+                                    icon: LucideIcons.circleCheck,
+                                    color: context.appColors.success,
+                                    label: l10n.completedTasks,
+                                    value:
+                                        item?.completedTasks.toString() ?? '—',
+                                  ),
+                                  _Metric(
+                                    width: width,
+                                    icon: LucideIcons.timer,
+                                    color: context.appColors.accent,
+                                    label: l10n.focusIntervals,
+                                    value:
+                                        item?.focusIntervals.toString() ?? '—',
+                                  ),
+                                  _Metric(
+                                    width: width,
+                                    icon: LucideIcons.target,
+                                    color: context.appColors.accent,
+                                    label: l10n.focusTime,
+                                    value: item == null
+                                        ? '—'
+                                        : formatFocusTime(
+                                            context,
+                                            item.focusSeconds,
+                                          ),
+                                  ),
+                                  _Metric(
+                                    width: width,
+                                    icon: LucideIcons.listTodo,
+                                    color: context.appColors.secondaryText,
+                                    label: l10n.browseOpenNow,
+                                    value: item?.openTasks.toString() ?? '—',
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  _LoadStatus(
-                    value: summary,
-                    keyPrefix: 'browse-productivity',
-                    errorText: l10n.failedToLoadReports,
-                    onRetry: () => ref
-                        .read(browseViewModelProvider(_identity).notifier)
-                        .retry(),
-                  ),
-                  const SizedBox(height: 20),
-                  AnimatedSwitcher(
-                    duration: AppMotion.duration(context, AppMotion.state),
-                    switchInCurve: AppMotion.curve,
-                    switchOutCurve: AppMotion.curve,
-                    child: LayoutBuilder(
-                      key: ValueKey(period),
-                      builder: (context, constraints) {
-                        final columns = constraints.maxWidth >= 640 ? 4 : 2;
-                        final width =
-                            (constraints.maxWidth - (columns - 1) * 16) /
-                            columns;
-                        return Wrap(
-                          spacing: 16,
-                          runSpacing: 20,
-                          children: [
-                            _Metric(
-                              width: width,
-                              label: l10n.completedTasks,
-                              value: item?.completedTasks.toString() ?? '—',
-                            ),
-                            _Metric(
-                              width: width,
-                              label: l10n.focusIntervals,
-                              value: item?.focusIntervals.toString() ?? '—',
-                            ),
-                            _Metric(
-                              width: width,
-                              label: l10n.focusTime,
-                              value: item == null
-                                  ? '—'
-                                  : formatFocusTime(context, item.focusSeconds),
-                            ),
-                            _Metric(
-                              width: width,
-                              label: l10n.browseOpenNow,
-                              value: item?.openTasks.toString() ?? '—',
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  const _OverdueSummary(),
                   const SizedBox(height: 28),
-                  const Divider(height: 1),
-                  const SizedBox(height: 24),
                   LayoutBuilder(
                     builder: (context, constraints) =>
                         constraints.maxWidth >= 960
@@ -185,7 +252,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                             children: [
                               Expanded(child: _BrowseProjects()),
                               SizedBox(width: 32),
-                              SizedBox(width: 280, child: _BrowseSecondary()),
+                              SizedBox(width: 320, child: _BrowseSecondary()),
                             ],
                           )
                         : const Column(
@@ -225,7 +292,7 @@ class _BrowseProjects extends ConsumerWidget {
       children: [
         _SectionHeading(
           title: l10n.navProjects,
-          action: ShadButton.ghost(
+          action: ShadButton(
             leading: const Icon(LucideIcons.plus, size: 16),
             onPressed: () => showCreateProjectDialog(context),
             child: Text(l10n.newProject),
@@ -250,25 +317,34 @@ class _BrowseProjects extends ConsumerWidget {
         for (final row in rows)
           Padding(
             padding: EdgeInsetsDirectional.only(
-              start: math.min(row.depth, 4) * 12.0,
+              start: math.min(row.depth, 4) * 20.0,
+              top: row.depth == 0 ? 8 : 0,
             ),
             child: ProjectContextMenu(
               key: ValueKey('browse-project-${row.project.id}'),
               project: row.project,
               showMenuButton: true,
               child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                color: row.depth == 0
+                    ? context.appColors.surface
+                    : Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: context.appColors.border),
+                ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
                   hoverColor: context.appColors.surfaceHover,
                   focusColor: context.appColors.accentTint,
                   hoverDuration: AppMotion.duration(context, AppMotion.hover),
                   onTap: () => context.go('/project/${row.project.id}'),
-                  child: SizedBox(
-                    height: 44,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                       child: Row(
                         children: [
                           ProjectIconView(project: row.project, size: 20),
@@ -276,11 +352,13 @@ class _BrowseProjects extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               row.project.displayName(context.l10n),
-                              maxLines: 1,
                               textAlign: TextAlign.start,
-                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
+                                  ?.copyWith(
+                                    fontWeight: row.depth == 0
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -327,8 +405,8 @@ class _BrowseSecondary extends ConsumerWidget {
           action: Tooltip(
             message: l10n.newLabel,
             child: ShadIconButton.ghost(
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               icon: const Icon(LucideIcons.plus, size: 18),
               onPressed: () => showCreateLabelDialog(context),
             ),
@@ -343,35 +421,82 @@ class _BrowseSecondary extends ConsumerWidget {
         const SizedBox(height: 8),
         if (labels.hasValue && items.isEmpty)
           Text(l10n.noLabels, style: Theme.of(context).textTheme.bodyMedium),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final label in items)
-              Material(
-                type: MaterialType.transparency,
-                child: ActionChip(
-                  avatar: LabelIconView(label: label, size: 14),
-                  label: Text(
-                    '@${label.name} (${labelTaskCounts[label.id] ?? 0})',
-                    overflow: TextOverflow.ellipsis,
+        if (items.isNotEmpty)
+          Material(
+            color: context.appColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: context.appColors.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var index = 0; index < items.length; index++) ...[
+                  if (index > 0) const Divider(height: 1),
+                  Semantics(
+                    button: true,
+                    child: InkWell(
+                      onTap: () => context.go('/label/${items[index].id}'),
+                      hoverColor: context.appColors.surfaceHover,
+                      focusColor: context.appColors.accentTint,
+                      hoverDuration: AppMotion.duration(
+                        context,
+                        AppMotion.hover,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            LabelIconView(label: items[index], size: 18),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(items[index].name)),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${labelTaskCounts[items[index].id] ?? 0}',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.merge(AppTheme.monoTextStyle)
+                                  .copyWith(
+                                    color: context.appColors.secondaryText,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () => context.go('/label/${label.id}'),
-                ),
-              ),
-          ],
-        ),
+                ],
+              ],
+            ),
+          ),
+        const _OverdueSummary(),
         const SizedBox(height: 24),
         const Divider(height: 1),
         const SizedBox(height: 16),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: ShadButton.ghost(
-            key: const Key('browse-completed-tasks'),
-            onPressed: () => context.go('/browse/completed'),
-            leading: const Icon(LucideIcons.circleCheck, size: 18),
-            trailing: const Icon(LucideIcons.arrowRight, size: 16),
-            child: Text(l10n.completedTasks),
+        Material(
+          color: context.appColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: context.appColors.border),
+          ),
+          child: Semantics(
+            button: true,
+            child: InkWell(
+              key: const Key('browse-completed-tasks'),
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => context.go('/browse/completed'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.circleCheck, size: 18),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(l10n.completedTasks)),
+                    const SizedBox(width: 8),
+                    const Icon(LucideIcons.arrowRight, size: 16),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -503,11 +628,15 @@ class _SectionHeading extends StatelessWidget {
 class _Metric extends StatelessWidget {
   const _Metric({
     required this.width,
+    required this.icon,
+    required this.color,
     required this.label,
     required this.value,
   });
 
   final double width;
+  final IconData icon;
+  final Color color;
   final String label;
   final String value;
 
@@ -517,20 +646,37 @@ class _Metric extends StatelessWidget {
     child: Semantics(
       label: '$label: $value',
       excludeSemantics: true,
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.merge(AppTheme.monoTextStyle),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.appColors.secondaryText,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.appColors.secondaryText,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  value,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.merge(AppTheme.monoTextStyle),
+                ),
+              ],
             ),
           ),
         ],
@@ -618,27 +764,76 @@ class _OverdueSummary extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Divider(height: 1),
+          const SizedBox(height: 20),
           _LoadStatus(
             value: tasks,
             errorText: context.l10n.failedToLoadTasks,
             onRetry: () => ref.read(overdueViewModelProvider.notifier).retry(),
           ),
           if (count > 0)
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 12,
-              runSpacing: 4,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(context.l10n.overdueTaskCount(count)),
-                ShadButton.ghost(
-                  onPressed: () => context.push('/browse/overdue'),
-                  trailing: const Icon(LucideIcons.arrowRight, size: 16),
-                  child: Text(context.l10n.overdueReview),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      LucideIcons.timer,
+                      size: 18,
+                      color: context.appColors.overdue,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        context.l10n.overdueTaskCount(count),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Material(
+                  color: context.appColors.overdue.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Semantics(
+                    button: true,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => context.push('/browse/overdue'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.listChecks,
+                              size: 18,
+                              color: context.appColors.overdue,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                context.l10n.overdueReview,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                      color: context.appColors.overdue,
+                                    ),
+                              ),
+                            ),
+                            Icon(
+                              LucideIcons.arrowRight,
+                              size: 16,
+                              color: context.appColors.overdue,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -331,118 +332,154 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
           ) +
           16,
     );
-    return Focus(
-      focusNode: _panelFocus,
-      autofocus: true,
-      onKeyEvent: _handleKey,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          _bounds = Rect.fromLTRB(
-            padding.left,
-            padding.top,
-            math.max(padding.left, constraints.maxWidth - padding.right),
-            math.max(padding.top, constraints.maxHeight - padding.bottom),
-          );
-          final panelWidth = math.min(640.0, _bounds.width);
-          final panelHeight = math.min(_panelHeight, _bounds.height);
-          final compactPosition = _clamp(
-            _dragPosition ??
-                Offset(
-                  _corner.x < 0 ? _bounds.left : _bounds.right - _capsule.width,
-                  _corner.y < 0
-                      ? _bounds.top
-                      : _bounds.bottom - _capsule.height,
-                ),
-          );
-          final target = widget.expanded
-              ? Rect.fromLTWH(
-                  _bounds.center.dx - panelWidth / 2,
-                  _bounds.bottom - panelHeight,
-                  panelWidth,
-                  panelHeight,
-                )
-              : compactPosition & _capsule;
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: !widget.expanded,
-                  child: AnimatedOpacity(
-                    opacity: widget.expanded ? 1 : 0,
-                    duration: duration,
-                    child: ModalBarrier(
-                      key: const Key('voice-panel-barrier'),
-                      color: Colors.black54,
-                      onDismiss: widget.onCollapse,
-                      semanticsLabel: context.l10n.voiceCollapse,
+    return ShortcutHintsScope(
+      modal: widget.expanded,
+      identity: widget.expanded,
+      hints: [
+        if (widget.expanded) ShortcutHint(context.l10n.voiceCollapse, 'Esc'),
+      ],
+      child: Focus(
+        focusNode: _panelFocus,
+        autofocus: true,
+        onKeyEvent: _handleKey,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            _bounds = Rect.fromLTRB(
+              padding.left,
+              padding.top,
+              math.max(padding.left, constraints.maxWidth - padding.right),
+              math.max(padding.top, constraints.maxHeight - padding.bottom),
+            );
+            final panelWidth = math.min(640.0, _bounds.width);
+            final panelHeight = math.min(_panelHeight, _bounds.height);
+            final compactPosition = _clamp(
+              _dragPosition ??
+                  Offset(
+                    _corner.x < 0
+                        ? _bounds.left
+                        : _bounds.right - _capsule.width,
+                    _corner.y < 0
+                        ? _bounds.top
+                        : _bounds.bottom - _capsule.height,
+                  ),
+            );
+            final target = widget.expanded
+                ? Rect.fromLTWH(
+                    _bounds.center.dx - panelWidth / 2,
+                    _bounds.bottom - panelHeight,
+                    panelWidth,
+                    panelHeight,
+                  )
+                : compactPosition & _capsule;
+            return Stack(
+              children: [
+                if (!widget.expanded)
+                  Positioned(
+                    width: math.min(360, _bounds.width),
+                    left: compactPosition.dx.clamp(
+                      _bounds.left,
+                      math.max(
+                        _bounds.left,
+                        _bounds.right - math.min(360, _bounds.width),
+                      ),
+                    ),
+                    top: compactPosition.dy <= _bounds.center.dy
+                        ? compactPosition.dy + _capsule.height + 8
+                        : null,
+                    bottom: compactPosition.dy > _bounds.center.dy
+                        ? constraints.maxHeight - compactPosition.dy + 8
+                        : null,
+                    child: const ShortcutHintsCompactHelp(),
+                  ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: !widget.expanded,
+                    child: AnimatedOpacity(
+                      opacity: widget.expanded ? 1 : 0,
+                      duration: duration,
+                      child: ModalBarrier(
+                        key: const Key('voice-panel-barrier'),
+                        color: Colors.black54,
+                        onDismiss: widget.onCollapse,
+                        semanticsLabel: context.l10n.voiceCollapse,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              TweenAnimationBuilder<Rect?>(
-                tween: RectTween(end: target),
-                duration: _dragPosition == null ? duration : Duration.zero,
-                curve: Curves.easeOutCubic,
-                builder: (context, animatedRect, _) {
-                  final width = math.min(animatedRect!.width, _bounds.width);
-                  final height = math.min(animatedRect.height, _bounds.height);
-                  final rect = Rect.fromLTWH(
-                    animatedRect.left.clamp(
-                      _bounds.left,
-                      _bounds.right - width,
-                    ),
-                    animatedRect.top.clamp(
-                      _bounds.top,
-                      _bounds.bottom - height,
-                    ),
-                    width,
-                    height,
-                  );
-                  _displayed = rect;
-                  return Positioned.fromRect(
-                    rect: rect,
-                    child: Material(
-                      color: colors.surface,
-                      elevation: 3,
-                      shadowColor: colors.shadow.withValues(alpha: .22),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: colors.outlineVariant),
+                TweenAnimationBuilder<Rect?>(
+                  tween: RectTween(end: target),
+                  duration: _dragPosition == null ? duration : Duration.zero,
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedRect, _) {
+                    final width = math.min(animatedRect!.width, _bounds.width);
+                    final height = math.min(
+                      animatedRect.height,
+                      _bounds.height,
+                    );
+                    final rect = Rect.fromLTWH(
+                      animatedRect.left.clamp(
+                        _bounds.left,
+                        _bounds.right - width,
                       ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Offstage(
-                            offstage: !widget.expanded && rect == target,
-                            child: IgnorePointer(
-                              ignoring: !widget.expanded,
-                              child: ExcludeFocus(
-                                excluding: !widget.expanded,
-                                child: ExcludeSemantics(
+                      animatedRect.top.clamp(
+                        _bounds.top,
+                        _bounds.bottom - height,
+                      ),
+                      width,
+                      height,
+                    );
+                    _displayed = rect;
+                    return Positioned.fromRect(
+                      rect: rect,
+                      child: Material(
+                        color: colors.surface,
+                        elevation: 3,
+                        shadowColor: colors.shadow.withValues(alpha: .22),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: colors.outlineVariant),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Offstage(
+                              offstage: !widget.expanded && rect == target,
+                              child: IgnorePointer(
+                                ignoring: !widget.expanded,
+                                child: ExcludeFocus(
                                   excluding: !widget.expanded,
-                                  child: AnimatedOpacity(
-                                    opacity: widget.expanded ? 1 : 0,
-                                    duration: duration,
-                                    child: TickerMode(
-                                      enabled: widget.expanded,
-                                      child: OverflowBox(
-                                        alignment: Alignment.topLeft,
-                                        minWidth: panelWidth,
-                                        maxWidth: panelWidth,
-                                        minHeight: 0,
-                                        maxHeight: _bounds.height,
-                                        child: _MeasurePanel(
-                                          onSize: (size) {
-                                            if (mounted &&
-                                                _panelHeight != size.height) {
-                                              setState(
-                                                () =>
-                                                    _panelHeight = size.height,
-                                              );
-                                            }
-                                          },
-                                          child: widget.panel,
+                                  child: ExcludeSemantics(
+                                    excluding: !widget.expanded,
+                                    child: AnimatedOpacity(
+                                      opacity: widget.expanded ? 1 : 0,
+                                      duration: duration,
+                                      child: TickerMode(
+                                        enabled: widget.expanded,
+                                        child: OverflowBox(
+                                          alignment: Alignment.topLeft,
+                                          minWidth: panelWidth,
+                                          maxWidth: panelWidth,
+                                          minHeight: 0,
+                                          maxHeight: _bounds.height,
+                                          child: _MeasurePanel(
+                                            onSize: (size) {
+                                              if (mounted &&
+                                                  _panelHeight != size.height) {
+                                                setState(
+                                                  () => _panelHeight =
+                                                      size.height,
+                                                );
+                                              }
+                                            },
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const ShortcutHintsBar(),
+                                                Flexible(child: widget.panel),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -450,84 +487,108 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                 ),
                               ),
                             ),
-                          ),
-                          Offstage(
-                            offstage: widget.expanded && rect == target,
-                            child: IgnorePointer(
-                              ignoring: widget.expanded,
-                              child: VoicePanelSwipeArea(
-                                child: ExcludeFocus(
-                                  excluding: widget.expanded,
-                                  child: ExcludeSemantics(
+                            Offstage(
+                              offstage: widget.expanded && rect == target,
+                              child: IgnorePointer(
+                                ignoring: widget.expanded,
+                                child: VoicePanelSwipeArea(
+                                  child: ExcludeFocus(
                                     excluding: widget.expanded,
-                                    child: AnimatedOpacity(
-                                      opacity: widget.expanded ? 0 : 1,
-                                      duration: duration,
-                                      child: OverflowBox(
-                                        alignment: Alignment.topLeft,
-                                        minWidth: 168,
-                                        maxWidth: 168,
-                                        minHeight: 64,
-                                        maxHeight: 64,
-                                        child: Stack(
-                                          key: const Key('voice-mini-panel'),
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.all(8),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Focus(
-                                                    focusNode: _dragFocus,
-                                                    onFocusChange: (_) =>
-                                                        setState(() {}),
-                                                    child: Semantics(
-                                                      label: context
-                                                          .l10n
-                                                          .voiceMovePanel,
-                                                      button: true,
-                                                      onTap: widget.onExpand,
-                                                      child: _handle(
-                                                        key: const Key(
-                                                          'voice-drag-handle',
+                                    child: ExcludeSemantics(
+                                      excluding: widget.expanded,
+                                      child: AnimatedOpacity(
+                                        opacity: widget.expanded ? 0 : 1,
+                                        duration: duration,
+                                        child: OverflowBox(
+                                          alignment: Alignment.topLeft,
+                                          minWidth: 168,
+                                          maxWidth: 168,
+                                          minHeight: 64,
+                                          maxHeight: 64,
+                                          child: Stack(
+                                            key: const Key('voice-mini-panel'),
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    ShortcutHintsScope(
+                                                      modal:
+                                                          !widget.expanded &&
+                                                          _dragFocus.hasFocus,
+                                                      hints: [
+                                                        ShortcutHint(
+                                                          context
+                                                              .l10n
+                                                              .voiceExpand,
+                                                          'Enter / Space',
                                                         ),
-                                                        child: SizedBox.square(
-                                                          dimension: 48,
-                                                          child: DecoratedBox(
-                                                            decoration: BoxDecoration(
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              border:
-                                                                  _dragFocus
-                                                                      .hasFocus
-                                                                  ? Border.all(
-                                                                      color: colors
-                                                                          .primary,
-                                                                      width: 2,
-                                                                    )
-                                                                  : null,
+                                                        ShortcutHint(
+                                                          context
+                                                              .l10n
+                                                              .voiceMovePanel,
+                                                          '← ↑ ↓ →',
+                                                        ),
+                                                      ],
+                                                      child: Focus(
+                                                        focusNode: _dragFocus,
+                                                        onFocusChange: (_) =>
+                                                            setState(() {}),
+                                                        child: Semantics(
+                                                          label: context
+                                                              .l10n
+                                                              .voiceMovePanel,
+                                                          button: true,
+                                                          onTap:
+                                                              widget.onExpand,
+                                                          child: _handle(
+                                                            key: const Key(
+                                                              'voice-drag-handle',
                                                             ),
-                                                            child: widget
-                                                                .indicator,
+                                                            child: SizedBox.square(
+                                                              dimension: 48,
+                                                              child: DecoratedBox(
+                                                                decoration: BoxDecoration(
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                  border:
+                                                                      _dragFocus
+                                                                          .hasFocus
+                                                                      ? Border.all(
+                                                                          color:
+                                                                              colors.primary,
+                                                                          width:
+                                                                              2,
+                                                                        )
+                                                                      : null,
+                                                                ),
+                                                                child: widget
+                                                                    .indicator,
+                                                              ),
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                  SizedBox.square(
-                                                    dimension: 48,
-                                                    child: widget.stopButton,
-                                                  ),
-                                                  SizedBox.square(
-                                                    dimension: 48,
-                                                    child: widget.expandButton,
-                                                  ),
-                                                ],
+                                                    SizedBox.square(
+                                                      dimension: 48,
+                                                      child: widget.stopButton,
+                                                    ),
+                                                    SizedBox.square(
+                                                      dimension: 48,
+                                                      child:
+                                                          widget.expandButton,
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -535,16 +596,16 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
-        },
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

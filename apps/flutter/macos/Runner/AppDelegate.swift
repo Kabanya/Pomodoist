@@ -12,6 +12,7 @@ class AppDelegate: FlutterAppDelegate {
   private var systemSpeechHost: SystemSpeechHost?
   private var appIconChannel: FlutterMethodChannel?
   private var selectedAppIcon = "icon-light-pomo"
+  private var distractionController: DistractionProtectionController?
   private var macosGlassController: MacosGlassController?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
@@ -29,7 +30,7 @@ class AppDelegate: FlutterAppDelegate {
             appMenuController == nil ||
             focusStatusItemController == nil ||
             systemSpeechHost == nil ||
-            macosGlassController == nil || appIconChannel == nil
+            macosGlassController == nil || appIconChannel == nil || distractionController == nil
     else {
       return
     }
@@ -42,6 +43,12 @@ class AppDelegate: FlutterAppDelegate {
         )
     else {
       return
+    }
+
+    if distractionController == nil {
+      distractionController = DistractionProtectionController(channel: FlutterMethodChannel(
+        name: "pomodoist/distractions", binaryMessenger: flutterViewController.engine.binaryMessenger
+      ))
     }
 
     if appIconChannel == nil {
@@ -83,7 +90,11 @@ class AppDelegate: FlutterAppDelegate {
         name: watchCompanionChannelName,
         binaryMessenger: flutterViewController.engine.binaryMessenger
       )
-      focusStatusItemController = FocusStatusItemController(channel: focusChannel)
+      let styleChannel = FlutterMethodChannel(
+        name: FocusStatusItemController.styleChannelName,
+        binaryMessenger: flutterViewController.engine.binaryMessenger
+      )
+      focusStatusItemController = FocusStatusItemController(channel: focusChannel, styleChannel: styleChannel)
       focusStatusItemController?.start()
     }
 
@@ -105,6 +116,7 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    if distractionController?.protectionActive == true { return false }
     return MultiviewDesktopPlugin.applicationShouldTerminateAfterLastWindowClosed()
   }
 
@@ -132,6 +144,10 @@ class AppDelegate: FlutterAppDelegate {
   override func applicationShouldTerminate(
     _ sender: NSApplication
   ) -> NSApplication.TerminateReply {
+    if distractionController?.protectionActive == true {
+      distractionController?.requestQuit()
+      return .terminateCancel
+    }
     return MultiviewDesktopPlugin.applicationShouldTerminate(sender)
   }
 

@@ -24,6 +24,8 @@ struct WatchSnapshot: Codable, Equatable {
   var tasks: WatchTaskBuckets
   var projects: [WatchProject]
   var sync: WatchSyncSnapshot
+  var locale: String?
+  var widgets: PomodoistWidgetSnapshot?
 
   static let empty = WatchSnapshot(
     version: 1,
@@ -40,7 +42,9 @@ struct WatchSnapshot: Codable, Equatable {
     focus: WatchFocusSnapshot,
     tasks: WatchTaskBuckets,
     projects: [WatchProject],
-    sync: WatchSyncSnapshot
+    sync: WatchSyncSnapshot,
+    locale: String? = nil,
+    widgets: PomodoistWidgetSnapshot? = nil
   ) {
     self.version = version
     self.generatedAt = generatedAt
@@ -48,6 +52,8 @@ struct WatchSnapshot: Codable, Equatable {
     self.tasks = tasks
     self.projects = projects
     self.sync = sync
+    self.locale = locale
+    self.widgets = widgets
   }
 
   init(from decoder: Decoder) throws {
@@ -58,6 +64,8 @@ struct WatchSnapshot: Codable, Equatable {
     tasks = try container.decode(WatchTaskBuckets.self, forKey: .tasks)
     projects = try container.decode([WatchProject].self, forKey: .projects)
     sync = try container.decodeIfPresent(WatchSyncSnapshot.self, forKey: .sync) ?? .empty
+    locale = try container.decodeIfPresent(String.self, forKey: .locale)
+    widgets = try container.decodeIfPresent(PomodoistWidgetSnapshot.self, forKey: .widgets)
   }
 
   static func decode(from value: Any?) -> WatchSnapshot? {

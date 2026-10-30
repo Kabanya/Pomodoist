@@ -273,12 +273,14 @@ void main() {
 
     expect(find.byKey(const Key('app-startup-error-title')), findsOneWidget);
     expect(find.textContaining('seed failed'), findsOneWidget);
-    expect(find.byType(AdaptiveShell), findsNothing);
+    expect(find.byType(AdaptiveShell), findsOneWidget);
+    final shell = tester.state(find.byType(AdaptiveShell));
 
     await tester.tap(find.byKey(const Key('app-startup-retry-button')));
     await tester.pumpAndSettle();
 
     expect(attempts, 2);
+    expect(tester.state(find.byType(AdaptiveShell)), same(shell));
   });
 
   testWidgets('milestone achievement appears in the global banner', (
@@ -1750,6 +1752,12 @@ class _FakeNotificationScheduler extends NotificationScheduler {
 }
 
 class _FakeFocusRepository implements FocusRepository {
+  @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) async => const Result.ok(null);
+
   _FakeFocusRepository({
     FocusRunItem? activeRun,
     FocusIntervalItem? activeInterval,

@@ -5,7 +5,7 @@ export const APP_IDS = new Set([
     'com.finchforge.pomodoist.stg',
 ]);
 export const PROTOCOL_VERSION = 1;
-export const EXTENSION_VERSION = 1;
+export const EXTENSION_VERSION = 2;
 
 function object(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value))

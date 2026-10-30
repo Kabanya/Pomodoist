@@ -1,10 +1,59 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/productivity/productivity_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/view_models/browse_summary.dart';
+import 'package:pomodoist/ui/tasks/view_models/browse_view_model.dart';
 import 'package:pomodoist/domain/use_cases/tasks/project_list_data.dart';
+import 'package:pomodoist/utils/clock.dart';
 
 void main() {
+  test(
+    'browse date follows local midnight without resetting the period',
+    () async {
+      final now = DateTime(2026, 10, 27, 23, 59).toUtc();
+      final ticks = StreamController<DateTime>();
+      addTearDown(ticks.close);
+      final container = ProviderContainer(
+        overrides: [
+          clockProvider.overrideWithValue(FixedClock(now)),
+          focusTickerProvider.overrideWith((_) => ticks.stream),
+          productivitySummaryProvider.overrideWith(
+            (_) => Stream.value(
+              ProductivitySummary(
+                completedTasks: 0,
+                completedFocusIntervals: 0,
+                totalFocusSeconds: 0,
+                plannedFocusIntervals: 0,
+                openTasks: 3,
+                allTimeCompletedTasks: 0,
+                allTimeCompletedFocusIntervals: 0,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final provider = browseViewModelProvider(Object());
+      container.listen(provider, (_, _) {});
+      await container.read(productivitySummaryProvider.future);
+      expect(container.read(provider).today, DateTime(2026, 10, 27));
+      expect(container.read(provider).period, BrowsePeriod.today);
+      container.read(provider.notifier).setPeriod(BrowsePeriod.sevenDays);
+
+      ticks.add(DateTime(2026, 10, 28).toUtc());
+      await container.read(focusTickerProvider.future);
+      await container.pump();
+
+      expect(container.read(provider).today, DateTime(2026, 10, 28));
+      expect(container.read(provider).period, BrowsePeriod.sevenDays);
+      expect(container.read(provider).numbers?.openTasks, 3);
+    },
+  );
+
   test('periods use daily totals and keep the current open count', () {
     final days = List.generate(
       7,

@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array><string>$(POMODOIST_URL_SCHEME)</string></array>
+		</dict>
+	</array>
+	<key>PomodoistAppGroup</key>
+	<string>$(POMODOIST_APP_GROUP)</string>
+	<key>PomodoistURLScheme</key>
+	<string>$(POMODOIST_URL_SCHEME)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

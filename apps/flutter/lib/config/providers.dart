@@ -1,7 +1,5 @@
 import 'package:pomodoist/config/local_completion_dependencies.dart';
-import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository.dart';
-import 'package:pomodoist/data/repositories/planning/quick_add_hint_repository_impl.dart';
-import 'package:pomodoist/domain/models/planning/quick_add_hint.dart';
+import 'package:pomodoist/utils/startup_diagnostics.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/calendar/calendar_models.dart';
 import 'package:pomodoist/data/repositories/calendar/drift_calendar_integration_repository.dart';
@@ -20,7 +18,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/project_collaboration.dart';
-import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
@@ -38,14 +35,12 @@ import 'package:pomodoist/utils/timer_engine.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository_impl.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
-import 'package:pomodoist/config/billing_dependencies.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
 import 'package:pomodoist/data/repositories/local/local_transaction.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/quick_add_use_case.dart';
 import 'package:pomodoist/domain/use_cases/tasks/edit_task_title_use_case.dart';
 import 'package:pomodoist/domain/use_cases/focus/complete_expired_focus_interval_use_case.dart';
 import 'package:pomodoist/domain/use_cases/focus/refresh_focus_notification_language_use_case.dart';
-import 'package:pomodoist/data/services/planning/quick_add_hint.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:pomodoist/data/repositories/productivity/productivity_repository_impl.dart';
@@ -68,10 +63,7 @@ final appStartupProvider = FutureProvider<void>((ref) async {
   ref.watch(focusAutoCompletionCoordinatorProvider);
   final db = ref.watch(appDatabaseProvider);
   await db.ensureSeedData();
-  await ref
-      .read(taskRepositoryProvider)
-      .materializeDueRecurringTasks()
-      .then((result) => result.getOrThrow());
+  traceStartupStage('database-ready');
   unawaited(
     _initializeNotificationsBestEffort(
       ref.watch(notificationRepositoryProvider),
@@ -137,67 +129,11 @@ final quickAddParserProvider = Provider<QuickAddParser>(
   ),
 );
 
-const _deepSeekApiKey = String.fromEnvironment('DEEPSEEK_API_KEY');
-
-final quickAddHintGeneratorProvider = Provider<QuickAddHintGenerator>((ref) {
-  return DeepSeekQuickAddHintGenerator(apiKey: _deepSeekApiKey);
+final quickAddHintTextProvider = Provider<String>((ref) {
+  return lookupAppLocalizations(
+    resolveAppLocale(ref.watch(appLanguageProvider)),
+  ).quickAddHint;
 });
-
-final quickAddHintHistoryProvider = Provider<QuickAddHintHistory>((ref) {
-  return DriftQuickAddHintHistory(ref.watch(appDatabaseProvider));
-});
-
-final quickAddHintStoreProvider = Provider<QuickAddHintStore>((ref) {
-  final preferences = ref.read(sharedPreferencesProvider.future);
-  return SharedPreferencesQuickAddHintStore(() => preferences);
-});
-
-final quickAddHintRepositoryProvider = Provider<QuickAddHintRepository>((ref) {
-  final repository = StoredQuickAddHintRepository(
-    history: ref.watch(quickAddHintHistoryProvider),
-    store: ref.watch(quickAddHintStoreProvider),
-    generator: ref.watch(quickAddHintGeneratorProvider),
-    locale: () => activeQuickAddHintLocale(ref.read(appLanguageProvider)),
-    hasActiveEntitlement: () =>
-        ref.read(billingRepositoryProvider).currentAccess.hasActiveEntitlement,
-  );
-  ref.onDispose(repository.dispose);
-  unawaited(repository.initialize());
-  return repository;
-});
-
-final quickAddHintStateProvider = Provider<QuickAddHintState>((ref) {
-  final repository = ref.watch(quickAddHintRepositoryProvider);
-  final subscription = repository.watch().listen((_) => ref.invalidateSelf());
-  ref.onDispose(subscription.cancel);
-  return repository.state;
-});
-
-final quickAddHintTextProvider = Provider<String?>((ref) {
-  final state = ref.watch(quickAddHintStateProvider);
-  final language = ref.watch(appLanguageProvider);
-  final hint = state.hintForLocale(activeQuickAddHintLocale(language));
-  if (hint != null) {
-    return hint;
-  }
-  return state.starterConsumed
-      ? quickAddHintEmptyFor(language)
-      : quickAddHintFallbackFor(language);
-});
-
-final effectiveQuickAddHintProvider = Provider<String>((ref) {
-  return ref.watch(quickAddHintTextProvider) ??
-      quickAddHintFallbackFor(ref.watch(appLanguageProvider));
-});
-
-String activeQuickAddHintLocale(AppLanguage language) =>
-    resolveAppLocale(language).toLanguageTag();
-
-String quickAddHintFallbackFor(AppLanguage language) =>
-    lookupAppLocalizations(resolveAppLocale(language)).quickAddHint;
-
-String quickAddHintEmptyFor(AppLanguage language) =>
-    lookupAppLocalizations(resolveAppLocale(language)).addTask;
 
 final localSyncOwnerProvider = StreamProvider<String?>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -294,12 +230,19 @@ final labelRepositoryProvider = Provider<LabelRepository>((ref) {
   );
 });
 
-final focusRepositoryProvider = Provider<FocusRepository>((ref) {
+final focusRepositoryProvider = Provider<FocusRepository>(
+  (ref) => ref.watch(localFocusRepositoryProvider),
+);
+
+final serverOwnedFocusRunIdsProvider = Provider<Set<String>>((ref) => {});
+
+final localFocusRepositoryProvider = Provider<FocusRepository>((ref) {
   ref.read(focusCompletionCelebrationEnabledProvider);
   return DriftFocusRepository(
     ref.watch(appDatabaseProvider),
     ref.watch(syncQueueRepositoryProvider),
     ref.watch(notificationSchedulerProvider),
+    serverOwnedRunIds: ref.watch(serverOwnedFocusRunIdsProvider),
     soundPlayer: ref.watch(focusSoundPlayerProvider),
     kanbanTransitions: ref.watch(kanbanTransitionCoordinatorProvider),
     onIntervalCompleted: ref.watch(localCompletionEventsProvider).publish,
@@ -341,7 +284,6 @@ final quickAddUseCaseProvider = Provider<QuickAddUseCase>((ref) {
     projectRepository: ref.watch(projectRepositoryProvider),
     focusRepository: ref.watch(focusRepositoryProvider),
     selectedFocusPresetId: () => ref.read(lastFocusPresetIdProvider),
-    hints: ref.watch(quickAddHintRepositoryProvider),
   );
 });
 
@@ -361,7 +303,10 @@ final tasksByQueryProvider = StreamProvider.family<List<TaskItem>, TaskQuery>((
   ref,
   query,
 ) {
-  return ref.watch(taskRepositoryProvider).watchTasks(query);
+  return ref.watch(taskRepositoryProvider).watchTasks(query).map((tasks) {
+    traceStartupStage('tasks-emitted');
+    return tasks;
+  });
 });
 
 final taskProvider = StreamProvider.family<TaskItem?, String>((ref, id) {
@@ -430,20 +375,6 @@ final activeFocusRunProvider = StreamProvider<FocusRunItem?>((ref) {
 
 final activeFocusIntervalProvider = StreamProvider<FocusIntervalItem?>((ref) {
   return ref.watch(focusRepositoryProvider).watchActiveInterval();
-});
-
-// Only replace the global player after both streams describe the same session.
-final todayFocusStripVisibleProvider = Provider<bool>((ref) {
-  final runId = ref.watch(
-    activeFocusRunProvider.select((value) => value.value?.id),
-  );
-  final intervalRunId = ref.watch(
-    activeFocusIntervalProvider.select((value) => value.value?.runId),
-  );
-  final hasRemaining = ref.watch(
-    activeFocusRemainingProvider.select((value) => value != null),
-  );
-  return runId != null && runId == intervalRunId && hasRemaining;
 });
 
 final focusIntervalsForRunProvider =

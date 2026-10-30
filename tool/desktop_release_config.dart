@@ -28,8 +28,9 @@ const _forbiddenSupabaseKeys = {
 ///   `pomodoist-dev`. `local` is the name the development entry point declares
 ///   and the only environment `RuntimeEnvironment` accepts for it; a
 ///   configuration that says `development` is rejected because the app refuses
-///   to start with an environment it does not know. All hosted flavors
-///   intentionally share the same backend.
+///   to start with an environment it does not know. The development flavor is
+///   refused the production backend, so a dev install can never read or write
+///   production data.
 ///
 /// Every environment keeps the privileged-key ban, so no artifact can ship a
 /// Supabase secret whatever it is pointed at.
@@ -109,7 +110,8 @@ void _validateProductionConfig(Map<String, Object?> config) {
 /// Validates the staging flavor's configuration.
 ///
 /// The domains are the ones `RuntimePublicConfig` accepts for a staging build,
-/// and staging and production intentionally share the hosted backend.
+/// so a staging artifact can never be pointed at the production backend and a
+/// staging install never shares data with the production one.
 void _validateStagingConfig(Map<String, Object?> config) {
   final webAppUrl = _releaseUrl(
     _requiredString(config, 'WEB_APP_URL'),
@@ -159,8 +161,11 @@ void _validateStagingConfig(Map<String, Object?> config) {
 
 /// Validates the development flavor's configuration.
 ///
-/// The development flavor may omit its Supabase pair or share the hosted
-/// backend. Its web URL must keep the development identity.
+/// The development flavor is the only one allowed to run without a backend, so
+/// its Supabase pair may be absent — but when it is present it must not be the
+/// production project, and the web host must not be the production one either.
+/// Otherwise a dev install would read and write the data the production install
+/// owns, which is exactly what the separate identities exist to prevent.
 void _validateDevelopmentConfig(Map<String, Object?> config) {
   final webAppUrl = _releaseUrl(
     _requiredString(config, 'WEB_APP_URL'),
@@ -179,8 +184,15 @@ void _validateDevelopmentConfig(Map<String, Object?> config) {
       'SUPABASE_URL and SUPABASE_ANON_KEY must be supplied together.',
     );
   }
-  if (supabaseUrl != null) {
-    _releaseUrl(supabaseUrl, 'SUPABASE_URL');
+  if (supabaseUrl != null &&
+      productionSupabaseOrigins.any(
+        (origin) =>
+            Uri.parse(origin).host ==
+            _releaseUrl(supabaseUrl, 'SUPABASE_URL').host,
+      )) {
+    throw const FormatException(
+      'The development flavor must not use the production Supabase project.',
+    );
   }
 
   final registration = _nonEmptyOptionalString(

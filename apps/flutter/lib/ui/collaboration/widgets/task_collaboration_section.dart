@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
 import 'package:flutter/material.dart';
@@ -17,12 +18,14 @@ class TaskCollaborationSection extends ConsumerStatefulWidget {
     required this.task,
     this.showAssignees = true,
     this.showComments = true,
+    this.assigneeChips = false,
     super.key,
   });
 
   final TaskItem task;
   final bool showAssignees;
   final bool showComments;
+  final bool assigneeChips;
 
   @override
   ConsumerState<TaskCollaborationSection> createState() =>
@@ -67,6 +70,32 @@ class _TaskCollaborationSectionState
       for (final id in widget.task.assigneeIds)
         collaborationMemberLabel(l10n, scope, id),
     ];
+    if (widget.assigneeChips) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final name in names)
+            ActionChip(
+              avatar: CircleAvatar(
+                backgroundColor: context.appColors.surfaceTint,
+                child: Text(
+                  collaborationInitials(name),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ),
+              label: Text(name),
+              onPressed: scope.canEdit ? () => _editAssignees(scope) : null,
+            ),
+          TextButton.icon(
+            onPressed: scope.canEdit ? () => _editAssignees(scope) : null,
+            icon: const Icon(LucideIcons.userPlus, size: 18),
+            label: Text(l10n.collaborationEditAssignees),
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         Icon(
@@ -263,71 +292,10 @@ class _TaskCollaborationSectionState
   }
 
   Future<void> _editAssignees(SharedScope scope) async {
-    final l10n = context.l10n;
-    final selected = <String>{...widget.task.assigneeIds};
-    final editors = _state.editors;
-    final result = await showDialog<Set<String>>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => ShadDialog(
-          title: Text(l10n.collaborationEditAssignees),
-          actions: [
-            ShadButton.ghost(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(context.l10n.commonCancel),
-            ),
-            ShadButton(
-              key: const Key('task-assignees-save'),
-              onPressed: () => Navigator.of(context).pop(selected),
-              child: Text(context.l10n.commonSave),
-            ),
-          ],
-          child: SizedBox(
-            width: 460,
-            child: Material(
-              type: MaterialType.transparency,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 320),
-                child: editors.isEmpty
-                    ? Padding(
-                        key: const Key('task-assignees-empty'),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(l10n.collaborationNoAssignees),
-                      )
-                    : SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (final member in editors)
-                              CheckboxListTile(
-                                key: Key(
-                                  'task-assignee-option-${member.userId}',
-                                ),
-                                value: selected.contains(member.userId),
-                                title: Text(
-                                  collaborationMemberLabel(
-                                    l10n,
-                                    scope,
-                                    member.userId,
-                                  ),
-                                ),
-                                onChanged: (checked) => setState(() {
-                                  if (checked == true) {
-                                    selected.add(member.userId);
-                                  } else {
-                                    selected.remove(member.userId);
-                                  }
-                                }),
-                              ),
-                          ],
-                        ),
-                      ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    final result = await showTaskAssigneesDialog(
+      context,
+      scope: scope,
+      assigneeIds: widget.task.assigneeIds.toSet(),
     );
     if (result == null || !mounted) return;
     try {
@@ -342,4 +310,80 @@ class _TaskCollaborationSectionState
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+}
+
+Future<Set<String>?> showTaskAssigneesDialog(
+  BuildContext context, {
+  required SharedScope scope,
+  required Set<String> assigneeIds,
+}) {
+  final l10n = context.l10n;
+  final selected = <String>{...assigneeIds};
+  final editors = scope.members.where((member) => member.role.canEdit).toList();
+  return showDialog<Set<String>>(
+    context: context,
+    animationStyle: AnimationStyle(
+      duration: AppMotion.duration(context, AppMotion.popup),
+      reverseDuration: AppMotion.duration(context, AppMotion.popup),
+      curve: AppMotion.curve,
+    ),
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => ShadDialog(
+        title: Text(l10n.collaborationEditAssignees),
+        actions: [
+          ShadButton.ghost(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.l10n.commonCancel),
+          ),
+          ShadButton(
+            key: const Key('task-assignees-save'),
+            onPressed: () => Navigator.of(context).pop(selected),
+            child: Text(context.l10n.commonSave),
+          ),
+        ],
+        child: SizedBox(
+          width: 460,
+          child: Material(
+            type: MaterialType.transparency,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 320),
+              child: editors.isEmpty
+                  ? Padding(
+                      key: const Key('task-assignees-empty'),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(l10n.collaborationNoAssignees),
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final member in editors)
+                            CheckboxListTile(
+                              key: Key('task-assignee-option-${member.userId}'),
+                              value: selected.contains(member.userId),
+                              title: Text(
+                                collaborationMemberLabel(
+                                  l10n,
+                                  scope,
+                                  member.userId,
+                                ),
+                              ),
+                              onChanged: (checked) => setState(() {
+                                if (checked == true) {
+                                  selected.add(member.userId);
+                                } else {
+                                  selected.remove(member.userId);
+                                }
+                              }),
+                            ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

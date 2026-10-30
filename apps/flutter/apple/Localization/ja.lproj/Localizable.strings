@@ -53,3 +53,28 @@
 "Classic" = "クラシック";
 "Deep Work" = "深い集中";
 "Short Sprint" = "短時間スプリント";
+
+"Tasks" = "タスク";
+"Habits" = "習慣";
+"Day" = "予定";
+"Progress" = "進捗";
+"Next" = "次へ";
+"No tasks" = "タスクはありません";
+"No habits today" = "今日の習慣はありません";
+"Nothing scheduled" = "予定はありません";
+"Open Pomodoist to update" = "Pomodoistを開いて更新";
+"Focus this week" = "今週の集中";
+"%d tasks today" = "今日の完了タスク：%d";
+"All day" = "終日";
+"Shows your next tasks." = "次のタスクを表示します。";
+"Shows today's habits." = "今日の習慣を表示します。";
+"Shows today's schedule." = "今日の予定を表示します。";
+"Shows this week's progress." = "今週の進捗を表示します。";
+"Complete task" = "タスクを完了";
+"Pause or resume focus" = "集中を一時停止または再開";
+"Interval" = "区間";
+"Task" = "タスク";
+
+"Appearance" = "外観";
+"Old" = "旧スタイル";
+"New" = "新スタイル";

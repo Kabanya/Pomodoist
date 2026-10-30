@@ -7,6 +7,7 @@ class _QuickAddCommentButton extends StatelessWidget {
     required this.enabled,
     required this.onPressed,
     this.touchTargets = false,
+    this.iconsOnly = false,
   });
 
   final TextEditingController controller;
@@ -14,41 +15,78 @@ class _QuickAddCommentButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onPressed;
   final bool touchTargets;
+  final bool iconsOnly;
 
   @override
-  Widget build(BuildContext context) =>
-      ValueListenableBuilder<TextEditingValue>(
-        valueListenable: controller,
-        builder: (context, value, _) {
-          final hasComment = value.text.trim().isNotEmpty;
-          final colors = context.appColors;
-          return Semantics(
+  Widget build(
+    BuildContext context,
+  ) => ValueListenableBuilder<TextEditingValue>(
+    valueListenable: controller,
+    builder: (context, value, _) {
+      final hasComment = value.text.trim().isNotEmpty;
+      final colors = context.appColors;
+      final style = colors.quickAddStyle(colors.quickAddNoteColor);
+      final foreground = style.color!;
+      return Tooltip(
+        message: hasComment
+            ? '${context.l10n.taskComment}: ${value.text.trim()}'
+            : context.l10n.taskComment,
+        excludeFromSemantics: true,
+        child: MergeSemantics(
+          child: Semantics(
+            label: iconsOnly ? context.l10n.taskComment : null,
             expanded: expanded,
             value: hasComment ? value.text.trim() : null,
             child: ShadButton.outline(
               key: const Key('quick-add-comment-toggle'),
               size: ShadButtonSize.sm,
               height: touchTargets ? 48 : 40,
+              width: iconsOnly ? 40 : null,
+              padding: iconsOnly ? EdgeInsets.zero : null,
               enabled: enabled,
               onPressed: enabled ? onPressed : null,
-              foregroundColor: expanded || hasComment
-                  ? colors.accent
-                  : colors.secondaryText,
-              backgroundColor: expanded ? colors.accentTint : colors.surface,
-              leading: const Icon(LucideIcons.messageSquare, size: 18),
-              trailing: hasComment
-                  ? const Icon(LucideIcons.check, size: 14)
-                  : null,
-              child: Flexible(
-                child: Text(
-                  context.l10n.taskComment,
-                  overflow: TextOverflow.ellipsis,
+              foregroundColor: foreground,
+              hoverForegroundColor: foreground,
+              pressedForegroundColor: foreground,
+              backgroundColor: style.backgroundColor,
+              hoverBackgroundColor: colors.quickAddBackground(
+                foreground,
+                emphasized: true,
+              ),
+              pressedBackgroundColor: colors.quickAddBackground(
+                foreground,
+                emphasized: true,
+              ),
+              decoration: ShadDecoration(
+                border: ShadBorder.all(
+                  color: colors.quickAddBorder(foreground, active: expanded),
+                  radius: BorderRadius.circular(8),
                 ),
               ),
+              leading: iconsOnly && hasComment
+                  ? Badge(
+                      backgroundColor: foreground,
+                      smallSize: 6,
+                      child: const Icon(LucideIcons.messageSquare, size: 18),
+                    )
+                  : const Icon(LucideIcons.messageSquare, size: 18),
+              trailing: hasComment && !iconsOnly
+                  ? const Icon(LucideIcons.check, size: 14)
+                  : null,
+              child: iconsOnly
+                  ? null
+                  : Flexible(
+                      child: Text(
+                        context.l10n.taskComment,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
             ),
-          );
-        },
+          ),
+        ),
       );
+    },
+  );
 }
 
 class _QuickAddCommentField extends StatelessWidget {

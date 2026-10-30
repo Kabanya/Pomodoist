@@ -146,6 +146,26 @@ native view is ready, after native errors, and when Reduce Transparency is
 enabled. Accessibility changes update live. Preserve the existing 180 ms theme
 transition, Reduce Motion behavior and interface zoom.
 
+### Agent changes to local appearance
+
+Connected agents may read and change the existing appearance controls on a chosen
+online device through MCP. Reuse the same controllers, palette validation,
+platform capabilities and persistence as manual settings. A successful response
+requires saved preferences and any required native acknowledgment. Changes appear
+immediately, including in Quick Add through its existing shared providers.
+
+An unfinished theme editor owns its preview: agent theme writes return `busy`
+rather than replacing it. Compare a fresh version of the changed settings group
+before applying; manual edits invalidate that version. Preserve light/dark pairs,
+semantic role meanings, Reduce Motion and platform fallbacks. Agent access adds
+no arbitrary UI code, preference keys or new design tokens.
+
+Remote background imports download directly on the selected device, use the same
+50 MiB/2560 px image preparation and local storage as manual imports, and preserve
+the current background on failure. Never send image bytes, base64 or local paths
+to MCP or store images in the server database/Storage. The command lifecycle and
+wire values are documented in [Agent app settings](agent-app-settings.md).
+
 ### Photo backgrounds
 
 Custom supports optional photos in three modes: main area only, one continuous
@@ -192,6 +212,9 @@ badges: a rounded cobalt rectangle for DEV and an amber capsule for STG, each
 with a thin contrasting rim and visually centered text. `--check` validates the
 generated output without writing it.
 
+The Chrome extension uses the generated Pomo icon for its build flavor in both
+the toolbar and extension list.
+
 On iOS/iPadOS use alternate app icons; on Android use launcher aliases while
 keeping MainActivity and its deep links enabled. Enable the new alias before
 disabling the previous one. Watch uses the default Pomo icon without a selector.
@@ -205,6 +228,21 @@ migrated. Web selection changes the favicon only; installed PWA icons remain
 browser-managed. Explain these limits beside the choices, using localized copy.
 Validate favicon selection and manifest races with
 `node tool/test_app_icon_web.mjs` from `apps/flutter`.
+
+## macOS menu bar timer
+
+Native macOS Appearance settings and the timer's Appearance submenu offer Old
+(`classic`, the default from v1.1.4) and New (`modern`). Keep the selection in
+native UserDefaults under `focus.statusItem.style`; missing or unknown values
+use Classic. Both controls use the `pomodoist/status_item` channel and update
+immediately, without duplicating the preference in Flutter storage. Hide the
+setting on web and other platforms. Disable the selector until loading completes
+and during saves; retain the last acknowledged selection on errors and offer Retry.
+
+Classic keeps its compact circle and state-colored timer. Modern uses a red
+native timer symbol and adaptive label-colored digits. Existing explicit timer
+colors apply to the digits in either style. Preserve the timer's accessible
+name, state, remaining time and Focus commands when switching.
 
 ## Interface zoom
 
@@ -246,6 +284,44 @@ Windows and Linux) both toggle the last opened task details. Both bindings are
 configurable. Before any task is opened, or after that task is deleted, they
 do nothing. Reuse the existing full-screen details layout below the shell
 breakpoint.
+
+### Detailed task editor
+
+The leading Quick Add icon opens the detailed creation editor; the compact
+overlay below 820 px omits this icon. Reuse the same syntax-aware title
+controller and description draft; Cancel returns to Quick
+Add with that text intact. Do not repeat project, date, priority, tag or Pomodoro
+pickers inside this editor. Its header shows the resolved project, followed by
+assignee chips for shared projects, description, and pending attachments. There
+is one Create task action. Discussion, history and subtasks appear only after a
+task exists. Keep the header and actions pinned while the form scrolls.
+
+Use a resizable 1080 × 760 dialog, constrained to the viewport and keyboard.
+The separate native Quick Add window temporarily expands within its display's
+work area and restores its previous base size afterward. Temporary editor sizes
+must not overwrite the saved Quick Add dimensions. Light, dark and custom themes
+use the same palette roles, 12 px dialog corners and 44 px action targets.
+Description formatting inserts portable Markdown emphasis, list and link syntax
+in a plain-text field; it does not introduce a separate rich-text data format.
+
+Only editable members of the resolved collaboration scope can be assigned.
+Create the task, its assignees and their ordered sync commands in one local
+transaction. Pending files remain local until Create. Commit the task identity
+before uploading, retain remaining files after failure, and retry the existing
+upload reservation rather than creating another task. Once a task exists, lock
+its creation fields; offer upload retry or removal of pending files followed by
+Done. Busy creation/upload blocks dismissal. Cancellation before creation never
+publishes a task or an attachment.
+
+Existing task panels expose Expand editor in their header. Expansion keeps the
+same mounted task screen and editor identities, centered at up to 1280 px with
+24 px viewport margins on desktop; narrow viewports use the available area.
+Shared tasks use a 65/35 content/discussion split at 900 px of editor width.
+Below that width, discussion follows the content in one scrollable column.
+Retain the same discussion section when moving between columns so its unsent
+draft survives resizing. Assignees sit below the title without a second copy in
+Properties. Save persists title/description and returns to the side panel;
+existing permissions and immediate task actions retain their current behavior.
 
 ### Task card and files
 
@@ -358,8 +434,9 @@ confirmation and deletion Undo. Clear due removes scheduling while preserving
 the task; Delete removes the task itself. Context-menu bulk actions always
 operate on the selected set, including when opened from an unselected card.
 
-Routine is an alternative calendar layout grouped by task start time, with
-localized default Morning, Afternoon and Evening periods. Users may name, add,
+Routine is the initial calendar layout on desktop and mobile when no mode is
+saved; subsequent visits restore each saved mode. It groups tasks by start time,
+with localized default Morning, Afternoon and Evening periods. Users may name, add,
 remove and adjust periods; invalid or overlapping ranges cannot be saved. Tasks
 outside the configured periods remain visible. The routine and selected mode are
 local preferences; failed saves retain the editor draft. Reuse shared colors,
@@ -369,7 +446,8 @@ Below 820 px of available calendar width, use three equal text segments: Day,
 Month and Rhythm. Keep the active segment visibly selected and exposed to
 accessibility; retain the selected date, project filter and visible selection
 when switching modes. Save the mobile mode separately from the desktop mode,
-defaulting legacy preferences to Day without changing the saved desktop view.
+defaulting missing mobile preferences to Rhythm without changing the saved
+desktop view.
 
 Mobile Day uses a single chronological column with time labels, full-width
 cards and tappable free windows. Concurrent tasks stack rather than shrinking
@@ -518,29 +596,48 @@ Wide layouts keep their existing task creation controls.
 
 The Quick Add overlay below 820 px is a full-width bottom sheet with 12 px top
 corners, positioned above software keyboard insets and inside system safe areas.
-Use a compact heading with an explicit Close action, a large multiline field,
-and wrapping date, project and priority controls with 48 px touch targets. Show
-the short `P1`–`P4` priority label while retaining its localized accessible name.
+Keep the centered panel handle and an explicit Close action at the trailing edge,
+without a visible heading or detailed-editor button. Retain the localized Add task name
+in route semantics. The large multiline field fills the width between the 20 px
+side insets. Use wrapping date, project and priority controls with 48 px touch
+targets. Show the short `P1`–`P4` priority label while retaining its localized
+accessible name.
 Only the text field requests autofocus on opening, so typing can start with the
 software keyboard immediately; surrounding focus wrappers must not claim it.
 Keep the microphone and expanded Add button in a pinned 48 px action row; scroll
-the heading, field and metadata when height is limited. Honor the selected theme's
-Quick Add background and accent, keeping the input solid with a visible focus
+only the field, metadata and comment when height is limited. The handle and Close
+stay in a separate pinned 48 px header. Honor the
+selected theme's Quick Add background and accent, keeping the input solid with a visible focus
 indicator. Preserve the draft and input focus when resizing between the sheet
 and desktop dialog, and keep the existing voice-session lifecycle.
 
 Desktop Quick Add uses a compact command panel in both the wide-layout dialog
 and the separate native window. Place a large multiline input between the
 list-plus icon and microphone, above a thin divider. Keep date, project and
-short priority menus together with Add in the bottom row; wrap the action below
-the menus when space is limited. Use 40 px desktop controls and the current
-theme, without a duplicate heading or an Escape hint. Enter submits and Escape
+short priority menus together with Add in the bottom row. Show full labels while
+the complete row fits; switch all six controls to icons only when any labeled
+control would wrap. Measure the current labels, values, text scale and shared
+button geometry rather than using a fixed width breakpoint. Keep localized
+accessible names and
+tooltips with current values, semantic colors and comment-presence indicators.
+Wrap metadata within its available width and scroll it vertically when height
+is limited; keep Add outside that scroll area and always available. Use 40 px
+desktop controls and the current theme, without a duplicate heading or an Escape
+hint. Enter submits and Escape
 closes as before; retain a localized accessible name for the panel. Keep the
 input scrollable and size its region to its content, with 12 px vertical padding;
 extra window height must not create a gap between the text and the footer. Keep
 the footer outside the input scroll area, resizing available, and voice-window
 expansion intact. Start the dialog at 680 × 180 px and the native window at
-680 × 200 px. The native title bar supplies window controls.
+680 × 200 px, widening the native window on its first opening to fit the full
+labeled toolbar within native and display limits. The native title bar supplies
+window controls. A saved manual size takes priority over this initial width.
+The separate window
+remembers the user's width and height locally across openings and app restarts.
+Constrain restored and expanded sizes to native limits and the display's working
+area. Temporary comment or voice expansion does not replace the saved size;
+manual resizing in any mode becomes the new base size. Keep the last manual size
+usable in memory if local storage fails.
 
 ### Sidebar
 
@@ -627,11 +724,11 @@ Missing parents and cycles from synchronization must never hide projects.
 Center the list within 1200 px of content width. Keep the date below the title
 and use the shared connected task rows with the existing inline Quick Add.
 
-Keep daily context to one text summary and one active Focus strip. The strip and
-global mini player share the existing session, interval and clock providers.
-Only replace the global player once the run and interval agree and remaining
-time is available. Completed-today rows form a collapsed group with independent
-selection, using the local completion day.
+Keep daily context to one text summary, without an inline Focus card. The global
+mini player follows the same visibility rules as other task lists, appearing
+above bottom navigation on compact layouts and below content on wide layouts.
+Completed-today rows form a collapsed group with independent selection, using
+the local completion day.
 
 ### Upcoming
 
@@ -704,6 +801,12 @@ schedule stays overdue, and finishing the review shows a quiet empty state.
 
 ### Quick Add
 
+Every empty Quick Add input uses the same permanent, localized syntax example:
+`Task name tomorrow p2 #Project @label 2p`. Keep it independent of task history,
+subscription status and saved suggestions; it never triggers AI generation or
+changes to a generic prompt after task creation. The separate window's native
+hint bridge uses the same localized copy.
+
 Parsed date/time, project and priority chips edit recognized spans in the source
 phrase. Both `#` and `№` introduce project names, including quoted names, in
 parsing, highlighting, and autocomplete. The phrase is the only metadata state:
@@ -711,24 +814,46 @@ clearing a token reveals the existing context defaults. Preview and creation use
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
-The composer renders entered text at a regular weight in opaque primary text;
-recognized tokens keep their accent through color alone. On mobile and desktop,
-the composer hint uses light weight (300) and secondary text at 65% opacity to
-stay unobtrusive.
+The composer renders entered text at a regular weight in opaque primary text.
+Recognized tokens use semantic foregrounds and soft fills shared with the metadata
+controls: green for dates, times and durations; blue for projects and sections;
+the existing P1–P4 colors for priority; the selected accent for Pomodoro estimates;
+and muted violet for labels and Comment. Resolve these through
+`AppThemePaletteQuickAdd` in `app_theme.dart`, including the shared light/dark
+violet role; no additional theme setting is stored. Foregrounds adjust toward
+primary text when needed to retain 4.5:1 contrast on normal and interaction fills.
+Use native `TextSpan.backgroundColor` without changing text metrics, selection
+or composing underlines. Tokens reflect the phrase's effective priority.
+On mobile and desktop, the composer hint uses light weight (300) and secondary
+text at 65% opacity to stay unobtrusive.
 `QuickAddComposer` owns this styling, so the dialog and the separate window
 stay consistent. Details stay below the editable input; the separate window
 scrolls when needed.
 
+Date, project, priority, Pomodoro estimate and Comment controls retain soft fills
+and thin tinted borders even without a value. Open menus and the expanded Comment
+control use a stronger semantic border. Hover and press retain the semantic color
+with a slightly stronger fill; disabled states retain the shared button behavior.
+Keep 8 px control corners, existing sizes and wrapping, and keyboard focus outlines.
+Apply this treatment to inline Quick Add, dialogs, the separate window and editable
+voice drafts including subtasks, using the existing shared components.
+
 A Pomodoro estimate chip precedes Comment whenever the phrase is nonempty.
-Without an estimate it remains a neutral, discoverable action. Manual estimates
+Without an estimate it remains a softly accent-tinted, discoverable action. Manual estimates
 and recognized `3p` / `3п` tokens use the palette accent, independently of priority.
-The anchored, keyboard-accessible editor offers a 1–999 interval field, decrement,
-increment and Clear estimate. Opening it proposes one interval without changing
+Below 820 px, expand the estimate editor inside the task form below its metadata
+row; never detach it to the top of the screen. Dismiss the task keyboard when
+opening the selector. Use a horizontal, snapping number strip with an accent
+number and underline, accessible decrement/increment actions, Clear estimate,
+and an explicit Enter number action for validated 1–999 input. Keep number
+targets at least 48 px wide, showing fewer adjacent numbers for large text or
+three-digit counts. Desktop uses the same selector in its constrained popover.
+Opening it proposes one interval without changing
 the phrase. Edits replace only estimate spans; clearing reveals the automatic
 schedule estimate or an empty estimate. Manual estimates override schedule-based
 counts without changing the schedule. The focus-time preview uses only the selected
 preset's work duration, excludes breaks, and stays hidden until a preset is available.
-Use the existing viewport/keyboard-safe popover geometry, scroll constrained content,
+Use the existing viewport/keyboard-safe popover geometry on desktop, scroll constrained content,
 and retain 48 px touch controls and regular token text weight in both themes.
 
 All Quick Add surfaces (inline lists, dialogs, the separate window and voice
@@ -743,14 +868,32 @@ The comment is literal task description text, never parsed as Quick Add metadata
 create and synchronize it atomically with the task. Keep both drafts after a
 failure and clear them only after successful text creation.
 
-Opening the comment raises the desktop dialog minimum height to 320 px and the
-separate window to 680 × 340 px. Preserve comment text and selection across
-mobile/desktop layout changes. In constrained windows, scroll the input and
+Opening the comment raises the desktop dialog minimum height to 320 px and
+temporarily raises the separate window height to at least 340 px without changing
+its chosen width. Expanded voice temporarily requests at least 720 × 720 px.
+Neither mode shrinks an already larger window; constrain both to the working area
+and restore the user's base size when closed. Preserve comment text and selection
+across mobile/desktop layout changes. In constrained windows, scroll the input and
 comment while keeping creation controls outside their scroll regions. Allow the
-metadata/action row to scroll independently when wrapping exceeds the available
-height. Mobile
-keeps the existing keyboard-aware sheet and pinned action row. Returning from
+metadata to scroll independently when wrapping exceeds the available height,
+keeping Add outside its scroll region. Mobile keeps the existing keyboard-aware
+sheet and pinned action row. Returning from
 voice mode restores the separate window's expanded comment size when applicable.
+
+Below 820 px, Quick Add starts as a content-sized bottom sheet. Keep the drag
+handle and Close in one pinned 48 px header, with no separate close row or blank
+top section. Preserve the existing hint and metadata visibility, wrapping and
+editing behavior; the microphone and Add row stay pinned below scrolling content.
+Only the header accepts panel gestures: on release, a predominantly vertical
+swipe of at least 48 px expands upward or closes downward. Short, horizontal and
+cancelled gestures do nothing; scrolling fields or metadata never moves the panel.
+Tapping the handle also expands, with keyboard and accessibility support.
+Expansion fills the available viewport above the keyboard, respecting system
+safe areas, and retains the same composer, draft, selection, focus and comment.
+Swipe down closes from either size through the existing cancel action; disable
+these actions while submitting. Use `AppMotion.panel` and `AppMotion.curve`,
+with no animation under Reduce Motion. Each new opening starts compact; desktop,
+the separate Quick Add window and voice panels keep their existing behavior.
 
 Voice draft titles start at one line and grow with their text up to three lines;
 do not reserve blank lines for short tasks. Keep metadata and comments editable.
@@ -1043,7 +1186,7 @@ existing behavior.
 
 On native iOS/Android, an unfinished shared task row follows a horizontal finger
 gesture. A physical right swipe reveals Focus; a physical left swipe reveals
-Schedule, independently of text direction. Reveal after 48 logical pixels, with
+Delete, independently of text direction. Reveal after 48 logical pixels, with
 an action area capped at 144 px and half the row width. Even a full swipe only
 reveals a button: never execute or dismiss a task on gesture completion.
 
@@ -1052,6 +1195,9 @@ long-press menus. Disable swiping during selection, task dragging and action
 execution. Close on an outside tap, reverse swipe or Back. Snap open and closed
 with the existing 180 ms state transition; Reduce Motion applies the final state
 immediately, without delaying actions or waiting for animation callbacks.
+Tapping a revealed button must not close it through drag cancellation before
+its action runs. Delete uses the semantic error color and the shared recurring
+deletion prompt, deletion feedback and Undo.
 
 Single-task Schedule uses the same confirmed date panel and patch application as
 bulk scheduling, without changing selection or requiring a selection scope. Read
@@ -1154,6 +1300,21 @@ Actions remain independent of the decorative animation and Reduce Motion.
 
 ### Empty states and full search
 
+The application shell and navigation render before local data is ready. Show
+preparation, errors and retry inside the main content area; retain the shell's
+state while preparation finishes or fails. Task creation, project creation,
+details, task counts, project lists, Focus playback and account-data overlays
+activate only after local database preparation and account ownership checks.
+Never read previous-owner data to populate the preparing shell. Task lists
+subscribe asynchronously after that boundary; loading a list does not block
+navigation. Defer onboarding overlays until local preparation completes.
+Token refresh, background synchronization and app resume retain the working
+interface and available rows; network failures use the existing sync status.
+Recurring task generation runs after local startup through the background wiring.
+Local preparation failures retain the existing error/retry screen, and retry
+cannot start a second preparation while the first is pending. A real account
+change still gates access until its ownership transition completes.
+
 Inbox, Today and project empty states explain the current context and offer a
 relevant Quick Add action. Today distinguishes no planned tasks from a clear list
 with completed work. Loading and errors retain available rows and offer retry.
@@ -1210,6 +1371,9 @@ including Linux monitor controls and availability feedback. Show the section on
 native macOS, Windows and Linux, even while Linux capabilities are being checked
 or the companion is unavailable. Hide it on mobile and web. The menu, content
 panes and selected content index use the same platform-filtered section list.
+The Pomo menu entry uses a monochrome tomato outline with a leafy crown, an
+18 px size and rounded strokes matching the Lucide icons. It inherits the menu's
+icon color, including the selected accent; do not use an emoji or a face.
 Without a valid or available section parameter, the initial wide view opens
 General and the narrow view opens the index. Profile and Browse account links
 open `section=account`.
@@ -1771,6 +1935,43 @@ the interval, even after a task moves. Keep unlinked, missing and deleted record
 in explicit groups; unavailable tasks do not open. Zero-time distributions have
 no percentage or proportion bar. Both themes use the shared palette and type.
 
+## Apple widget family
+
+The Quiet Typography family uses native SwiftUI system type, prominent monospaced
+digits, a restrained red accent, thin rules and adaptive system backgrounds.
+Focus retains the user's timer color. Tasks, Habits, Day and Progress share this
+hierarchy across iPhone/iPad and Mac widget sizes, Lock Screen accessories and
+Apple Watch Smart Stack widgets/complications. Keep accessory content short and
+legible when WidgetKit removes backgrounds or applies system tinting.
+
+Large home-screen widgets place the existing Pomo stills in the remaining space
+below their data, trailing for Focus, Tasks, Day and Progress, centered for
+Habits. Content has priority: Pomo shrinks or disappears when space is tight.
+Smaller widgets, accessories and Live Activities retain their existing layouts.
+Pomo is decorative and does not intercept interactions or add VoiceOver stops.
+Reuse the calm, focus, happy and rest assets without altering the character.
+
+Pose changes follow real snapshot events: focus interval/status, task completion
+or next task, habit completion, first scheduled item and weekly focus/task totals.
+WidgetKit data transitions last at most two seconds; Reduce Motion and reduced
+luminance disable the Pomo transition. Do not add animation timers or looping
+playback. Native transitions and system image tinting require device validation.
+
+Focus Live Activities use ActivityKit's countdown and support Dynamic Island
+and system StandBy presentation. Interactive completion and pause/resume open
+the app and use its existing command bridge; pause/resume validates the interval
+ID. Regular widgets display cached snapshots and deep-link to existing screens.
+Do not infer background execution or exact refresh timing from timeline entries.
+
+Snapshots contain personal tasks, scheduled habits with period-aware progress,
+today's schedule and a Monday-first calendar week of focus totals. Dates follow
+the local calendar day. A previous day's overview shows an update prompt until
+the app publishes fresh data. Empty states use real data; samples are limited
+to WidgetKit previews. Treat task titles and overview content as privacy-sensitive.
+Shared widget storage must never contain account credentials. Watch habits and
+reports currently refresh through iPhone; direct Watch API replies retain that
+same-day projection until a new iPhone snapshot arrives.
+
 ## Validation
 
 For styling work, the agent formats changed Dart files, runs static analysis,
@@ -1916,3 +2117,112 @@ serialized replacement queue, cover the next 30 calendar days and occupy at
 most 30 slots, preserving iOS capacity for other notifications and Focus.
 Validation for this feature is unit tests, SQL tests, localization/Drift
 generation and static/architecture analysis only.
+
+## Blocking preset desk
+
+Blocking UI is temporarily hidden for this release through
+`blockingAvailableProvider`. Hide the sidebar destination and Settings link on
+all platforms and redirect `/blocking` to `/focus`. Keep the screen, saved
+profiles, preset associations, sync and protection services intact and independent
+of this UI gate. The isolated Blocking E2E overrides the gate to exercise the
+retained functionality.
+
+When enabled for isolated validation, the desktop-only `/blocking` destination
+follows Focus in the sidebar. Settings links to it rather than duplicating its
+controls. At a content width of 820 px or
+more, show the preset rail beside the selected preset's settings. Below that
+width, put a horizontal preset list above the settings. Selecting a preset edits
+its association without changing Focus selection or the active session.
+
+Initially show the first three presets in their existing order. When there are
+more than three, place a 44 px ghost Show all / Collapse button below the list
+in both layouts. Keep expansion state in memory
+for the app lifetime, including navigation away and back; a fresh app starts
+collapsed. Collapsing never changes selection or brings a later preset into
+the first three. Profile saves and preset refreshes preserve expansion state.
+
+Preset tiles use a neutral surface with 10 px corners and an accent outline and
+filled checkmark for selection. Emphasize work minutes on the leading side,
+with labeled short and long breaks beside them and the profile status below.
+Use a 320 px preset rail and horizontal tiles; stack durations when scaled text
+needs more space. Keep all duration and profile labels localized and wrapping.
+The profile occupies a separate full-width secondary surface below a divider,
+with a 72 px minimum height, 16 px padding and a neutral shield icon. An assigned
+profile shows only its name in semibold text, without a "Blocking profile"
+caption. Let long names wrap and grow the footer. Preserve the localized empty
+and unavailable-profile messages; assignment alone does not indicate active
+protection.
+
+Use flat sections for the preset rhythm, shared profile, blocked categories,
+allowed exceptions and expandable behavior. Resource management reuses the
+manual category and per-resource allow/block controls. Show all presets that
+share a profile so edits have a clear scope. Profile selection saves the preset's
+association for the next Focus and remains available during a session; preserve
+the running session's profile snapshot. Keep exit policy locked during a session,
+while categories and exceptions remain editable.
+
+Show computer and Chrome protection as two flat Settings rows with 32 px leading
+icons, a divider, and trailing read-only Enabled / Disabled pills. Use the shared
+Settings row geometry to stack labels and status on narrow layouts. Apps uses
+the Lucide overlapping-window icon; Chrome uses the bundled
+[Google Chrome logo](https://www.google.com/chrome/static/images/chrome-logo.svg).
+Enabled requires confirmation that native protection is applied, or a fresh
+device confirmation of the current rules revision. Availability and extension connection remain
+secondary descriptions, separate from protection state. Pair status text with
+check/pause icons and theme success/neutral colors. Keep app discovery and Chrome
+pairing visible below the protection rows, so first-time setup does not require
+expanding a section. Keep Shared/Local Focus and expandable device and privacy
+details in the footer.
+Keep Automatic categories with a Pro badge and the explanation
+that search assigns categories while manual choices take priority visible after
+devices and before the final action. Unverified subscription access is a pending
+or error state; it must never be presented as Free. Existing assignments survive
+subscription expiry. Pending writes and failed writes remain explicit.
+
+Keep the preset list free of a timer or current-task summary.
+The final action starts that preset when idle and returns to the current Focus when
+a session exists. Missing assigned profiles block starts until reloaded or
+explicitly replaced, including an explicit choice of no blocking.
+Hide the compact quick-add floating button on Blocking and Focus so it cannot
+cover the final action or the session menu. Keyboard quick-add remains available.
+
+## Held-modifier shortcut hints
+
+Desktop native and desktop web views reveal informational shortcut hints after
+one second of holding Command (macOS) or Control (Windows/Linux) alone. Each
+window owns its observer and timer. Shortcut execution remains immediate and
+unchanged. An ordinary key cancels the hold until the modifier is released;
+autorepeat never rearms it. Additional modifiers retain already visible hints.
+Release, window blur, context changes, recording a shortcut, and disposal reset
+hints immediately. Touch interfaces retain their existing layout.
+
+Use `ShortcutHintsHost` inside the zoomed application root, and
+`ShortcutHintsScope` at existing local keyboard handlers. Focused local scopes
+replace shell hints; modal scopes own their context for their mounted lifetime.
+Unregistered dialogs and open context menus suppress shell hints. Recorders
+explicitly disable hints. Register only commands handled in that context, and
+omit unavailable actions. Plain Enter/Escape/navigation hints explain that the
+primary modifier must first be released. Do not duplicate system text editing.
+Shell badges use `shellKeyboardViewModelProvider`, existing command
+names and binding formatting, including remaps and required modifiers. Blocking,
+Habits and projects receive no invented navigation shortcuts.
+
+Keep navigation labels and task counters stable while badges toggle. Search has
+no permanently visible shortcut label. Focus badges show both configured Focus
+bindings, including the alternate (Command/Control F by default).
+Command/Control E toggles Pomo's persisted enabled preference through its existing
+controller, guards concurrent writes and closing, and reports failures. The Pomo
+button shows the configured shortcut on hold; the binding is editable alongside
+the other app shortcuts. Adding it preserves existing user bindings, choosing a
+free modified key when E is occupied.
+
+On small icon buttons, anchor the full badge in an overlay sized to the viewport; flip its
+placement near window edges instead of squeezing it into the button. Do not
+show a floating shell help panel when the modifier is held; retain the in-place
+badges and compact local hints. Compact dialog hints sit beside their actions,
+with reserved space and wrapping for scaled text.
+Hints ignore pointer events and cannot receive focus. Use the current palette,
+Geist/GeistMono and Lucide icons in both themes. Fade in with `AppMotion.popup`
+(180 ms), respecting Reduce Motion; removal is immediate. No preference or
+persisted state is added. Validate hold logic and command projection with unit
+tests, plus static and architecture checks; visual acceptance remains manual.

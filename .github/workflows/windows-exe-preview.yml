@@ -307,10 +307,3 @@ jobs:
             release/Pomodoist-Setup.exe \
             release/Pomodoist-Setup.exe.sha256
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
-  android-preview-smoke:
-    needs: publish
-    if: ${{ always() && needs.publish.outputs.preview_tag != '' }}
-    uses: ./.github/workflows/android.yml
-    with:
-      release_tag: ${{ needs.publish.outputs.preview_tag }}

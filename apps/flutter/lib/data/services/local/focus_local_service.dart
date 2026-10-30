@@ -5,7 +5,11 @@ import 'package:pomodoist/domain/models/focus/focus_models.dart'
     show defaultPresetId;
 
 class FocusLocalService {
-  FocusLocalService(this._db);
+  FocusLocalService(this._db, {Set<String>? serverOwnedRunIds})
+    : _serverOwnedRunIds = serverOwnedRunIds ?? {};
+
+  // Shared-session shadows remain history; only local runs accept local writes.
+  final Set<String> _serverOwnedRunIds;
 
   final AppDatabase _db;
 
@@ -80,6 +84,7 @@ class FocusLocalService {
     return (_db.update(_db.focusRuns)..where(
           (row) =>
               row.presetId.equals(presetId) &
+              row.id.isNotIn(_serverOwnedRunIds) &
               (row.status.equals('active') | row.status.equals('paused')) &
               row.isDeleted.equals(false),
         ))
@@ -129,27 +134,36 @@ class FocusLocalService {
   }
 
   Stream<FocusRunRow?> watchActiveRun() {
-    return _activeRunQuery().watchSingleOrNull().map(
-      (row) => row?.readTable(_db.focusRuns),
+    return _activeRunQuery().watch().map(
+      (rows) => rows
+          .where(
+            (row) =>
+                !_serverOwnedRunIds.contains(row.readTable(_db.focusRuns).id),
+          )
+          .firstOrNull
+          ?.readTable(_db.focusRuns),
     );
   }
 
   Stream<FocusIntervalRow?> watchActiveInterval() {
-    return _activeIntervalQuery().watchSingleOrNull().map(
-      (row) => row?.readTable(_db.focusIntervals),
+    return _activeIntervalQuery().watch().map(
+      (rows) => rows
+          .where(
+            (row) => !_serverOwnedRunIds.contains(
+              row.readTable(_db.focusIntervals).runId,
+            ),
+          )
+          .firstOrNull
+          ?.readTable(_db.focusIntervals),
     );
   }
 
   Future<FocusRunRow?> activeRun() {
-    return _activeRunQuery().getSingleOrNull().then(
-      (row) => row?.readTable(_db.focusRuns),
-    );
+    return watchActiveRun().first;
   }
 
   Future<FocusIntervalRow?> activeInterval() {
-    return _activeIntervalQuery().getSingleOrNull().then(
-      (row) => row?.readTable(_db.focusIntervals),
-    );
+    return watchActiveInterval().first;
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _activeRunQuery() {
@@ -192,8 +206,7 @@ class FocusLocalService {
       ..orderBy([
         OrderingTerm.desc(_db.focusRuns.startedAt),
         OrderingTerm.desc(_db.focusIntervals.sequenceNumber),
-      ])
-      ..limit(1);
+      ]);
   }
 
   Stream<List<FocusRunRow>> watchRunsForTask(String taskId) {

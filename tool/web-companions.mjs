@@ -47,7 +47,7 @@ async function main() {
   const env = await loadEnv(configFile);
   if (env.POMODOIST_ENVIRONMENT !== (mode === 'debug' ? 'staging' : 'production')) throw new Error(`Wrong environment in ${configFile}.`);
   const destination = path.join(root, 'build', platform, mode);
-  await (platform === 'chrome' ? build(env, destination) : buildMiniApp(env, destination));
+  await (platform === 'chrome' ? build({ ...env, APP_ENV: env.POMODOIST_ENVIRONMENT }, destination) : buildMiniApp(env, destination));
   console.log(`Built ${platform} (${env.POMODOIST_ENVIRONMENT}): ${destination}`);
   if (mode === 'release') {
     const archive = path.join(root, 'build', platform, `pomodoist-${platform}-release.zip`);

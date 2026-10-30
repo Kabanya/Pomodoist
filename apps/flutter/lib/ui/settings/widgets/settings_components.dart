@@ -24,6 +24,7 @@ class SettingsRow extends StatelessWidget {
     required this.title,
     required this.control,
     this.subtitle,
+    this.leading,
     this.onTap,
     this.controlWidth = 280,
     super.key,
@@ -31,13 +32,14 @@ class SettingsRow extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+  final Widget? leading;
   final Widget control;
   final double controlWidth;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final label = Column(
+    final text = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: Theme.of(context).textTheme.titleMedium),
@@ -52,6 +54,15 @@ class SettingsRow extends StatelessWidget {
         ],
       ],
     );
+    final label = leading == null
+        ? text
+        : Row(
+            children: [
+              ExcludeSemantics(child: leading!),
+              const SizedBox(width: 16),
+              Expanded(child: text),
+            ],
+          );
     return Material(
       color: Colors.transparent,
       child: InkWell(

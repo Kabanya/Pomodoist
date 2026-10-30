@@ -13,6 +13,44 @@ void main() {
     SharedPreferences.setMockInitialValues(const {});
   });
 
+  test('Pomo uses Cmd/Ctrl E and migration preserves an occupied E', () async {
+    for (final platform in [TargetPlatform.macOS, TargetPlatform.windows]) {
+      final defaults = defaultAppShortcutBindings(platform);
+      final pomo = defaults.entries.singleWhere(
+        (entry) => entry.key.name == 'togglePomo',
+      );
+      expect(pomo.value.keyLabel, 'E');
+      expect(pomo.value.meta, platform == TargetPlatform.macOS);
+      expect(pomo.value.control, platform == TargetPlatform.windows);
+      final saved = {...defaults}..remove(pomo.key);
+      saved[AppShortcutCommand.search] = pomo.value;
+      SharedPreferences.setMockInitialValues({
+        keyboardShortcutsPreferenceKey: jsonEncode({
+          for (final entry in saved.entries)
+            entry.key.storageKey: entry.value.toJson(),
+        }),
+      });
+      final container = ProviderContainer(
+        overrides: [shortcutTargetPlatformProvider.overrideWithValue(platform)],
+      );
+      addTearDown(container.dispose);
+      await container.read(keyboardShortcutsLoadedProvider.future);
+      final loaded = container.read(keyboardShortcutsProvider);
+      expect(loaded[AppShortcutCommand.search], pomo.value);
+      expect(loaded[pomo.key]!.signature, isNot(pomo.value.signature));
+      expect(
+        loaded.values.map((binding) => binding.signature).toSet(),
+        hasLength(loaded.length),
+      );
+      final stored = jsonDecode(
+        (await SharedPreferences.getInstance()).getString(
+          keyboardShortcutsPreferenceKey,
+        )!,
+      );
+      expect(stored, contains('togglePomo'));
+    }
+  });
+
   test('both Focus shortcuts match on Apple and non-Apple platforms', () {
     for (final platform in [TargetPlatform.macOS, TargetPlatform.windows]) {
       final bindings = defaultAppShortcutBindings(platform);
@@ -196,6 +234,7 @@ void main() {
           .toList(),
       const [
         '⌘B',
+        '⌘E',
         '⌥⌘B',
         '⇧⌘B',
         '⌘N',
@@ -738,6 +777,7 @@ void main() {
             .toList(),
         const [
           '⌘B',
+          '⌘E',
           '⌥⌘B',
           '⇧⌘B',
           '⌘N',

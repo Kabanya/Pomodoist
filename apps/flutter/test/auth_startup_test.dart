@@ -3,11 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
 import 'package:pomodoist/ui/core/widgets/app_startup_gate.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/startup_wiring.dart';
+import 'package:pomodoist/data/services/local/database/app_database.dart';
+import 'package:pomodoist/data/services/local/outbox_service.dart';
+import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
 import 'package:pomodoist/routing/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +23,82 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(const {});
   });
+
+  for (final width in [390.0, 1280.0]) {
+    testWidgets('shell opens before local data at width $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final reads = _LocalReads();
+      final db = AppDatabase(NativeDatabase.memory().interceptWith(reads));
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      (await DriftTaskRepository(
+        db,
+        DriftOutboxService(db),
+      ).createTask(CreateTaskInput(content: 'Saved local task'))).getOrThrow();
+      reads.count = 0;
+      var ownership = Completer<void>();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          appStartupProvider.overrideWith((ref) async {}),
+          accountSyncStartupProvider.overrideWith((ref) => ownership.future),
+          startupBackgroundWiringProvider.overrideWith((ref) {}),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const PomodoistApp(),
+        ),
+      );
+      final router = container.read(routerProvider);
+      router.go('/inbox');
+      await _pumpFrames(tester);
+      expect(find.byType(AdaptiveShell), findsOneWidget);
+      expect(find.byKey(const Key('app-startup-loading')), findsOneWidget);
+      expect(find.text('Saved local task'), findsNothing);
+      expect(reads.count, 0, reason: 'Ownership must precede local data reads');
+      final shell = tester.state(find.byType(AdaptiveShell));
+      await tester.tap(
+        width >= 820
+            ? find.byKey(const ValueKey('sidebar-destination-/today'))
+            : find.byTooltip('Today'),
+      );
+      await _pumpFrames(tester);
+      expect(_routerUri(router), '/today');
+      expect(tester.state(find.byType(AdaptiveShell)), same(shell));
+      router.go('/inbox');
+      ownership.complete();
+      await _pumpFrames(tester);
+      await tester.runAsync(
+        () => container.read(
+          tasksByQueryProvider(const TaskQuery.inbox()).future,
+        ),
+      );
+      await _pumpFrames(tester);
+      expect(find.text('Saved local task'), findsOneWidget);
+      expect(tester.state(find.byType(AdaptiveShell)), same(shell));
+      ownership = Completer<void>();
+      container.invalidate(accountSyncStartupProvider);
+      await _pumpFrames(tester);
+      expect(find.text('Saved local task'), findsNothing);
+      expect(find.byKey(const Key('app-startup-loading')), findsOneWidget);
+      expect(tester.state(find.byType(AdaptiveShell)), same(shell));
+      ownership.complete();
+      await tester.pumpWidget(const SizedBox.shrink());
+      container.dispose();
+      await tester.pump(const Duration(seconds: 1));
+      final closing = db.close();
+      await tester.pumpAndSettle();
+      await closing;
+    });
+  }
 
   testWidgets('login renders while app startup is still pending', (
     tester,
@@ -161,6 +245,19 @@ void main() {
     expect(find.byKey(const Key('startup-ready-child')), findsOneWidget);
     expect(calls, 1);
   });
+}
+
+class _LocalReads extends QueryInterceptor {
+  int count = 0;
+  @override
+  Future<List<Map<String, Object?>>> runSelect(
+    QueryExecutor executor,
+    String statement,
+    List<Object?> args,
+  ) {
+    count++;
+    return executor.runSelect(statement, args);
+  }
 }
 
 Future<({ProviderContainer container, GoRouter router})>

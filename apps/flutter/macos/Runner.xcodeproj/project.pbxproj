@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		D70000000000000000000003 /* DistractionProtectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70000000000000000000002 /* DistractionProtectionController.swift */; };
+		D70000000000000000000001 /* DistractionProtectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70000000000000000000002 /* DistractionProtectionController.swift */; };
 		0279F8A08B39CEABF321504A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
 		06D4C8BDD1AE87463F9B66BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F70640268851B1260EC1EDE2 /* Localizable.strings */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
@@ -43,6 +45,7 @@
 		7D0000060000000000000006 /* PomodoistFocusWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7D0000160000000000000006 /* PomodoistFocusWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7D0000070000000000000007 /* FlutterControllerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000100000000000000010 /* FlutterControllerResolver.swift */; };
 		7D0000080000000000000008 /* FlutterControllerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000100000000000000010 /* FlutterControllerResolver.swift */; };
+		7D0000090000000000000009 /* FocusStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0000120000000000000002 /* FocusStatusItemController.swift */; };
 		A80000010000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A80000020000000000000002 /* PrivacyInfo.xcprivacy */; };
 		A90000010000000000000001 /* AppMenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000030000000000000003 /* AppMenuController.swift */; };
 		A90000020000000000000002 /* AppMenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000030000000000000003 /* AppMenuController.swift */; };
@@ -50,6 +53,7 @@
 		B60000000000000000000001 /* StoreKitHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60000000000000000000002 /* StoreKitHost.swift */; };
 		C60000000000000000000001 /* MacosGlassController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60000000000000000000002 /* MacosGlassController.swift */; };
 		EC94E618B3B8A02CFA518BBB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 25778229D0DA21714F8F106D /* InfoPlist.strings */; };
+		D80000000000000000000001 /* Pomo in Resources */ = {isa = PBXBuildFile; fileRef = D80000000000000000000002 /* Pomo */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +105,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D70000000000000000000002 /* DistractionProtectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionProtectionController.swift; sourceTree = "<group>"; };
 		0C16B8AFEB66997DF560BF69 /* Pods-RunnerTests.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-development.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-development.xcconfig"; sourceTree = "<group>"; };
 		1D44B4ECF994E00AE89C14B7 /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh; path = ../apple/Localization/zh.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		20C9B970C30B42BF3075EE26 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ../apple/Localization/ja.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
@@ -187,6 +192,7 @@
 		F70640268851B1260EC1EDE3 /* Direct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Direct.xcconfig; sourceTree = "<group>"; };
 		FAF0F5DBF24F03754627E7F8 /* Pods-Runner.release-direct-production.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release-direct-production.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release-direct-production.xcconfig"; sourceTree = "<group>"; };
 		FEAC13951B989D6877944A31 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		D80000000000000000000002 /* Pomo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pomo; path = ../apple/FocusWidget/Pomo; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -295,6 +301,7 @@
 				4C5155414448444B45594346 /* QuickAddHotKeyController.swift */,
 				A90000030000000000000003 /* AppMenuController.swift */,
 				C60000000000000000000002 /* MacosGlassController.swift */,
+				D70000000000000000000002 /* DistractionProtectionController.swift */,
 				A80000020000000000000002 /* PrivacyInfo.xcprivacy */,
 				7D0000120000000000000002 /* FocusStatusItemController.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
@@ -318,6 +325,7 @@
 		7D0000180000000000000018 /* PomodoistFocusWidget */ = {
 			isa = PBXGroup;
 			children = (
+				D80000000000000000000002 /* Pomo */,
 				7D0000130000000000000003 /* PomodoistFocusWidget.swift */,
 				7D0000140000000000000004 /* Info.plist */,
 				7D0000150000000000000005 /* PomodoistFocusWidget.entitlements */,
@@ -549,6 +557,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D80000000000000000000001 /* Pomo in Resources */,
 				3D5CECE55C35C80FAF683BC1 /* InfoPlist.strings in Resources */,
 				0279F8A08B39CEABF321504A /* Localizable.strings in Resources */,
 			);
@@ -664,7 +673,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */,
+				D70000000000000000000003 /* DistractionProtectionController.swift in Sources */,
 				7D0000080000000000000008 /* FlutterControllerResolver.swift in Sources */,
+				7D0000090000000000000009 /* FocusStatusItemController.swift in Sources */,
 				7D0000020000000000000002 /* PomodoistFocusShared.swift in Sources */,
 				4C5155424448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
 				A90000020000000000000002 /* AppMenuController.swift in Sources */,
@@ -680,6 +691,7 @@
 				B50000000000000000000001 /* SystemSpeechTranscriber.swift in Sources */,
 				B60000000000000000000001 /* StoreKitHost.swift in Sources */,
 				C60000000000000000000001 /* MacosGlassController.swift in Sources */,
+				D70000000000000000000001 /* DistractionProtectionController.swift in Sources */,
 				7D0000070000000000000007 /* FlutterControllerResolver.swift in Sources */,
 				4C5155414448444B45594246 /* QuickAddHotKeyController.swift in Sources */,
 				A90000010000000000000001 /* AppMenuController.swift in Sources */,

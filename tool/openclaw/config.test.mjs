@@ -13,6 +13,9 @@ test('read mode uses OAuth and an explicit read allowlist', () => {
   assert.ok(config.toolFilter.include.includes('get_habit'));
   assert.ok(!config.toolFilter.include.includes('openclaw_complete_habit'));
   assert.ok(config.toolFilter.include.includes('openclaw_get_focus'));
+  for (const name of ['list_app_devices', 'get_app_settings', 'get_app_settings_request']) assert.ok(config.toolFilter.include.includes(`openclaw_${name}`));
+  assert.ok(!config.toolFilter.include.includes('openclaw_set_app_appearance'));
+  assert.ok(!config.toolFilter.include.includes('openclaw_set_app_shortcut'));
   assert.ok(!config.toolFilter.include.includes('openclaw_create_task'));
   assert.ok(!JSON.stringify(config).includes('Authorization'));
 });
@@ -20,6 +23,9 @@ test('write mode permits guarded tools only, never globs or legacy mutations', (
   const config = buildConfig('https://tasks.example.com/mcp', 'write');
   assert.ok(config.toolFilter.include.includes('openclaw_create_task'));
   assert.ok(config.toolFilter.include.includes('openclaw_focus'));
+  assert.ok(config.toolFilter.include.includes('openclaw_set_app_appearance'));
+  assert.ok(config.toolFilter.include.includes('openclaw_set_app_shortcut'));
+  assert.ok(!config.toolFilter.include.includes('set_app_appearance'));
   assert.ok(config.toolFilter.include.includes('openclaw_set_task_details'));
   assert.ok(!config.toolFilter.include.some(x => x.includes('*')));
   for (const action of ['create_habit', 'update_habit', 'add_habit_check_in', 'complete_habit', 'undo_habit_check_in', 'finish_habit', 'reopen_habit', 'delete_habit']) {

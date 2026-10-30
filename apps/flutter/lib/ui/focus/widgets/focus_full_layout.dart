@@ -38,13 +38,18 @@ class _FocusFullHeader extends StatelessWidget {
           child: preset,
         ),
         if (onMinimize != null)
-          IconButton(
-            key: const Key('focus-header-minimize'),
-            tooltip: context.l10n.focusSwitchToMinimalView,
-            onPressed: onMinimize,
-            icon: const Icon(LucideIcons.minimize, size: 18),
-            color: context.appColors.secondaryText,
-            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+          ShortcutHintBadge(
+            command: AppShortcutCommand.focus,
+            outside: true,
+            alignment: Alignment.topRight,
+            child: IconButton(
+              key: const Key('focus-header-minimize'),
+              tooltip: context.l10n.focusSwitchToMinimalView,
+              onPressed: onMinimize,
+              icon: const Icon(LucideIcons.minimize, size: 18),
+              color: context.appColors.secondaryText,
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+            ),
           ),
         ?menu,
       ],

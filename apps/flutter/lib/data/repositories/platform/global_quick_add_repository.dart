@@ -6,9 +6,13 @@ export 'package:pomodoist/domain/models/platform/global_shortcut.dart';
 abstract interface class GlobalQuickAddRepository {
   GlobalQuickAddState get state;
   Future<void> get ready;
+  Future<void> reload();
   Stream<GlobalQuickAddState> watchState();
-  Future<void> setEnabled(bool enabled);
-  Future<void> setShortcut(GlobalQuickAddBinding shortcut);
+  Future<void> setEnabled(bool enabled, {bool Function()? isCurrent});
+  Future<void> setShortcut(
+    GlobalQuickAddBinding shortcut, {
+    bool Function()? isCurrent,
+  });
   Future<GlobalQuickAddBinding> captureShortcut();
   Future<void> cancelCapture();
 }

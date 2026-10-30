@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/distractions/widgets/distraction_settings.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart'
     show pomoSupported;
@@ -27,6 +28,7 @@ import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
 import 'package:pomodoist/ui/settings/widgets/theme_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/app_icon_settings.dart';
+import 'package:pomodoist/ui/settings/widgets/status_item_style_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/bottom_navigation_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/voice_transcription_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
@@ -114,14 +116,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     };
   }
 
-  IconData _icon(SettingsSection section) => switch (section) {
-    SettingsSection.general => LucideIcons.slidersHorizontal,
-    SettingsSection.appearance => LucideIcons.palette,
-    SettingsSection.tasksFocus => LucideIcons.timer,
-    SettingsSection.pomo => LucideIcons.smile,
-    SettingsSection.integrations => LucideIcons.plug,
-    SettingsSection.account => LucideIcons.userRound,
-    SettingsSection.about => LucideIcons.info,
+  Widget _icon(SettingsSection section) => switch (section) {
+    SettingsSection.general => const Icon(
+      LucideIcons.slidersHorizontal,
+      size: 18,
+    ),
+    SettingsSection.appearance => const Icon(LucideIcons.palette, size: 18),
+    SettingsSection.tasksFocus => const Icon(LucideIcons.timer, size: 18),
+    SettingsSection.pomo => const _PomoIcon(),
+    SettingsSection.integrations => const Icon(LucideIcons.plug, size: 18),
+    SettingsSection.account => const Icon(LucideIcons.userRound, size: 18),
+    SettingsSection.about => const Icon(LucideIcons.info, size: 18),
   };
 
   Widget _menu({required bool wide}) => ListView(
@@ -145,7 +150,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               child: Expanded(
                 child: Row(
                   children: [
-                    Icon(_icon(section), size: 18),
+                    _icon(section),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(_title(section), textAlign: TextAlign.start),
@@ -350,16 +355,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ],
         );
       case SettingsSection.appearance:
-        return const Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ThemeSettingsCard(),
-            SizedBox(height: 24),
-            AppIconSettings(),
-            SizedBox(height: 24),
-            BottomNavigationSettings(),
-            SizedBox(height: 24),
-            TaskListStyleSettings(),
+            const ThemeSettingsCard(),
+            if (statusItemStyleSupported) ...[
+              const SizedBox(height: 24),
+              const StatusItemStyleSettings(),
+            ],
+            const SizedBox(height: 24),
+            const AppIconSettings(),
+            const SizedBox(height: 24),
+            const BottomNavigationSettings(),
+            const SizedBox(height: 24),
+            const TaskListStyleSettings(),
           ],
         );
       case SettingsSection.tasksFocus:
@@ -411,6 +420,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         saveSetting(context, viewModel.setCelebration(value)),
                   ),
                 ),
+                const DistractionSettings(),
                 FocusSoundSettings(
                   active: _navigation.selected == SettingsSection.tasksFocus,
                 ),
@@ -703,4 +713,59 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       ],
     );
   }
+}
+
+class _PomoIcon extends StatelessWidget {
+  const _PomoIcon();
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    size: const Size.square(18),
+    painter: _PomoIconPainter(
+      IconTheme.of(context).color ?? context.appColors.primaryText,
+    ),
+  );
+}
+
+class _PomoIconPainter extends CustomPainter {
+  const _PomoIconPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final path = Path()
+      ..moveTo(7, 7)
+      ..cubicTo(3, 6, 2, 10, 2, 13)
+      ..cubicTo(2, 18, 6, 22, 12, 21)
+      ..cubicTo(18, 22, 22, 18, 22, 13)
+      ..cubicTo(22, 10, 21, 6, 17, 7)
+      ..moveTo(12, 7)
+      ..lineTo(8, 5)
+      ..lineTo(9, 8)
+      ..lineTo(5, 10)
+      ..lineTo(10, 10)
+      ..lineTo(12, 12)
+      ..lineTo(14, 10)
+      ..lineTo(19, 10)
+      ..lineTo(15, 8)
+      ..lineTo(16, 5)
+      ..close()
+      ..moveTo(12, 7)
+      ..quadraticBezierTo(11, 3, 14, 2);
+    canvas.save();
+    canvas.scale(size.width / 24, size.height / 24);
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _PomoIconPainter oldDelegate) =>
+      color != oldDelegate.color;
 }

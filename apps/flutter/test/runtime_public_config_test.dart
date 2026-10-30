@@ -32,12 +32,12 @@ void main() {
       });
     });
 
-    test('accepts production with the shared Pomodoist backend', () {
+    test('accepts production with the approved Supabase Cloud host', () {
       final config = RuntimePublicConfig.fromRuntimeJson({
         ..._stagingConfig(),
         'environment': 'production',
         'webAppUrl': 'https://app.pomodoist.com',
-        'supabaseUrl': 'https://supabase-test.pomodoist.com',
+        'supabaseUrl': 'https://pomodoist.supabase.co',
       });
 
       expect(config.environment, RuntimeEnvironment.production);
@@ -45,13 +45,13 @@ void main() {
 
     test('hosted backend URLs must be approved origins', () {
       for (final url in [
-        'https://user@supabase-test.pomodoist.com',
-        'https://supabase-test.pomodoist.com:8443',
-        'https://supabase-test.pomodoist.com/other',
-        'https://supabase-test.pomodoist.com?route=other',
-        'https://supabase-test.pomodoist.com#other',
-        'https://supabase-test.pomodoist.com.example.test',
-        'https://ewauihswbwduvklrozke.supabase.co',
+        'https://user@pomodoist.supabase.co',
+        'https://pomodoist.supabase.co:8443',
+        'https://pomodoist.supabase.co/other',
+        'https://pomodoist.supabase.co?route=other',
+        'https://pomodoist.supabase.co#other',
+        'https://pomodoist.supabase.co.example.test',
+        'https://supabase-test.pomodoist.com',
       ]) {
         expect(
           () => RuntimePublicConfig.fromRuntimeJson({
@@ -64,6 +64,16 @@ void main() {
           reason: url,
         );
       }
+    });
+
+    test('staging rejects the production Cloud backend', () {
+      expect(
+        () => RuntimePublicConfig.fromRuntimeJson({
+          ..._stagingConfig(),
+          'supabaseUrl': 'https://pomodoist.supabase.co',
+        }),
+        throwsFormatException,
+      );
     });
 
     test('accepts selfhosted HTTPS without optional integrations', () {
@@ -314,7 +324,8 @@ void main() {
         () => RuntimePublicConfig.fromRuntimeJson({
           ..._stagingConfig(),
           'environment': 'production',
-          'webAppUrl': 'https://app-test.pomodoist.com',
+          'webAppUrl': 'https://app.pomodoist.com',
+          'supabaseUrl': 'https://supabase-test.pomodoist.com',
         }),
         throwsFormatException,
       );
@@ -348,11 +359,8 @@ void main() {
         nativeRelease: true,
       );
 
-      expect(
-        config.supabaseUrl,
-        Uri.parse('https://supabase-test.pomodoist.com'),
-      );
-      expect(config.supabaseAnonKey.split('.'), hasLength(3));
+      expect(config.supabaseUrl, Uri.parse('https://pomodoist.supabase.co'));
+      expect(config.supabaseAnonKey, startsWith('sb_publishable_'));
     });
 
     test('explicit local native release does not fall back to cloud', () {

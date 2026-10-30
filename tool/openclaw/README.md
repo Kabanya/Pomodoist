@@ -119,6 +119,7 @@ Removing the local server definition or skill alone is also not revocation.
 | Projects and labels | Guarded project create/update/delete and label create/delete, preserving existing MCP restrictions on system anchors. |
 | Focus | `openclaw_get_focus`, then `openclaw_focus`: start a single 25-minute work session (optionally linked to a task), pause, resume, complete after its timer elapses, or stop with confirmation. Uses the shared Watch/Telegram Focus runtime, events and task totals. Custom session lengths/preset editing are not exposed in this version. |
 | Reports | Existing Focus history, productivity and achievements read tools. |
+| Device settings | `openclaw_list_app_devices`, fresh `openclaw_get_app_settings`, `openclaw_set_app_shortcut`, `openclaw_set_app_appearance`, and `openclaw_get_app_settings_request`. Changes require `--write`, a selected online device, UUID, and the affected group’s `expected_version`. |
 
 Habits use `period_targets` for independent morning, afternoon, evening and night
 goals; their sum is the daily target. For example, `{"morning":2,"night":5}`
@@ -128,7 +129,7 @@ schedule on an inclusive `end_date`, defaulting to today. Past dates remain
 correctable and future dates are read-only. Night always belongs to the selected
 calendar date. One reminder time does not create one notification per repetition.
 
-Each guarded mutation has a UUID `request_id` and a nested `arguments` object:
+Each task, habit, project or Focus guarded mutation has a UUID `request_id` and a nested `arguments` object:
 
 ```json
 {
@@ -165,6 +166,20 @@ metadata and a SHA-256 argument fingerprint, not OAuth credentials or task text.
 They survive Edge restarts and are retained until account/client deletion, so
 late retries cannot recreate a previously completed action. Sync hints are
 best-effort after commit; normal client pulls recover a missed hint.
+
+Device settings use their own short-lived receipt gateway. Their arguments are
+at the top level: `request_id`, `device_id`, `expected_version`, `value`, and
+`setting` for appearance. Device listing includes registered devices with explicit `online` availability.
+A fresh read returns group versions and capabilities;
+shortcuts share one version. Internal bindings use `physicalKeyId`, global Quick
+Add uses native `keyCode`, and `binding: null` resets. A pending response returns
+a UUID for status polling. Only `status: applied` confirms a change. An expired
+request was not claimed; claimed execution has a fixed 120-second deadline; an uncertain request may have applied and needs a fresh
+read before any new intent. Never blindly replay uncertain work. Settings receipts
+are limited to 24 hours and 100 per device, including short-lived image source
+URLs cleared when requests finish or expire. Image bytes and paths never cross
+the gateway. Settings stay local to the selected runtime and are never queued for
+an offline device or replayed after restart.
 
 ## Server rollout and tests
 
@@ -249,3 +264,8 @@ gates.
 Official integration contracts:
 - [OpenClaw MCP tools](https://docs.openclaw.ai/tools/mcp)
 - [OpenClaw MCP CLI and OAuth](https://docs.openclaw.ai/cli/mcp)
+
+Device settings require
+`server/supabase/migrations/20261029081042_pomodoist_core_app_settings.sql`
+before deploying the updated function and client. Apply existing saved tool
+filters deliberately to expose the settings tools.

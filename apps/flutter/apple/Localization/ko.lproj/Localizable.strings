@@ -53,3 +53,28 @@
 "Classic" = "클래식";
 "Deep Work" = "깊은 집중";
 "Short Sprint" = "짧은 집중";
+
+"Tasks" = "작업";
+"Habits" = "습관";
+"Day" = "일정";
+"Progress" = "진행 상황";
+"Next" = "다음";
+"No tasks" = "작업 없음";
+"No habits today" = "오늘 습관 없음";
+"Nothing scheduled" = "예정된 일정 없음";
+"Open Pomodoist to update" = "Pomodoist를 열어 업데이트";
+"Focus this week" = "이번 주 집중";
+"%d tasks today" = "오늘 완료한 작업 %d개";
+"All day" = "종일";
+"Shows your next tasks." = "다음 작업을 표시합니다.";
+"Shows today's habits." = "오늘의 습관을 표시합니다.";
+"Shows today's schedule." = "오늘의 일정을 표시합니다.";
+"Shows this week's progress." = "이번 주 진행 상황을 표시합니다.";
+"Complete task" = "작업 완료";
+"Pause or resume focus" = "집중 일시 정지 또는 재개";
+"Interval" = "구간";
+"Task" = "작업";
+
+"Appearance" = "모양";
+"Old" = "이전";
+"New" = "새로운";

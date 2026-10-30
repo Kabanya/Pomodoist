@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { registerAppSettingsTools } from "./app_settings_tools.ts";
 import { registerCollaborationTool } from "./collaboration_tools.ts";
 import { registerHabitReads } from "./habit_tools.ts";
 import { mutate } from "./mutation_helpers.ts";
@@ -146,6 +147,7 @@ export function registerPomodoistTools(
     }));
   }
   registerCollaborationTool(server, auth, dependencies, outputEnvelope(z.record(z.string(), z.unknown())));
+  registerAppSettingsTools(server, auth, dependencies);
 }
 
 function productivityReport(value: unknown) {

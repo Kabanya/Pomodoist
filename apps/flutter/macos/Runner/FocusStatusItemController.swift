@@ -2,7 +2,21 @@ import Cocoa
 import FlutterMacOS
 import WidgetKit
 
+enum StatusItemStyle: String, CaseIterable {
+  case classic
+  case modern
+}
+
 final class FocusStatusItemController: NSObject, NSMenuDelegate {
+  static let styleChannelName = "pomodoist/status_item"
+  private static let styleDefaultsKey = "focus.statusItem.style"
+  private static let timerImage: NSImage? = {
+    let image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)?
+      .withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [.systemRed]))
+    image?.isTemplate = false
+    image?.size = NSSize(width: 16, height: 16)
+    return image
+  }()
   private static let timerColors: [(key: PomodoistTimerColor, title: String, color: NSColor)] = [
     (.white, "White", .white),
     (.black, "Black", .black),
@@ -14,24 +28,30 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
   ]
 
   private let channel: FlutterMethodChannel
+  private let styleChannel: FlutterMethodChannel
   private let store: PomodoistFocusSnapshotStore
   private let defaults: UserDefaults
-  private let statusItem = NSStatusBar.system.statusItem(
+  let statusItem = NSStatusBar.system.statusItem(
     withLength: NSStatusItem.variableLength
   )
   private let menu = NSMenu()
   private var snapshot = PomodoistSnapshot.empty
   private var selectedTimerColor: PomodoistTimerColor?
+  private(set) var style: StatusItemStyle
   private var ticker: Timer?
 
   init(
     channel: FlutterMethodChannel,
+    styleChannel: FlutterMethodChannel,
     store: PomodoistFocusSnapshotStore = PomodoistFocusSnapshotStore(),
     defaults: UserDefaults = UserDefaults(suiteName: pomodoistFocusAppGroupIdentifier) ?? .standard
   ) {
     self.channel = channel
+    self.styleChannel = styleChannel
     self.store = store
     self.defaults = defaults
+    style = defaults.string(forKey: Self.styleDefaultsKey)
+      .flatMap(StatusItemStyle.init(rawValue:)) ?? .classic
     let storedColor = defaults.string(forKey: pomodoistTimerColorDefaultsKey)
       ?? UserDefaults.standard.string(forKey: pomodoistTimerColorDefaultsKey)
     selectedTimerColor = storedColor.flatMap(PomodoistTimerColor.init(rawValue:))
@@ -47,6 +67,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
 
   deinit {
     ticker?.invalidate()
+    styleChannel.setMethodCallHandler(nil)
     NSStatusBar.system.removeStatusItem(statusItem)
   }
 
@@ -64,6 +85,34 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     channel.setMethodCallHandler { [weak self] call, result in
       self?.handleFlutterCall(call, result: result)
     }
+    styleChannel.setMethodCallHandler { [weak self] call, result in
+      self?.handleStyleCall(call, result: result)
+    }
+  }
+
+  func handleStyleCall(_ call: FlutterMethodCall, result: FlutterResult) {
+    switch call.method {
+    case "getStyle":
+      result(style.rawValue)
+    case "setStyle":
+      guard let value = call.arguments as? String,
+        let style = StatusItemStyle(rawValue: value)
+      else {
+        result(FlutterError(code: "invalid_style", message: "Expected classic or modern.", details: nil))
+        return
+      }
+      applyStyle(style)
+      result(style.rawValue)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func applyStyle(_ style: StatusItemStyle) {
+    self.style = style
+    defaults.set(style.rawValue, forKey: Self.styleDefaultsKey)
+    updateStatusItem()
+    styleChannel.invokeMethod("styleChanged", arguments: style.rawValue)
   }
 
   private func configureStatusItem() {
@@ -103,7 +152,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     statusItem.button?.setAccessibilityLabel(pomodoistLocalized("Pomodoist focus timer", locale: decoded.locale))
     store.save(dictionary: dictionary)
     updateStatusItem()
-    WidgetCenter.shared.reloadTimelines(ofKind: pomodoistFocusWidgetKind)
+    WidgetCenter.shared.reloadAllTimelines()
   }
 
   private func requestSnapshot() {
@@ -116,7 +165,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     }
     let font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
     let title = NSMutableAttributedString(
-      string: "\u{25EF} ",
+      string: style == .classic ? "\u{25EF} " : "",
       attributes: [
         .font: font,
         .foregroundColor: NSColor.secondaryLabelColor,
@@ -132,9 +181,12 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
         ]
       )
     )
+    button.image = style == .modern ? Self.timerImage : nil
+    button.imagePosition = .imageLeading
+    button.imageHugsTitle = true
     button.attributedTitle = title
     button.setAccessibilityValue(
-      "\(PomodoistFocusDisplay.stateLabel(focus: snapshot.focus)), \(timerText)"
+      "\(PomodoistFocusDisplay.stateLabel(focus: snapshot.focus, locale: snapshot.locale)), \(timerText)"
     )
   }
 
@@ -143,6 +195,9 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
       let preset = Self.timerColors.first(where: { $0.key == selectedTimerColor })
     {
       return preset.color
+    }
+    if style == .modern {
+      return .labelColor
     }
     guard focus.isActive, let interval = focus.interval else {
       return .systemRed
@@ -194,6 +249,7 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
     }
 
     menu.addItem(.separator())
+    menu.addItem(styleMenuItem())
     menu.addItem(timerColorMenuItem())
     menu.addItem(.separator())
     menu.addItem(item(title: "Open Pomodoist", action: #selector(openPomodoist)))
@@ -225,6 +281,26 @@ final class FocusStatusItemController: NSObject, NSMenuDelegate {
 
     parent.submenu = submenu
     return parent
+  }
+
+  private func styleMenuItem() -> NSMenuItem {
+    let title = pomodoistLocalized("Appearance", locale: snapshot.locale)
+    let parent = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+    let submenu = NSMenu(title: title)
+    for option in StatusItemStyle.allCases {
+      let child = item(title: option == .classic ? "Old" : "New", action: #selector(selectStyle(_:)))
+      child.representedObject = option.rawValue
+      child.state = style == option ? .on : .off
+      submenu.addItem(child)
+    }
+    parent.submenu = submenu
+    return parent
+  }
+
+  @objc private func selectStyle(_ sender: NSMenuItem) {
+    guard let value = sender.representedObject as? String,
+      let style = StatusItemStyle(rawValue: value) else { return }
+    applyStyle(style)
   }
 
   private func swatchImage(color: NSColor) -> NSImage {

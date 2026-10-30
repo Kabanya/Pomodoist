@@ -49,6 +49,7 @@ final appThemeModeProvider =
 
 class AppThemeModeController extends Notifier<AppThemeMode> {
   bool _loaded = false;
+  late Future<void> ready;
   bool _hasLocalSelection = false;
   AppLifecycleListener? _lifecycleListener;
 
@@ -66,10 +67,13 @@ class AppThemeModeController extends Notifier<AppThemeMode> {
     );
     if (!_loaded) {
       _loaded = true;
-      unawaited(_loadStoredThemeMode());
+      ready = _loadStoredThemeMode();
+      unawaited(ready);
     }
     return sharedMode ?? AppThemeMode.system;
   }
+
+  Future<void> refresh() => _loadStoredThemeMode(allowSharedOverride: true);
 
   Future<void> setThemeMode(AppThemeMode mode) async {
     _hasLocalSelection = true;

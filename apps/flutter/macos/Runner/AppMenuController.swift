@@ -47,7 +47,7 @@ final class AppMenuController: NSObject {
     fileMenu.removeAllItems()
     fileMenu.addItem(menuItem(for: quickAdd, name: "quickAdd", ellipsis: true))
 
-    installToggleSidebar(toggleSidebar)
+    installToggleSidebar(toggleSidebar, pomo: commands["togglePomo"])
     installSettings(settings)
 
     let goMenu = topLevelMenu(
@@ -119,7 +119,7 @@ final class AppMenuController: NSObject {
     configure(item, for: command, name: "settings", ellipsis: true)
   }
 
-  private func installToggleSidebar(_ command: AppMenuCommand) {
+  private func installToggleSidebar(_ command: AppMenuCommand, pomo: AppMenuCommand?) {
     let viewIdentifier = NSUserInterfaceItemIdentifier("pomodoist.view")
     let viewMenu = mainMenu.items.first(where: { $0.identifier == viewIdentifier })?.submenu
       ?? mainMenu.item(withTitle: "View")?.submenu
@@ -141,6 +141,14 @@ final class AppMenuController: NSObject {
     }
     item.identifier = Self.sidebarIdentifier
     configure(item, for: command, name: "toggleSidebar")
+    if let pomo = pomo {
+      let identifier = NSUserInterfaceItemIdentifier("pomodoist.togglePomo")
+      let existingPomo = viewMenu.items.first(where: { $0.identifier == identifier })
+      let pomoItem = existingPomo ?? NSMenuItem(title: "", action: nil, keyEquivalent: "")
+      if existingPomo == nil { viewMenu.insertItem(pomoItem, at: 1) }
+      pomoItem.identifier = identifier
+      configure(pomoItem, for: pomo, name: "togglePomo")
+    }
   }
 
   private func menuItem(
@@ -172,7 +180,7 @@ final class AppMenuController: NSObject {
     guard let name = sender.representedObject as? String else {
       return
     }
-    if (name == "focus" || name == "focusAlternate"),
+    if (name == "focus" || name == "focusAlternate" || name == "togglePomo"),
        let event = NSApp.currentEvent, event.type == .keyDown, event.isARepeat {
       return
     }

@@ -4,6 +4,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yaml/yaml.dart';
 
 void main() {
+  test('Android smoke runs only for application release tags', () {
+    final android =
+        loadYaml(File('../../.github/workflows/android.yml').readAsStringSync())
+            as YamlMap;
+    final triggers = android['on'] as YamlMap;
+    expect(triggers.keys.toSet(), {'push'});
+    final push = triggers['push'] as YamlMap;
+    expect(push.keys.toSet(), {'tags'});
+    expect(push['tags'], ['v*.*.*']);
+    final steps =
+        _job(
+              '../../.github/workflows/android.yml',
+              'release-build-smoke',
+            )['steps']
+            as YamlList;
+    final emulator = steps.singleWhere(
+      (step) => (step['uses'] as String? ?? '').startsWith(
+        'ReactiveCircus/android-emulator-runner@',
+      ),
+    );
+    expect(emulator['if'], isNull);
+    expect(
+      emulator['with']['script'],
+      'bash tool/android/smoke_test.sh development',
+    );
+    for (final name in ['selfhost', 'windows-exe-preview']) {
+      final workflow =
+          loadYaml(File('../../.github/workflows/$name.yml').readAsStringSync())
+              as YamlMap;
+      final jobs = workflow['jobs'] as YamlMap;
+      expect(
+        jobs.values.where(
+          (job) => job['uses'] == './.github/workflows/android.yml',
+        ),
+        isEmpty,
+        reason: name,
+      );
+    }
+  });
+
   test('Flutter build and test checkouts download the Pomo LFS asset', () {
     const jobs = {
       'validate': 'validate',
@@ -54,7 +94,10 @@ void main() {
         'zlib1g-dev',
       ];
       for (final entry in jobs.entries) {
-        final llvmVersion = entry.key == 'linux-appimage-release' ? '-12' : '';
+        final llvmVersion =
+            ['linux-appimage-release', 'desktop-updates'].contains(entry.key)
+            ? '-12'
+            : '';
         final steps =
             _job(
                   '../../.github/workflows/${entry.key}.yml',
@@ -75,6 +118,48 @@ void main() {
           ).hasMatch(step['run'] as String? ?? ''),
         );
         expect(compile, greaterThan(install), reason: entry.key);
+      }
+    },
+  );
+
+  test(
+    'Linux updater preflight separates package names from version constraints',
+    () {
+      final steps =
+          _job(
+                '../../.github/workflows/desktop-updates.yml',
+                'updater',
+              )['steps']
+              as YamlList;
+      final run =
+          steps.singleWhere(
+                (step) => step['name'] == 'Install Linux build dependencies',
+              )['run']
+              as String;
+      final preflight = run
+          .replaceAll('\\\n', ' ')
+          .split('\n')
+          .singleWhere((line) => line.trimLeft().startsWith('pkg-config '));
+      final temp = Directory.systemTemp.createTempSync('desktop-pkg-config-');
+      try {
+        // Capture the real shell arguments. pkg-config 0.29.2 treats an
+        // unspaced name>=version argument as a literal package name.
+        final result = _bash(
+          'pkg-config() { printf "%s\\n" "\$@" > arguments; }\n$preflight',
+          temp,
+          {},
+        );
+        expect(result.exitCode, 0, reason: '${result.stderr}');
+        final arguments = File('${temp.path}/arguments').readAsLinesSync();
+        expect(
+          arguments,
+          containsAll(['gtk-layer-shell-0 >= 0.6', 'wayland-client >= 1.20']),
+        );
+        for (final argument in arguments.where((arg) => arg.contains('>='))) {
+          expect(argument, matches(RegExp(r'^\S+\s+>=\s+\S+$')));
+        }
+      } finally {
+        temp.deleteSync(recursive: true);
       }
     },
   );

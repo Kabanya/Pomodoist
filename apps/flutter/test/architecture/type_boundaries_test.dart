@@ -20,6 +20,11 @@ void main() {
   final negative = check('negative');
   final positive = check('positive');
 
+  // Cold SDK resolution gets its own budget before individual rule assertions.
+  test('resolves shared analyzer fixtures', () async {
+    await Future.wait([negative, positive]);
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
   bool has(
     List<ArchitectureDiagnostic> diagnostics, {
     required String file,
@@ -274,7 +279,7 @@ void main() {
   });
 
   test('part files resolve to their owning library', () async {
-    final diagnostics = await check('negative');
+    final diagnostics = await negative;
     expect(
       has(
         diagnostics,

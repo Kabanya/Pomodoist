@@ -855,7 +855,6 @@ Future<UpcomingTestHarness> pumpUpcomingForTest(
         ),
         projectsProvider.overrideWith((ref) => Stream.value(projects)),
         labelsProvider.overrideWith((ref) => Stream.value(const <LabelItem>[])),
-        quickAddHintTextProvider.overrideWithValue(null),
         tasksByQueryProvider.overrideWith((ref, query) {
           onQuery?.call(query);
           if (query == listQuery) return allStream ?? Stream.value(tasks);

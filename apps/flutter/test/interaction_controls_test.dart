@@ -1700,7 +1700,10 @@ void main() {
 
       expect(harness.taskRepository.updatePatches.single.priority, 2);
       expect(harness.taskRepository.updatePatches.single.schedule, isNull);
-      expect(harness.taskRepository.updatePatches.single.clearSchedule, isFalse);
+      expect(
+        harness.taskRepository.updatePatches.single.clearSchedule,
+        isFalse,
+      );
       expect(harness.taskRepository.movedParentIds, isEmpty);
       expect(harness.taskRepository.movedProjectIds, isEmpty);
     } finally {
@@ -2579,6 +2582,7 @@ void main() {
       onRouter: (value) => router = value,
       size: const Size(1200, 900),
       tasks: const <TaskItem>[],
+      focusNow: DateTime(2026, 1, 2, 11),
     );
 
     router.go('/timeline?date=${_routeDate(today)}');
@@ -3049,8 +3053,7 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     await _pumpFrames(tester);
 
-    final surface = find.byKey(const Key('mobile-bottom-navigation'));
-    expect(find.byKey(const Key('mini-focus-player-surface')), findsNothing);
+    final surface = find.byKey(const Key('mini-focus-player-surface'));
     final bottomNavigation = find.byKey(const Key('mobile-bottom-navigation'));
     final lastTaskRow = find
         .ancestor(of: lastTask, matching: find.byType(InkWell))
@@ -3500,6 +3503,31 @@ void main() {
     expect(find.text('Open browse task'), findsNothing);
   });
 
+  testWidgets('Blocking stays hidden and its route redirects to Focus', (
+    tester,
+  ) async {
+    late GoRouter router;
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+    );
+
+    expect(
+      find.byKey(const ValueKey('sidebar-destination-/focus')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('sidebar-destination-/blocking')),
+      findsNothing,
+    );
+    router.go('/blocking');
+    await _pumpFrames(tester);
+    expect(_routerUri(router), '/focus');
+    expect(find.byType(FocusScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('browse completed task link opens completed task screen', (
     tester,
   ) async {
@@ -3519,6 +3547,8 @@ void main() {
     );
 
     router.go('/browse');
+    await _pumpFrames(tester);
+    await tester.ensureVisible(find.byKey(const Key('browse-completed-tasks')));
     await _pumpFrames(tester);
     await tester.tap(find.byKey(const Key('browse-completed-tasks')));
     await _pumpFrames(tester);
@@ -3680,7 +3710,6 @@ Future<_AppHarness> _pumpApp(
             projectRepository: projectRepository,
           ),
         ),
-        quickAddHintTextProvider.overrideWithValue(null),
         productivitySummaryProvider.overrideWith(
           (ref) => Stream.value(_summary),
         ),
@@ -4471,6 +4500,12 @@ Iterable<MethodCall> _hapticCalls(Iterable<MethodCall> calls) =>
     calls.where((call) => call.method == 'HapticFeedback.vibrate');
 
 class _FakeFocusRepository implements FocusRepository {
+  @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) async => const Result.ok(null);
+
   _FakeFocusRepository({this.activeRun, this.activeInterval});
 
   final FocusRunItem? activeRun;

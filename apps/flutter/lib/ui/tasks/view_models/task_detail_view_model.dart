@@ -338,8 +338,13 @@ class TaskEditorViewModel extends Notifier<TaskEditorState> {
       failed = true;
     }
     if (!ref.mounted) return !failed;
-    state = _copy(saving: false, failed: failed, dirty: failed);
-    return !failed;
+    final changedWhileSaving = state.draft != value;
+    state = _copy(
+      saving: false,
+      failed: failed,
+      dirty: failed || changedWhileSaving,
+    );
+    return !failed && !changedWhileSaving;
   }
 
   Future<bool> createSubtask(TaskItem task, String input) async {

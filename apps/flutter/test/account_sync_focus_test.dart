@@ -42,6 +42,110 @@ void main() {
 
     tearDown(() => db.close());
 
+    test(
+      'preset binding reaches a second client and survives an older client edit',
+      () async {
+        final other = AppDatabase(NativeDatabase.memory());
+        addTearDown(other.close);
+        await other.ensureSeedData();
+        final peer = testSyncEngine(
+          db: other,
+          account: account,
+          uuid: const Uuid(),
+        );
+        final preset = (await db.select(db.focusPresets).get()).first;
+        await (db.update(
+          db.focusPresets,
+        )..where((p) => p.id.equals(preset.id))).write(
+          const FocusPresetsCompanion(
+            distractionProfileConfigured: Value(true),
+            distractionProfileId: Value('study'),
+          ),
+        );
+        await queue.enqueue(
+          type: 'focus.preset.update',
+          clientId: preset.id,
+          payload: {'id': preset.id},
+        );
+        await engine.pushPending();
+        await peer.pullLatest();
+        var received = await (other.select(
+          other.focusPresets,
+        )..where((p) => p.id.equals(preset.id))).getSingle();
+        expect(received.distractionProfileConfigured, true);
+        expect(received.distractionProfileId, 'study');
+        final oldPayload = {...preset.toJson(), 'name': 'Older client rename'}
+          ..remove('distractionProfileConfigured')
+          ..remove('distractionProfileId');
+        account.pullResults.add(
+          AccountSyncPullResult(
+            nextCursor: 100,
+            hasMore: false,
+            changes: [
+              AccountSyncEntity(
+                entityType: 'focus_preset',
+                entityId: preset.id,
+                serverRevision: 100,
+                data: oldPayload,
+              ),
+            ],
+          ),
+        );
+        await peer.pullLatest();
+        received = await (other.select(
+          other.focusPresets,
+        )..where((p) => p.id.equals(preset.id))).getSingle();
+        expect(received.name, 'Older client rename');
+        expect(received.distractionProfileConfigured, true);
+        expect(received.distractionProfileId, 'study');
+        final legacyId = 'legacy-import';
+        account.pullResults.add(
+          AccountSyncPullResult(
+            nextCursor: 101,
+            hasMore: false,
+            changes: [
+              AccountSyncEntity(
+                entityType: 'focus_preset',
+                entityId: legacyId,
+                serverRevision: 101,
+                data: {...oldPayload, 'id': legacyId},
+              ),
+            ],
+          ),
+        );
+        await peer.pullLatest();
+        final legacy = await (other.select(
+          other.focusPresets,
+        )..where((p) => p.id.equals(legacyId))).getSingle();
+        expect(legacy.distractionProfileConfigured, false);
+        expect(legacy.distractionProfileId, isNull);
+        await (db.update(
+          db.focusPresets,
+        )..where((p) => p.id.equals(preset.id))).write(
+          const FocusPresetsCompanion(distractionProfileId: Value(null)),
+        );
+        await queue.enqueue(
+          type: 'focus.preset.update',
+          clientId: preset.id,
+          payload: {'id': preset.id},
+        );
+        await engine.pushPending();
+        // Use a fresh peer to exercise full recovery, including explicit null.
+        final recovery = AppDatabase(NativeDatabase.memory());
+        addTearDown(recovery.close);
+        await testSyncEngine(
+          db: recovery,
+          account: account,
+          uuid: const Uuid(),
+        ).pullLatest();
+        final restored = await (recovery.select(
+          recovery.focusPresets,
+        )..where((p) => p.id.equals(preset.id))).getSingle();
+        expect(restored.distractionProfileConfigured, true);
+        expect(restored.distractionProfileId, isNull);
+      },
+    );
+
     test('legacy active commands drain without reaching the server', () async {
       final now = DateTime.utc(2026, 7, 11, 9);
       await _insertRun(db, id: 'active-run', status: 'active', now: now);

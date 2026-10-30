@@ -128,3 +128,14 @@ test('tunnel discovery handles split output, failed startup and timeout', async 
     } finally { child.kill(); }
   }
 });
+
+test('Telegram runtime configuration separates official production and staging backends', () => {
+  for (const [POMODOIST_ENVIRONMENT, WEB_APP_URL, SUPABASE_URL, other] of [
+    ['production', 'https://app.pomodoist.com', 'https://pomodoist.supabase.co', 'https://supabase-test.pomodoist.com'],
+    ['staging', 'https://app-test.pomodoist.com', 'https://supabase-test.pomodoist.com', 'https://pomodoist.supabase.co'],
+  ]) {
+    const config = { ...env, POMODOIST_ENVIRONMENT, WEB_APP_URL, SUPABASE_URL };
+    assert.equal(runtimeConfig(config).supabaseUrl, SUPABASE_URL);
+    assert.throws(() => runtimeConfig({ ...config, SUPABASE_URL: other }), /backend/i);
+  }
+});

@@ -111,8 +111,9 @@ int get _initPlatformId => !Platform.isMacOS ? 0 : 1;
 Future<Widget> createMultiViewRoot(
   Widget Function(BuildContext, int) home,
   Widget Function(Widget)? scope,
-  MultiAppConfig config,
-) async {
+  MultiAppConfig config, {
+  Completer<void>? initialWindowReady,
+}) async {
   _hasInitView = await _nativeChannel.checkWindowExist(_initPlatformId) ?? true;
 
   // Reset native behavioral flags before the widget tree is built
@@ -120,7 +121,7 @@ Future<Widget> createMultiViewRoot(
     await _nativeChannel.resetWindowToDefaults(_initPlatformId, config);
   }
 
-  final mainRoot = _MultiViewRoot(homeBuilder: home, config: config);
+  final mainRoot = _MultiViewRoot(homeBuilder: home, config: config, initialWindowReady: initialWindowReady);
   return scope?.call(mainRoot) ?? mainRoot;
 }
 
@@ -134,10 +135,11 @@ Future<Widget> createMultiViewRoot(
 /// opened or closed.  Each child is wrapped in a `ViewScope` so that any
 /// descendant can call `MultiViewDesktop.getIdByContext`.
 class _MultiViewRoot extends StatefulWidget {
-  const _MultiViewRoot({required this.homeBuilder, required this.config});
+  const _MultiViewRoot({required this.homeBuilder, required this.config, this.initialWindowReady});
 
   final Widget Function(BuildContext, int) homeBuilder;
   final MultiAppConfig config;
+  final Completer<void>? initialWindowReady;
 
   @override
   State<_MultiViewRoot> createState() => _MultiViewRootState();
@@ -216,31 +218,55 @@ class _MultiViewRootState extends State<_MultiViewRoot> with WidgetsBindingObser
     _initMainView();
   }
 
+  bool _initialWindowStarted = false;
+
   void _initMainView() async {
+    if (_initialWindowStarted || !mounted) return;
     // Snapshot to avoid concurrent-modification errors on the live views set.
     final initial = WidgetsBinding.instance.platformDispatcher.views.toList();
     final excludeId = !Platform.isMacOS ? -1 : 0;
     final live = initial.where((v) => v.viewId != excludeId).toList();
     if (live.isEmpty) return;
+    _initialWindowStarted = true;
 
     // After hot restart the lowest live view id may not be 1 (e.g. if view 1 was closed).
     live.sort((a, b) => a.viewId.compareTo(b.viewId));
-    await _viewsManagerImpl.registerInitialWindow(
-      viewId: live.first.viewId,
-      homeBuilder: (context) => widget.homeBuilder(context, 1),
-    );
-    unawaited(_viewsManagerImpl.applyNativeLifecyclePolicy());
-    unawaited(_viewsManagerImpl.applyInitialTaskbarMenu());
-    // Only for debug. Closes all windows from past session on hot restart
-    if (!kReleaseMode) {
-      final registered = _viewsManagerImpl.allRealWindowIds.toSet();
-      final orphaned = live.where((v) => !registered.contains(v.viewId)).toList();
-      _viewsManagerImpl.removeOrphanViewsForceAfterRestart(orphaned.map((e) => e.viewId).toList());
+    try {
+      // The first native probe can precede window attachment.
+      if (!_hasInitView) {
+        _hasInitView = await _nativeChannel.checkWindowExist(live.first.viewId) ?? true;
+      }
+      if (!mounted) return;
+      await _viewsManagerImpl.registerInitialWindow(
+        viewId: live.first.viewId,
+        homeBuilder: (context) => widget.homeBuilder(context, 1),
+      );
+      if (!mounted) return;
+      unawaited(_viewsManagerImpl.applyNativeLifecyclePolicy());
+      unawaited(_viewsManagerImpl.applyInitialTaskbarMenu());
+      // Only for debug. Closes all windows from past session on hot restart
+      if (!kReleaseMode) {
+        final registered = _viewsManagerImpl.allRealWindowIds.toSet();
+        final orphaned = live.where((v) => !registered.contains(v.viewId)).toList();
+        _viewsManagerImpl.removeOrphanViewsForceAfterRestart(orphaned.map((e) => e.viewId).toList());
+      }
+      widget.initialWindowReady?.complete();
+    } catch (error, stackTrace) {
+      final ready = widget.initialWindowReady;
+      if (ready != null) {
+        if (!ready.isCompleted) ready.completeError(error, stackTrace);
+      } else {
+        FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stackTrace, library: 'multiview_desktop'));
+      }
     }
   }
 
   @override
   void dispose() {
+    final ready = widget.initialWindowReady;
+    if (ready != null && !ready.isCompleted) {
+      ready.completeError(StateError('Initial window closed during startup.'));
+    }
     WidgetsBinding.instance.removeObserver(this);
     if (Platform.isLinux) _linuxLifecycle.dispose();
     if (identical(_rootState, this)) _rootState = null;
@@ -253,6 +279,7 @@ class _MultiViewRootState extends State<_MultiViewRoot> with WidgetsBindingObser
 
   @override
   void didChangeMetrics() {
+    _initMainView();
     final dispatcher = WidgetsBinding.instance.platformDispatcher;
     _viewsManagerImpl.reconcileAnchor(dispatcher);
 

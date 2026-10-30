@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show ShadApp, ShadAppBuilder, ShadTheme, GlobalShadLocalizations;
@@ -7,13 +6,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multiview_desktop/multiview_desktop.dart';
 
-import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/quick_add/view_models/global_quick_add_view_model.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/widgets/app_zoom.dart';
 import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
+import 'package:pomodoist/ui/core/view_models/app_zoom_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
@@ -21,116 +20,22 @@ import 'package:pomodoist/ui/core/themes/macos_glass.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
 import 'package:pomodoist/ui/core/widgets/keyboard_dismiss_region.dart';
 
-const globalQuickAddCompactSize = Size(680, 200);
-const globalQuickAddCommentSize = Size(680, 340);
-const globalQuickAddVoiceSize = Size(720, 720);
-
-Size globalQuickAddWindowSize({
-  required bool voiceExpanded,
-  required bool commentExpanded,
-}) => voiceExpanded
-    ? globalQuickAddVoiceSize
-    : commentExpanded
-    ? globalQuickAddCommentSize
-    : globalQuickAddCompactSize;
-
-final globalQuickAddWindowManager = GlobalQuickAddWindowManager();
-
-class GlobalQuickAddWindowManager extends WindowObserver {
-  int? _viewId;
-  Future<int>? _opening;
-  bool _voiceExpanded = false;
-  bool _commentExpanded = false;
-
-  Future<void> show() async {
-    final existingId = _viewId;
-    if (existingId != null &&
-        MultiViewDesktop.allWindowViewIds.contains(existingId)) {
-      final window = MultiViewDesktop.fromId(existingId);
-      await window.show();
-      await window.focus();
-      return;
-    }
-
-    final pending = _opening;
-    if (pending != null) {
-      final id = await pending;
-      await MultiViewDesktop.fromId(id).focus();
-      return;
-    }
-
-    _voiceExpanded = false;
-    _commentExpanded = false;
-    final opening = openWindow(
-      (context, id) => GlobalQuickAddWindowApp(
-        onClose: () => unawaited(close()),
-        onVoiceModeChanged: (active) => unawaited(setVoiceMode(active)),
-        onCommentExpandedChanged: (active) =>
-            unawaited(setCommentExpanded(active)),
-      ),
-      options: WindowOptions(
-        size: globalQuickAddCompactSize,
-        isUtility: true,
-        minimumSize: const Size(420, 200),
-        maximumSize: const Size(900, 800),
-        title: appFlavor.displayName,
-        alwaysOnTop: true,
-      ),
-    );
-    _opening = opening;
-    try {
-      _viewId = await opening;
-    } finally {
-      _opening = null;
-    }
-  }
-
-  Future<void> close() async {
-    final id = _viewId;
-    _viewId = null;
-    if (id != null && MultiViewDesktop.allWindowViewIds.contains(id)) {
-      await MultiViewDesktop.fromId(id).closeWindow();
-    }
-  }
-
-  Future<void> setVoiceMode(bool active) async {
-    _voiceExpanded = active;
-    await _resize();
-  }
-
-  Future<void> setCommentExpanded(bool active) async {
-    _commentExpanded = active;
-    await _resize();
-  }
-
-  Future<void> _resize() async {
-    final id = _viewId;
-    if (id == null || !MultiViewDesktop.allWindowViewIds.contains(id)) return;
-    await MultiViewDesktop.fromId(id).setSize(
-      globalQuickAddWindowSize(
-        voiceExpanded: _voiceExpanded,
-        commentExpanded: _commentExpanded,
-      ),
-    );
-  }
-
-  @override
-  void onWindowClosed(int viewId) {
-    if (_viewId == viewId) _viewId = null;
-  }
-}
-
 class GlobalQuickAddWindowApp extends ConsumerWidget {
   const GlobalQuickAddWindowApp({
     required this.onClose,
     required this.onVoiceModeChanged,
     this.onCommentExpandedChanged,
+    this.onEditorModeChanged,
+    this.onPreferredWidthChanged,
     super.key,
   });
 
   final VoidCallback onClose;
   final ValueChanged<bool> onVoiceModeChanged;
   final ValueChanged<bool>? onCommentExpandedChanged;
+  final Future<void> Function(bool)? onEditorModeChanged;
+  final void Function(double width, double viewportWidth)?
+  onPreferredWidthChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -176,8 +81,10 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
             child: AppZoom(
               child: ShadAppBuilder(
                 backgroundColor: rootBackground,
-                child: KeyboardDismissRegion(
-                  child: child ?? const SizedBox.shrink(),
+                child: ShortcutHintsHost(
+                  child: KeyboardDismissRegion(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),
@@ -196,6 +103,14 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
                   onCancel: onClose,
                   onVoiceModeChanged: onVoiceModeChanged,
                   onCommentExpandedChanged: onCommentExpandedChanged,
+                  onEditorModeChanged: onEditorModeChanged,
+                  onPreferredWidthChanged: (width) {
+                    final view = View.of(context);
+                    onPreferredWidthChanged?.call(
+                      width * ref.read(appZoomProvider) / 100,
+                      view.physicalSize.width / view.devicePixelRatio,
+                    );
+                  },
                 ),
               ),
             ),
@@ -229,7 +144,13 @@ class _QuickAddWindowFocusState extends State<_QuickAddWindowFocus>
   }
 
   @override
-  void onWindowFocus() => _inputFocus.requestFocus();
+  void onWindowFocus() {
+    final inputContext = _inputFocus.context;
+    if (inputContext != null &&
+        ModalRoute.of(inputContext)?.isCurrent == true) {
+      _inputFocus.requestFocus();
+    }
+  }
 
   @override
   void dispose() {

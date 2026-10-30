@@ -47,6 +47,12 @@ class LocalGlobalQuickAddRepository implements GlobalQuickAddRepository {
     _changes.add(value);
   }
 
+  @override
+  Future<void> reload() async {
+    await ready;
+    await _loadState();
+  }
+
   Future<void> _loadState() async {
     try {
       final values = (await _preferences.read([
@@ -80,8 +86,14 @@ class LocalGlobalQuickAddRepository implements GlobalQuickAddRepository {
   Future<void> cancelCapture() => _platform.cancelCapture();
 
   @override
-  Future<void> setShortcut(GlobalQuickAddBinding binding) async {
+  Future<void> setShortcut(
+    GlobalQuickAddBinding binding, {
+    bool Function()? isCurrent,
+  }) async {
     await ready;
+    if (isCurrent != null && !isCurrent()) {
+      throw StateError('Settings session expired');
+    }
     if (_disposed) return;
     final previous = state;
     var registered = false;
@@ -98,6 +110,9 @@ class LocalGlobalQuickAddRepository implements GlobalQuickAddRepository {
           }
           rethrow;
         }
+      }
+      if (isCurrent != null && !isCurrent()) {
+        throw StateError('Settings session expired');
       }
       (await _preferences.write({
         globalQuickAddBindingPreferenceKey: jsonEncode(binding.toJson()),
@@ -117,14 +132,20 @@ class LocalGlobalQuickAddRepository implements GlobalQuickAddRepository {
   }
 
   @override
-  Future<void> setEnabled(bool enabled) async {
+  Future<void> setEnabled(bool enabled, {bool Function()? isCurrent}) async {
     await ready;
+    if (isCurrent != null && !isCurrent()) {
+      throw StateError('Settings session expired');
+    }
     if (_disposed || state.enabled == enabled) return;
     final previous = state;
     var applied = false;
     try {
       await _platform.setEnabled(enabled, previous.binding);
       applied = true;
+      if (isCurrent != null && !isCurrent()) {
+        throw StateError('Settings session expired');
+      }
       (await _preferences.write({
         globalQuickAddEnabledPreferenceKey: enabled,
       })).getOrThrow();

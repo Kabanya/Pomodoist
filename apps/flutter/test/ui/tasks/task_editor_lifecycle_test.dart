@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/ui/settings/view_models/task_settings_view_model.dart';
@@ -152,6 +153,32 @@ void main() {
     },
   );
 
+  test(
+    'a newer description remains dirty and blocks closing after an older save',
+    () async {
+      final repository = _FakeTaskRepository()
+        ..pendingUpdate = Completer<void>();
+      final container = _container(repository: repository);
+      addTearDown(container.dispose);
+      final provider = taskEditorViewModelProvider(Object());
+      final subscription = container.listen(provider, (_, _) {});
+      addTearDown(subscription.close);
+      final editor = container.read(provider.notifier);
+      editor.updateDraft('First edit');
+      final saving = editor.saveDescription(_task('task'), 'First edit');
+      editor.updateDraft('Newer formatted edit');
+      repository.pendingUpdate!.complete();
+      expect(await saving, isFalse);
+      expect(editor.state.dirty, isTrue);
+      expect(editor.state.draft, 'Newer formatted edit');
+      expect(
+        await editor.saveDescription(_task('task'), editor.state.draft),
+        isTrue,
+      );
+      expect(repository.descriptions, ['First edit', 'Newer formatted edit']);
+    },
+  );
+
   test('the guard resolves the editor again after provider disposal', () async {
     final repository = _FakeTaskRepository();
     final container = _container(repository: repository);
@@ -237,12 +264,14 @@ TaskItem _task(String id, {String? description}) => TaskItem(
 
 class _FakeTaskRepository implements TaskRepository {
   bool failNextUpdate = false;
+  Completer<void>? pendingUpdate;
   final List<String> descriptions = [];
   final List<String> titles = [];
 
   @override
   Future<Result<void>> updateTask(String id, UpdateTaskPatch patch) =>
       Result.capture(() async {
+        await pendingUpdate?.future;
         if (failNextUpdate) {
           throw StateError('offline');
         }

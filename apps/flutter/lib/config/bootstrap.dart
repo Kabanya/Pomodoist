@@ -1,3 +1,6 @@
+import 'package:pomodoist/config/distraction_dependencies.dart';
+import 'package:pomodoist/utils/startup_diagnostics.dart';
+import 'package:pomodoist/config/providers.dart' show focusRepositoryProvider;
 import 'package:app_account/app_account.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +18,7 @@ import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
 import 'package:pomodoist/ui/core/widgets/app_icon_runtime.dart';
-import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
+import 'package:pomodoist/config/platform/platform_quick_add.dart';
 import 'package:pomodoist/config/auth/native_account_startup.dart';
 import 'package:pomodoist/data/services/platform/native_link_coordinator.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
@@ -32,6 +35,7 @@ import 'package:pomodoist/domain/models/billing/billing_models.dart';
 import 'package:pomodoist/ui/settings/widgets/pomodoist_account_actions.dart';
 
 Future<void> bootstrapPomodoist(AppEnvironment appEnvironment) async {
+  traceStartupStage('begin');
   await runPomodoistStartup(
     loadMonitoringPolicy: loadSentryRuntimePolicy,
     loadRuntimeConfig: loadRuntimePublicConfig,
@@ -84,7 +88,7 @@ Future<void> _startPomodoist(
           initializePomodoistAccountIfConfigured(runtimeConfig),
     );
     updateWebBootstrapStage('app');
-    _runPomodoist(
+    await _runPomodoist(
       _pomodoistOverrides(
         runtimeConfig: runtimeConfig,
         nativeAccountStartup: nativeAccountStartup,
@@ -97,15 +101,32 @@ Future<void> _startPomodoist(
   }
 }
 
-void _runPomodoist(List<Override> overrides) {
+Future<void> _runPomodoist(List<Override> overrides) async {
+  void recordFirstFrame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      traceStartupStage('first-frame');
+    });
+  }
+
   Widget scope(Widget child) => ProviderScope(
-    overrides: [...overrides, ...pomoOverrides],
+    overrides: [
+      ...overrides,
+      ...pomoOverrides,
+      if (desktopDistractionsAvailable)
+        focusRepositoryProvider.overrideWith(
+          (ref) => ref.watch(liveFocusRepositoryProvider),
+        ),
+    ],
     child: AppIconRuntime(child: PomoRuntime(child: child)),
   );
 
   if (_supportsDesktopMultiView) {
-    runMultiApp(
-      home: (context, id) => const PomodoistApp(),
+    await runMultiApp(
+      home: (context, id) {
+        traceStartupStage('window-attached');
+        recordFirstFrame();
+        return const PomodoistApp();
+      },
       globalScope: scope,
       config: MultiAppConfig(
         globalWindowOptions: const WindowOptions(
@@ -120,6 +141,7 @@ void _runPomodoist(List<Override> overrides) {
       ),
     );
   } else {
+    recordFirstFrame();
     runApp(scope(const PomodoistApp()));
   }
   WidgetsBinding.instance.addPostFrameCallback((_) {

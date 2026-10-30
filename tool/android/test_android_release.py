@@ -173,13 +173,17 @@ class ReleaseConfigTests(unittest.TestCase):
         import base64
         for role in ['service_role', 'authenticated']:
             payload = base64.urlsafe_b64encode(json.dumps({'role': role}).encode()).decode().rstrip('=')
-            config = self.valid_config() | {'SUPABASE_URL': 'https://example.supabase.co', 'SUPABASE_ANON_KEY': 'e30.' + payload + '.signature'}
+            config = self.valid_config() | {'SUPABASE_URL': 'https://pomodoist.supabase.co', 'SUPABASE_ANON_KEY': 'e30.' + payload + '.signature'}
             self.assertNotEqual(self.validate(config).returncode, 0)
 
-    def test_accepts_public_backend_override(self):
-        config = self.valid_config() | {'SUPABASE_URL': 'https://example.supabase.co', 'SUPABASE_ANON_KEY': 'sb_publishable_test'}
+    def test_accepts_public_cloud_backend_override(self):
+        config = self.valid_config() | {'SUPABASE_URL': 'https://pomodoist.supabase.co', 'SUPABASE_ANON_KEY': 'sb_publishable_test'}
         result = self.validate(config)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_rejects_staging_backend_in_production(self):
+        config = self.valid_config() | {'SUPABASE_URL': 'https://supabase-test.pomodoist.com', 'SUPABASE_ANON_KEY': 'sb_publishable_test'}
+        self.assertNotEqual(self.validate(config).returncode, 0)
 
     def test_rejects_duplicate_json_keys(self):
         with tempfile.TemporaryDirectory() as directory:

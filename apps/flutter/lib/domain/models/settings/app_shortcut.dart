@@ -1,5 +1,6 @@
 enum AppShortcutCommand {
   toggleSidebar,
+  togglePomo,
   toggleTaskDetails,
   toggleTaskDetailsAlternate,
   quickAdd,

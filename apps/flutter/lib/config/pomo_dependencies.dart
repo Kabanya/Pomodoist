@@ -19,7 +19,7 @@ import 'package:pomodoist/domain/models/pomo/pomo_focus.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_window_host.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_window.dart';
-import 'package:pomodoist/ui/quick_add/widgets/global_quick_add_window.dart';
+import 'package:pomodoist/config/platform/platform_quick_add.dart';
 
 final pomoPreferencesProvider = Provider<PomoPreferencesRepository>((ref) {
   final repository = LocalPomoPreferencesRepository(

@@ -388,5 +388,290 @@
   },
   "break_over_ready_to_focus": {
     "message": "休憩が終了しました。集中を始めますか？"
+  },
+  "protection_129": {
+    "message": "60秒のカウントダウン"
+  },
+  "protection_130": {
+    "message": "アカウントのクラウド"
+  },
+  "protection_131": {
+    "message": "Allow access to the desktop bridge."
+  },
+  "protection_132": {
+    "message": "Allow website access to enable protection."
+  },
+  "protection_133": {
+    "message": "常に許可"
+  },
+  "protection_134": {
+    "message": "常にブロック"
+  },
+  "protection_135": {
+    "message": "長い休憩中もブロック"
+  },
+  "protection_136": {
+    "message": "短い休憩中もブロック"
+  },
+  "protection_137": {
+    "message": "一時停止中もブロック"
+  },
+  "protection_138": {
+    "message": "ブロックするカテゴリ"
+  },
+  "protection_139": {
+    "message": "終了をキャンセル"
+  },
+  "protection_140": {
+    "message": "カテゴリ"
+  },
+  "protection_141": {
+    "message": "確認してすぐ終了"
+  },
+  "protection_142": {
+    "message": "Desktop account or app environment does not match."
+  },
+  "protection_143": {
+    "message": "Desktop app unavailable. Local protection expires at the last confirmed deadline."
+  },
+  "protection_144": {
+    "message": "デスクトップのポート"
+  },
+  "protection_145": {
+    "message": "Desktop response too large."
+  },
+  "protection_146": {
+    "message": "集中の保護"
+  },
+  "protection_147": {
+    "message": "ドメイン"
+  },
+  "protection_148": {
+    "message": "プロフィールを編集"
+  },
+  "protection_149": {
+    "message": "このブラウザの保護を緊急解除"
+  },
+  "protection_150": {
+    "message": "サイト保護とドメイン検出を有効にする"
+  },
+  "protection_151": {
+    "message": "厳格な集中を今すぐ終了しますか？"
+  },
+  "protection_152": {
+    "message": "Enter a profile name."
+  },
+  "protection_153": {
+    "message": "Enter a valid desktop port."
+  },
+  "protection_154": {
+    "message": "Enter a valid domain."
+  },
+  "protection_155": {
+    "message": "Enter the desktop pairing code."
+  },
+  "protection_156": {
+    "message": "Focus belongs to another account."
+  },
+  "protection_157": {
+    "message": "集中セッションはデスクトップと共有されます。この画面を閉じても保護は続きます。"
+  },
+  "protection_158": {
+    "message": "集中セッションの接続先"
+  },
+  "protection_159": {
+    "message": "シークレットモード許可済み"
+  },
+  "protection_160": {
+    "message": "シークレットモード未許可"
+  },
+  "protection_161": {
+    "message": "Invalid Focus command."
+  },
+  "protection_162": {
+    "message": "Invalid Focus deadline."
+  },
+  "protection_163": {
+    "message": "Invalid Focus response."
+  },
+  "protection_164": {
+    "message": "Invalid Focus server clock."
+  },
+  "protection_165": {
+    "message": "Invalid Focus session."
+  },
+  "protection_166": {
+    "message": "Invalid Focus source."
+  },
+  "protection_167": {
+    "message": "Invalid desktop protection lease."
+  },
+  "protection_168": {
+    "message": "新規プロフィール"
+  },
+  "protection_169": {
+    "message": "ブロック用プロフィールなし"
+  },
+  "protection_170": {
+    "message": "デスクトップの保護設定で一度限りのコードを取得してください。同じアカウントと環境を使用します。"
+  },
+  "protection_171": {
+    "message": "ペアリング"
+  },
+  "protection_172": {
+    "message": "オフライン集中用にデスクトップをペアリング"
+  },
+  "protection_173": {
+    "message": "Pair the desktop app first."
+  },
+  "protection_174": {
+    "message": "ペアリング済みデスクトップ"
+  },
+  "protection_175": {
+    "message": "ペアリングコード"
+  },
+  "protection_176": {
+    "message": "プロフィール名"
+  },
+  "protection_177": {
+    "message": "プロフィールの個別ルール"
+  },
+  "protection_178": {
+    "message": "プロフィールとドメイン"
+  },
+  "protection_179": {
+    "message": "保護が終了しました。準備ができたらページに戻れます。"
+  },
+  "protection_180": {
+    "message": "保護プロフィール"
+  },
+  "protection_181": {
+    "message": "このブラウザだけ保護を解除しますか？共有の集中セッションは続きます。"
+  },
+  "protection_182": {
+    "message": "このブラウザの厳格な保護を今すぐ解除しますか？"
+  },
+  "protection_183": {
+    "message": "再開"
+  },
+  "protection_184": {
+    "message": "タスクに戻る"
+  },
+  "protection_185": {
+    "message": "タスクに戻りましょう。"
+  },
+  "protection_186": {
+    "message": "ドメインを保存"
+  },
+  "protection_187": {
+    "message": "プロフィールを保存"
+  },
+  "protection_188": {
+    "message": "Sign in or pair the desktop app."
+  },
+  "protection_189": {
+    "message": "すべての端末で停止"
+  },
+  "protection_190": {
+    "message": "厳格な集中"
+  },
+  "protection_191": {
+    "message": "厳格モードの終了"
+  },
+  "protection_192": {
+    "message": "厳格モード終了までカウントダウン中です。"
+  },
+  "protection_193": {
+    "message": "Strict exit countdown is active. Keep protection enabled until it finishes."
+  },
+  "protection_194": {
+    "message": "集中する時間です"
+  },
+  "protection_195": {
+    "message": "Too many website rules. Reduce profile assignments before enabling protection."
+  },
+  "protection_196": {
+    "message": "未分類のドメインは許可されます。保存した分類のみ同期し、検出した一覧はこのブラウザに残ります。"
+  },
+  "protection_197": {
+    "message": "カテゴリに従う"
+  },
+  "protection_198": {
+    "message": "サイトへのアクセス許可済み · 保護待機中"
+  },
+  "protection_199": {
+    "message": "サイトへのアクセス許可が必要です"
+  },
+  "protection_200": {
+    "message": "サイト保護が有効です"
+  },
+  "protection_201": {
+    "message": "ページは保存されています。メディアは一時停止のままです。"
+  },
+  "protection_202": {
+    "message": "開発"
+  },
+  "protection_203": {
+    "message": "教育"
+  },
+  "protection_204": {
+    "message": "ゲーム"
+  },
+  "protection_205": {
+    "message": "メッセージ"
+  },
+  "protection_206": {
+    "message": "音楽"
+  },
+  "protection_207": {
+    "message": "ニュース"
+  },
+  "protection_208": {
+    "message": "その他"
+  },
+  "protection_209": {
+    "message": "生産性"
+  },
+  "protection_210": {
+    "message": "ショッピング"
+  },
+  "protection_211": {
+    "message": "ソーシャル"
+  },
+  "protection_212": {
+    "message": "未分類"
+  },
+  "protection_213": {
+    "message": "動画"
+  },
+  "protection_214": {
+    "message": "AI使用量を取得できません。"
+  },
+  "protection_215": {
+    "message": "自動分類にはProが必要です。"
+  },
+  "protection_216": {
+    "message": "自動分類を利用できません。手動でカテゴリを選んでください。"
+  },
+  "protection_217": {
+    "message": "新しいドメインを自動分類（Pro）"
+  },
+  "protection_218": {
+    "message": "ドメインの個別ルールを設定するプロフィールを選んでください。"
+  },
+  "protection_219": {
+    "message": "Invalid AI quota response."
+  },
+  "protection_220": {
+    "message": "AI使用量を更新"
+  },
+  "protection_221": {
+    "message": "タスク分析と新しい自動分類は月間AI上限を共有します。キャッシュ済み分類と手動修正は無料です。"
+  },
+  "protection_222": {
+    "message": "AI使用量 {used}/{limit} · {date}にリセット"
+  },
+  "website_protection_unavailable": {
+    "message": "ウェブサイト保護を利用できません。chrome://extensions で Pomodoist を更新または再読み込みしてください。"
   }
 }

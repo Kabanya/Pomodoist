@@ -10,6 +10,7 @@ test('native Chrome messages translate UI, status, errors and placeholders', asy
       const messages = JSON.parse(await readFile(new URL(`../_locales/${locale}/messages.json`, import.meta.url), 'utf8'));
       globalThis.chrome = { i18n: { getMessage: key => messages[key]?.message || '', getUILanguage: () => locale.replace('_', '-') } };
       assert.notEqual(text('Session expired. Sign in again.'), 'Session expired. Sign in again.');
+      assert.notEqual(text('Website protection is unavailable. Update or reload Pomodoist in chrome://extensions.'), 'Website protection is unavailable. Update or reload Pomodoist in chrome://extensions.');
       assert.ok(text('{count} changes saved locally · waiting to sync', { count: 3 }).includes('3'));
       const label = { dataset: { i18n: 'Title' } };
       const input = { attrs: { placeholder: 'Add a task…', 'aria-label': 'New task title' },

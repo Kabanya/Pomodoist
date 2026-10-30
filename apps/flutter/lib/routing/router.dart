@@ -1,3 +1,7 @@
+import 'package:pomodoist/ui/distractions/widgets/blocking_screen.dart';
+import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dart';
+import 'package:pomodoist/data/services/platform/native_link_coordinator_core.dart'
+    show appleWidgetRoute;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,6 +74,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (_isFocusDeepLink(state.uri)) {
         return '/focus';
       }
+      final widgetRoute = appleWidgetRoute(state.uri);
+      if (widgetRoute != null) return widgetRoute;
       return webAppRedirectFor(
         isWeb: kIsWeb,
         signedIn: signedIn(),
@@ -163,8 +169,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) {
           return AppStartupGate(
-            child: OnboardingGate(
+            shellBuilder: (content, dataReady) => OnboardingGate(
+              enabled: dataReady,
               child: AdaptiveShell(
+                dataReady: dataReady,
                 location: state.uri.path,
                 taskId: state.uri.queryParameters['task'],
                 habitId:
@@ -173,9 +181,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ? state.uri.queryParameters['habit']
                     : null,
                 mapFullscreen: isProjectMapFullscreen(state.uri),
-                child: child,
+                child: content,
               ),
             ),
+            child: child,
           );
         },
         routes: [
@@ -242,6 +251,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: KanbanScreen(showMobileTitle: false),
             ),
+          ),
+          GoRoute(
+            path: '/blocking',
+            redirect: (context, state) =>
+                ref.read(blockingAvailableProvider) ? null : '/focus',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BlockingScreen()),
           ),
           GoRoute(
             path: '/focus',

@@ -35,12 +35,18 @@ class LocalTaskPreferencesRepository implements TaskPreferencesRepository {
   }
 
   @override
-  Future<Result<void>> load() => _loadFuture ??= _load().then((result) {
-    if (result is Failure<void>) _loadFuture = null;
-    return result;
-  });
+  Future<Result<void>> load({bool reload = false}) {
+    if (reload) {
+      _edited.clear();
+      _loadFuture = null;
+    }
+    return _loadFuture ??= _load(reload: reload).then((result) {
+      if (result is Failure<void>) _loadFuture = null;
+      return result;
+    });
+  }
 
-  Future<Result<void>> _load() => Result.capture(() async {
+  Future<Result<void>> _load({bool reload = false}) => Result.capture(() async {
     final values = (await _preferences.read(const [
       reengagementNotificationsEnabledPreferenceKey,
       quickAddDefaultTimedBlockMinutesPreferenceKey,
@@ -70,8 +76,9 @@ class LocalTaskPreferencesRepository implements TaskPreferencesRepository {
     for (final entry in _state.branchExpansion.entries) {
       branches[entry.key] = {...?branches[entry.key], ...entry.value};
     }
+    final base = reload && _edited.isEmpty ? TaskPreferences() : _state;
     _publish(
-      _state.copyWith(
+      base.copyWith(
         reengagementEnabled:
             values[reengagementNotificationsEnabledPreferenceKey] is bool
             ? values[reengagementNotificationsEnabledPreferenceKey] as bool

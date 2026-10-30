@@ -1,13 +1,14 @@
 import { text, localize } from './i18n.js';
 import { config } from './config.js';
 import { dateKey, deleteConfirmation, dueDay, openSubtasks, parseDue, schedule, scheduleFields, tabDraft, tasksFor } from './core.js';
-import { initial, phaseDuration, reduce, remainingMs, restore } from './timer.js';
+import { PRESETS, preset, timerView } from './timer.js';
+import { CATEGORIES, domain, pairingDetails } from './protection.js';
 import { Realtime } from './realtime.js';
 localize(document);
 const $ = id => document.getElementById(id);
 let state, view = 'today', editing = null, dirty = new Set(), busy = 0, live = false, syncing = false;
 let owner = null, poll, hintTimer, refreshAgain = false;
-let timer = initial(), timerTick = null;
+let minutes=25,timerTick=null,selectedProfile=null;
 // Every timer read goes through one clock accessor, so the countdown, the
 // deadline and the cache timestamp can never disagree about "now".
 const now = () => Date.now();
@@ -27,7 +28,7 @@ function lock() {
 async function run(action) {
   busy++; lock(); error('');
   try { await action(); } catch (e) { error(e.message); }
-  finally { busy--; lock(); }
+  finally { busy--; lock(); paintTimer(); }
 }
 function status() {
   if (!state?.user) return;
@@ -49,7 +50,10 @@ function status() {
 function render(next) {
   const previousOwner = owner;
   state = next; owner = state.user?.id ?? null;
-  $('startup').hidden = true; $('auth').hidden = !!owner; $('app').hidden = !owner;
+  $('startup').hidden = true; $('auth').hidden = !!owner; $('app').hidden = !owner && !state.protection?.paired;
+  paintTimer(); paintProtection();
+  if(!owner && state.protection?.paired){view='timer';showPanel();startTicking();}
+  for(const tab of document.querySelectorAll('[data-view]'))tab.hidden=!owner&&tab.dataset.view!=='timer';
   $('clear-account').hidden = !!owner || !state.pending;
   if (previousOwner !== owner) {
     editing = null; $('editor').hidden = true; showPanel();
@@ -161,7 +165,7 @@ for (const tab of document.querySelectorAll('[data-view]')) {
     view = tab.dataset.view; closeEditor();
     for (const item of document.querySelectorAll('[data-view]')) { item.setAttribute('aria-selected', String(item === tab)); item.tabIndex = item === tab ? 0 : -1; }
     $('task-panel').setAttribute('aria-labelledby', tab.id); $('task-scroll').scrollTop = 0;
-    if (view === 'timer') { showPanel(); startTicking(); } else { stopTicking(); render(state); }
+    if (view === 'timer') { showPanel(); startTicking(); run(async()=>render(await call('focusRead'))); } else { stopTicking(); render(state); }
   });
   tab.addEventListener('keydown', event => {
     const tabs = [...document.querySelectorAll('[data-view]')]; let index = tabs.indexOf(tab);
@@ -172,50 +176,106 @@ for (const tab of document.querySelectorAll('[data-view]')) {
   });
 }
 $('refresh').addEventListener('click', refresh);
-function clockText(timer) {
-  const total = Math.ceil(remainingMs(timer, now()) / 1000);
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+function currentTimer(){return timerView(state?.focus,state?.focusReadAt??now(),now(),minutes);}
+function paintTimer(){
+  const timer=currentTimer(),left=timer.remaining;
+  $('focus-task').textContent=state?.focus?.session?.taskTitle||state?.records?.[`task:${state?.focus?.session?.run?.taskId}`]?.content||text('Return to your task.');
+  $('timer-display').textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;
+  const pendingExit=timer.exitRequestedAt||state?.protection?.exitRequestedAt;
+  $('timer-phase').textContent=pendingExit?text('Strict exit countdown is active.'):timer.phase==='work'?text('Focus'):text('Break');
+  $('timer-toggle').firstElementChild.textContent=text(timer.status==='running'?'Pause':timer.status==='paused'?'Resume':'Start');
+  $('timer-progress').value=timer.total?left/timer.total:0;
+  const ongoing=!!state?.focus?.session && ['active','paused','running'].includes(state.focus.session.run?.status);
+  for(const button of document.querySelectorAll('[data-minutes]')){button.setAttribute('aria-pressed',String(Number(button.dataset.minutes)===minutes));button.disabled=busy>0||ongoing;}
+  $('strict-focus').disabled=busy>0||ongoing;$('exit-policy').disabled=busy>0||ongoing;
+  $('focus-profile').disabled=busy>0||ongoing;
+  $('auto-classify').disabled=busy>0||!state?.protection?.isPro;
+  $('cancel-stop').hidden=!pendingExit;
 }
-function paintTimer() {
-  $('timer-display').textContent = clockText(timer);
-  $('timer-phase').textContent = timer.phase === 'break' ? text("Break") : text("Focus");
-  $('timer-toggle').firstElementChild.textContent = text(timer.running ? "Pause" : "Start");
-  const total = phaseDuration(timer.phase, timer.minutes);
-  $('timer-progress').value = total ? remainingMs(timer, now()) / total : 0;
-  for (const button of document.querySelectorAll('[data-minutes]')) {
-    button.setAttribute('aria-pressed', String(Number(button.dataset.minutes) === timer.minutes));
-  }
+function startTicking(){if(!timerTick)timerTick=setInterval(paintTimer,250);}
+function stopTicking(){clearInterval(timerTick);timerTick=null;}
+async function focusCommand(action,payload){render(await call('focus',{action,payload}));}
+$('timer-toggle').addEventListener('click',()=>run(async()=>{
+  const t=currentTimer();
+  if(t.status==='running')await focusCommand('pause');
+  else if(t.status==='paused')await focusCommand('resume');
+  else if(t.status==='ready')await focusCommand('startReady');
+  else await focusCommand('start',{preset:preset(minutes,$('strict-focus').checked),profileId:$('focus-profile').value||null,strictExitSeconds:Number($('exit-policy').value)});
+}));
+$('timer-reset').addEventListener('click',()=>run(async()=>{
+  if(state?.focus?.session?.preset?.strictMode && state.focus.session.strictExitSeconds===0 && !confirm(text('End strict Focus now?')))return;
+  await focusCommand('requestStop',{confirmed:true});
+}));
+$('cancel-stop').addEventListener('click',()=>run(()=>focusCommand('cancelStop')));
+for(const button of document.querySelectorAll('[data-minutes]'))button.addEventListener('click',()=>{minutes=Number(button.dataset.minutes);paintTimer();});
+function options(select,values,selected){
+  const children=values.map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=text(label);return o;});
+  select.replaceChildren(...children);select.value=selected??'';
 }
-function saveTimer() {
-  chrome.storage.session.set({ timer: { ...timer, savedAt: now() } }).catch(() => {});
+for(const id of ['domain-category','profile-categories']) options($(id),CATEGORIES.filter(c=>id!=='profile-categories'||c!=='unclassified').map(c=>[c,c]));
+$('bridge-port').value=String({production:51987,staging:51988,development:51989}[config.flavor??'production']);
+function paintProtection(){
+  const p=state?.protection??{};
+  $('enable-protection').checked=!!p.enabled;
+  $('emergency-release').hidden=!p.authorityUnavailable;
+  $('auto-classify').checked=!!p.autoClassify;$('auto-classify').disabled=busy>0||!p.isPro;
+  $('classification-error').textContent=text(p.classificationError||'');
+  $('focus-source').value=p.source??'cloud';
+  $('protection-status').dataset.state=p.hostPermission?(p.active?'active':'idle'):'permission-required';
+  $('protection-status').textContent=text(p.hostPermission?(p.active?'Website protection active':'Website access allowed · protection idle'):'Website permission required')+' · '+text(p.incognito?'Incognito allowed':'Incognito not enabled')+(p.error?' · '+text(p.error):'');
+  const profiles=(state?.focus?.profiles??[]).filter(p=>!p.isDeleted);
+  const selected=$('focus-profile').value || state?.focus?.session?.profileId || '';
+  options($('focus-profile'),[['','No blocking profile'],...profiles.map(p=>[p.id,p.name])],selected);
+  const editor=$('edit-profile').value||selectedProfile||profiles[0]?.id||'';
+  options($('edit-profile'),[['','New profile'],...profiles.map(p=>[p.id,p.name])],editor);
+  const discovered=p.discovered??[];
+  const fragment=document.createDocumentFragment();
+  for(const host of discovered){const o=document.createElement('option');o.value=host;fragment.append(o);}
+  $('discovered-domains').replaceChildren(fragment);
 }
-function beep() {
-  try {
-    const context = new AudioContext(), oscillator = context.createOscillator(), gain = context.createGain();
-    oscillator.frequency.value = 880; gain.gain.value = 0.08;
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start(); oscillator.stop(context.currentTime + 0.35);
-  } catch { /* Autoplay policies may refuse audio; the live region still announces the phase. */ }
+function loadProfile(){
+  const p=state?.focus?.profiles?.find(p=>p.id===$('edit-profile').value);
+  selectedProfile=p?.id??null;
+  $('profile-name').value=p?.name??'';
+  for(const o of $('profile-categories').options??[])o.selected=p?.blockedCategories?.includes(o.value)??false;
+  $('block-pause').checked=p?.blockOnPause!==false;
+  $('block-short').checked=p?.blockOnShortBreak===true;
+  $('block-long').checked=p?.blockOnLongBreak===true;
 }
-function actTimer(action) {
-  const { timer: next, effect } = reduce(timer, action, now());
-  timer = next;
-  paintTimer();
-  if (effect) {
-    // Painted after the phase line so the announcement replaces the label
-    // instead of being overwritten by it. This is the polite live region.
-    $('timer-phase').textContent = text(effect === 'focusEnded' ? "Focus session complete. Take a break." : "Break over. Ready to focus?");
-    beep();
-  }
-  saveTimer();
-}
-function startTicking() { if (!timerTick) timerTick = setInterval(() => actTimer({ type: 'tick' }), 250); }
-function stopTicking() { clearInterval(timerTick); timerTick = null; }
-$('timer-toggle').addEventListener('click', () => actTimer({ type: timer.running ? 'pause' : 'start' }));
-$('timer-reset').addEventListener('click', () => actTimer({ type: 'reset' }));
-for (const button of document.querySelectorAll('[data-minutes]')) {
-  button.addEventListener('click', () => actTimer({ type: 'setMinutes', minutes: Number(button.dataset.minutes) }));
-}
+$('edit-profile').addEventListener('change',loadProfile);
+$('profile-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{
+  const previous=state?.focus?.profiles?.find(p=>p.id===$('edit-profile').value);
+  const name=$('profile-name').value.trim();if(!name||name.length>100)throw new Error('Enter a profile name.');
+  const profile={...previous,id:previous?.id??crypto.randomUUID(),name,blockedCategories:[...$('profile-categories').selectedOptions].map(o=>o.value),overrides:previous?.overrides??[],
+    blockOnPause:$('block-pause').checked,blockOnShortBreak:$('block-short').checked,blockOnLongBreak:$('block-long').checked,updatedAt:new Date().toISOString()};
+  await focusCommand('profileUpsert',{profile});selectedProfile=profile.id;$('edit-profile').value=profile.id;loadProfile();
+});});
+$('domain-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{
+  const id=domain($('domain-name').value);if(!id)throw new Error('Enter a valid domain.');
+  const assignment={id,kind:'domain',name:id.slice(0,100),category:$('domain-category').value,source:'manual',updatedAt:new Date().toISOString()};
+  const p=state?.focus?.profiles?.find(p=>p.id===$('edit-profile').value),action=$('domain-override').value;
+  if(!p && action!=='category')throw new Error('Choose a profile for an explicit domain rule.');
+  await focusCommand('assignmentUpsert',{assignment});
+  if(p){const overrides=p.overrides.filter(r=>r.kind!=='domain'||r.id!==id);if(action!=='category')overrides.push({kind:'domain',id,action});await focusCommand('profileUpsert',{profile:{...p,overrides,updatedAt:new Date().toISOString()}});}
+});});
+$('auto-classify').addEventListener('change',()=>run(async()=>render(await call('protection',{autoClassify:$('auto-classify').checked}))));
+$('enable-protection').addEventListener('change',()=>run(async()=>{
+  const enabled=$('enable-protection').checked;
+  if(enabled && !await chrome.permissions.request({origins:['http://*/*','https://*/*']}))throw new Error('Allow website access to enable protection.');
+  if(!enabled && !await confirmDetach())return;
+  render(await call('protection',{enabled,confirmed:true}));
+}));
+async function confirmDetach(){render(await call('focusRead'));return !state?.focus?.session?.preset?.strictMode||state.focus.session.strictExitSeconds!==0||confirm(text('Release strict protection on this browser now?'));}
+$('focus-source').addEventListener('change',()=>run(async()=>{if(await confirmDetach())render(await call('protection',{source:$('focus-source').value,confirmed:true}));}));
+$('pair-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{
+  const {port,code}=pairingDetails($('pair-code').value,$('bridge-port').value,config.flavor??'production');
+  if(!await chrome.permissions.request({origins:['http://127.0.0.1/*']}))throw new Error('Allow access to the desktop bridge.');
+  if(!await confirmDetach())return;
+  render(await call('pair',{port,code,confirmed:true}));$('pair-code').value='';
+});});
+$('emergency-release').addEventListener('click',()=>run(async()=>{
+  if(confirm(text('Release protection on this browser only? Shared Focus will continue.')))render(await call('emergencyRelease',{confirm:true}));
+}));
 $('login').addEventListener('submit', event => {
   event.preventDefault();
   const credentials = { email: $('email').value, password: $('password').value }; $('password').value = '';
@@ -223,10 +283,11 @@ $('login').addEventListener('submit', event => {
 });
 for (const provider of ['google', 'apple']) $(provider).addEventListener('click', () => run(async () => render(await call('oauth', { provider }))));
 async function logout() {
+  if(!await confirmDetach())return;
   const discard = state.pending > 0;
   if (discard && !confirm(text("There are unsynced changes. Signing out will discard them on this device. Continue?"))) return;
   realtime.stop(); clearInterval(poll);
-  render(await call('logout', { discard }));
+  render(await call('logout', { discard,confirmed:true }));
 }
 $('logout').addEventListener('click', () => run(logout));
 $('clear-account').addEventListener('click', () => run(logout));
@@ -238,14 +299,5 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) realtime.stop(); else if (state?.user) { realtime.start(); refresh(); }
 });
 window.addEventListener('pagehide', () => { realtime.stop(); clearInterval(poll); clearTimeout(hintTimer); stopTicking(); });
-async function restoreTimer() {
-  let saved;
-  try { saved = (await chrome.storage.session.get('timer')).timer; }
-  catch { return; /* Session storage may be unavailable; the default timer still works. */ }
-  const restored = restore(saved);
-  if (restored) timer = restored;
-}
 paintTimer();
-try { await restoreTimer(); } catch { /* A restore failure must not block the task list. */ }
-paintTimer();
-try { render(await call('snapshot')); refresh(); } catch (e) { $('startup').hidden = true; error(e.message); }
+try { render(await call('snapshot')); loadProfile(); refresh(); } catch (e) { $('startup').hidden = true; error(e.message); }

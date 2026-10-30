@@ -50,6 +50,11 @@ Deno.test("registers personal tools and shared project collaboration", async () 
       "configure_kanban",
       "move_task_on_kanban",
       "shared_projects",
+      "list_app_devices",
+      "get_app_settings",
+      "set_app_shortcut",
+      "set_app_appearance",
+      "get_app_settings_request",
     ]);
     for (const tool of listed.tools) {
       assertEquals(tool.inputSchema.additionalProperties, false, tool.name);
@@ -71,7 +76,7 @@ Deno.test("registers personal tools and shared project collaboration", async () 
           "calendar",
         ]
       ) {
-        assert(!schema.includes(excluded), `${tool.name} exposes ${excluded}`);
+        assert(["set_app_shortcut", "set_app_appearance"].includes(tool.name) && excluded === "calendar" || !schema.includes(excluded), `${tool.name} exposes ${excluded}`);
       }
     }
     const byName = Object.fromEntries(

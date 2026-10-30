@@ -53,3 +53,28 @@
 "Classic" = "Klassisch";
 "Deep Work" = "Konzentriertes Arbeiten";
 "Short Sprint" = "Kurzer Sprint";
+
+"Tasks" = "Aufgaben";
+"Habits" = "Gewohnheiten";
+"Day" = "Tag";
+"Progress" = "Fortschritt";
+"Next" = "Als Nächstes";
+"No tasks" = "Keine Aufgaben";
+"No habits today" = "Heute keine Gewohnheiten";
+"Nothing scheduled" = "Nichts geplant";
+"Open Pomodoist to update" = "Pomodoist zum Aktualisieren öffnen";
+"Focus this week" = "Fokus diese Woche";
+"%d tasks today" = "%d Aufgaben heute";
+"All day" = "Ganztägig";
+"Shows your next tasks." = "Zeigt deine nächsten Aufgaben.";
+"Shows today's habits." = "Zeigt die heutigen Gewohnheiten.";
+"Shows today's schedule." = "Zeigt den heutigen Zeitplan.";
+"Shows this week's progress." = "Zeigt den Fortschritt dieser Woche.";
+"Complete task" = "Aufgabe abschließen";
+"Pause or resume focus" = "Fokus pausieren oder fortsetzen";
+"Interval" = "Intervall";
+"Task" = "Aufgabe";
+
+"Appearance" = "Darstellung";
+"Old" = "Alt";
+"New" = "Neu";

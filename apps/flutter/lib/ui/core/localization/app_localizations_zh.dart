@@ -307,7 +307,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oauthConsentCapabilitiesTitle => '此智能体可以';
 
   @override
-  String get oauthConsentManagePlanning => '读取和管理任务、习惯、项目、自定义标签与看板。';
+  String get oauthConsentManagePlanning =>
+      '读取和管理任务、习惯、项目、自定义标签与看板。 读取和更改所选在线设备的快捷键与外观。';
 
   @override
   String get oauthConsentReadInsights => '读取已完成的专注历史、效率报告与成就。';
@@ -1132,7 +1133,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addTask => '添加任务';
 
   @override
-  String get quickAddHint => '写 sync engine 明天 p1 #App @coding 4p';
+  String get quickAddHint => '任务名称 明天 p2 #项目 @标签 2p';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4359,4 +4360,401 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsSyncRecoveryFailed => '本地数据恢复尚未完成。存档已保留。请尝试重新启动同步。';
+
+  @override
+  String get aiQuotaTitle => 'AI usage';
+
+  @override
+  String get aiQuotaUnavailable => 'Could not load the AI limit.';
+
+  @override
+  String aiQuotaUsage(int used, int limit, int remaining) {
+    return '$used of $limit requests used · $remaining remaining';
+  }
+
+  @override
+  String aiQuotaReset(String date) {
+    return 'Resets $date';
+  }
+
+  @override
+  String get aiQuotaExplanation =>
+      'Task analysis and new automatic categories share this monthly limit. Cached categories and manual corrections are free.';
+
+  @override
+  String get distractionTitle => 'Distraction blocking';
+
+  @override
+  String get distractionDescription =>
+      'Choose what to block during Focus. Unknown resources stay allowed until you assign a category.';
+
+  @override
+  String get distractionProfile => 'Protection profile';
+
+  @override
+  String get distractionBeforeStart => '所选配置将应用于下一次Focus。类别和例外可随时修改。';
+
+  @override
+  String get distractionNone => 'No blocking profile';
+
+  @override
+  String get distractionAddProfile => 'Add profile';
+
+  @override
+  String get distractionEditProfile => 'Edit profile';
+
+  @override
+  String get distractionProfileName => 'Profile name';
+
+  @override
+  String get distractionStrictExit => 'Strict Focus exit';
+
+  @override
+  String get distractionStrictDescription =>
+      'Used when the selected Focus preset has strict mode enabled.';
+
+  @override
+  String get distractionWait60 => 'Wait 60 seconds';
+
+  @override
+  String get distractionConfirmImmediately => 'Confirm immediately';
+
+  @override
+  String get distractionDiscovery => 'Discover used apps';
+
+  @override
+  String get distractionDiscoveryPrivacy =>
+      'Only foreground app identities and product names are stored locally. No disk scan, document names or window titles.';
+
+  @override
+  String get distractionAttempts => 'Save distraction attempts';
+
+  @override
+  String get distractionAttemptsPrivacy =>
+      'Optional local events, with repeated attempts combined. Usage time and page content are not recorded.';
+
+  @override
+  String get distractionAutomatic => '自动分类';
+
+  @override
+  String get distractionAutomaticDescription => '搜索确定类别，手动选择优先。';
+
+  @override
+  String get distractionLocal => 'Local Focus · this computer';
+
+  @override
+  String get distractionShared => 'Shared Focus · connected';
+
+  @override
+  String get distractionOffline =>
+      'Offline · protection ends at the confirmed deadline';
+
+  @override
+  String get distractionNativeApplied => 'Application protection applied';
+
+  @override
+  String get distractionNativeReady => 'Application protection available';
+
+  @override
+  String get distractionNativeUnavailable =>
+      'Application protection unavailable';
+
+  @override
+  String get distractionChrome => 'Chrome extension';
+
+  @override
+  String get distractionPairDescription =>
+      'Enable protection in Chrome and pair this desktop using a one-time code. The code expires after two minutes.';
+
+  @override
+  String get distractionPair => 'Show pairing code';
+
+  @override
+  String distractionPairCode(String code, int port) {
+    return 'Code $code · port $port';
+  }
+
+  @override
+  String get distractionConflict =>
+      'A shared Focus is already running on another device. Choose which session to continue.';
+
+  @override
+  String get distractionJoinShared => 'Join shared Focus';
+
+  @override
+  String get distractionFinishLocal => 'Finish local Focus';
+
+  @override
+  String get distractionStopEverywhere => 'End Focus on all devices';
+
+  @override
+  String get distractionResources => 'Resources and exceptions';
+
+  @override
+  String get distractionAddSite => 'Add site';
+
+  @override
+  String get distractionNoResources =>
+      'Enable app discovery or add a site. Chrome discovers domains only after you grant permission.';
+
+  @override
+  String get distractionCategory => 'Category';
+
+  @override
+  String get distractionException => 'Profile exception';
+
+  @override
+  String get distractionUseCategory => 'Use category';
+
+  @override
+  String get distractionAllow => 'Always allow';
+
+  @override
+  String get distractionBlock => 'Always block';
+
+  @override
+  String get distractionClassify => 'Find category · Pro';
+
+  @override
+  String get distractionAutomaticSource =>
+      'Automatic category · manual corrections take priority';
+
+  @override
+  String get distractionDetached => 'Protection disabled here';
+
+  @override
+  String distractionLastSeen(String date) {
+    return 'Last confirmation: $date';
+  }
+
+  @override
+  String get distractionInvalidDomain =>
+      'Enter a public domain, such as youtube.com.';
+
+  @override
+  String get distractionOnPause => 'Block during pauses';
+
+  @override
+  String get distractionOnShortBreak => 'Block during short breaks';
+
+  @override
+  String get distractionOnLongBreak => 'Block during long breaks';
+
+  @override
+  String get distractionExitTitle => 'End strict Focus?';
+
+  @override
+  String distractionExitCountdown(int seconds) {
+    return 'Exit available in $seconds seconds. You can cancel and return to Focus.';
+  }
+
+  @override
+  String get distractionExitConfirm =>
+      'The interval will be interrupted without a completion reward.';
+
+  @override
+  String get distractionExitConfirmButton => 'Confirm exit';
+
+  @override
+  String get distractionExitCancel => 'Keep focusing';
+
+  @override
+  String get distractionSocial => 'Social media';
+
+  @override
+  String get distractionMessaging => 'Messaging';
+
+  @override
+  String get distractionVideo => 'Video';
+
+  @override
+  String get distractionMusic => 'Music';
+
+  @override
+  String get distractionGames => 'Games';
+
+  @override
+  String get distractionNews => 'News';
+
+  @override
+  String get distractionShopping => 'Shopping';
+
+  @override
+  String get distractionEducation => 'Education';
+
+  @override
+  String get distractionDevelopment => 'Development';
+
+  @override
+  String get distractionProductivity => 'Work tools';
+
+  @override
+  String get distractionOther => 'Other';
+
+  @override
+  String get distractionUnclassified => 'Unclassified';
+
+  @override
+  String get distractionConnected => 'Connected';
+
+  @override
+  String get distractionDisconnected => 'Disconnected';
+
+  @override
+  String get distractionProtected => 'Protected · rules confirmed';
+
+  @override
+  String get distractionNotConfirmed => 'Rules not confirmed';
+
+  @override
+  String distractionIncognito(String status) {
+    return 'Incognito access: $status';
+  }
+
+  @override
+  String get blockingTitle => '屏蔽';
+
+  @override
+  String get blockingDescription => '在一处管理工作节奏及其限制。';
+
+  @override
+  String blockingRhythm(int work, int short, int long, int count) {
+    return '专注 $work 分钟 · 休息 $short 分钟 · 每 $count 轮长休息 $long 分钟';
+  }
+
+  @override
+  String blockingSharedPresets(String presets) {
+    return '使用此配置的预设：$presets。配置更改将应用于全部预设。';
+  }
+
+  @override
+  String get blockingProfileMissing => '指定的配置不可用。请重新加载或选择其他配置。';
+
+  @override
+  String get blockingWhatToClose => '屏蔽哪些内容';
+
+  @override
+  String get blockingWhatToKeep => '保持哪些内容可用';
+
+  @override
+  String get blockingBehavior => '配置行为';
+
+  @override
+  String get blockingApps => '应用';
+
+  @override
+  String get blockingEnabled => '已启用';
+
+  @override
+  String get blockingDisabled => '已停用';
+
+  @override
+  String get blockingDevices => '此电脑和 Chrome';
+
+  @override
+  String get blockingDeviceDetails => '设备与隐私';
+
+  @override
+  String get blockingSaving => '正在保存…';
+
+  @override
+  String get blockingCurrentFocus => '前往当前 Focus';
+
+  @override
+  String get blockingReady => '准备开始';
+
+  @override
+  String get shortcutHintsTitle => '快捷键提示';
+
+  @override
+  String get shortcutHintsNavigation => '导航';
+
+  @override
+  String shortcutHintsHeld(String key) {
+    return '正在按住 $key · 松开以隐藏';
+  }
+
+  @override
+  String shortcutHintsRelease(String key) {
+    return '请先松开 $key，再使用这些按键';
+  }
+
+  @override
+  String get shortcutHintsSwitchFocusView => '切换专注视图';
+
+  @override
+  String get shortcutHintsNavigate => '导航';
+
+  @override
+  String get shortcutHintsAcceptSuggestion => '接受建议';
+
+  @override
+  String get blockingShowAllPresets => '显示全部';
+
+  @override
+  String get blockingCollapsePresets => '收起';
+
+  @override
+  String get taskNew => '新建任务';
+
+  @override
+  String get taskCreateAction => '创建任务';
+
+  @override
+  String get taskDescription => '描述';
+
+  @override
+  String get taskExpandEditor => '展开编辑器';
+
+  @override
+  String get taskCollapseEditor => '收起编辑器';
+
+  @override
+  String get taskVisibleToYou => '仅自己可见';
+
+  @override
+  String get taskVisibleToTeam => '团队成员可见';
+
+  @override
+  String get taskCreatedFilesPending => '任务已创建。请重试上传剩余文件，或从列表中移除后完成。';
+
+  @override
+  String get taskFormatBold => '粗体 (Markdown)';
+
+  @override
+  String get taskFormatItalic => '斜体 (Markdown)';
+
+  @override
+  String get taskFormatList => '项目符号列表';
+
+  @override
+  String get taskFormatLink => '链接 (Markdown)';
+
+  @override
+  String get settingsShortcutsTogglePomo => '启用 / 停用 Pomo';
+
+  @override
+  String get settingsMenuBarTimerTitle => '菜单栏计时器';
+
+  @override
+  String get settingsMenuBarTimerClassic => '旧版';
+
+  @override
+  String get settingsMenuBarTimerModern => '新版';
+
+  @override
+  String get settingsMenuBarTimerError => '无法更新菜单栏计时器，请重试。';
+
+  @override
+  String get quickAddEnterEstimate => '输入数量';
+
+  @override
+  String quickAddEstimateTotalTime(String minutes) {
+    return '专注 $minutes 分钟';
+  }
+
+  @override
+  String quickAddEstimateInterval(String minutes) {
+    return '每次 $minutes 分钟';
+  }
 }

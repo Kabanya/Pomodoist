@@ -2,6 +2,10 @@ import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
 import 'package:pomodoist/data/repositories/projects/project_repository_impl.dart';
+import 'package:pomodoist/data/repositories/habits/habit_repository_impl.dart';
+import 'package:pomodoist/domain/models/habits/habit_models.dart';
+import 'package:pomodoist/data/repositories/productivity/productivity_repository_impl.dart';
+import 'package:pomodoist/utils/clock.dart';
 import 'package:app_account/app_account.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -53,6 +57,11 @@ void main() {
       taskRepository: taskRepository,
       projectRepository: projectRepository,
       focusRepository: focusRepository,
+      habitRepository: DriftHabitRepository(db, syncQueue),
+      productivityRepository: DriftProductivityRepository(
+        db,
+        clock: FixedClock(DateTime(2026, 5, 1, 12)),
+      ),
       quickAddService: quickAdd,
       voiceQuickAdd: VoiceQuickAddUseCase(
         quickAdd: quickAdd,
@@ -71,6 +80,60 @@ void main() {
   });
 
   tearDown(() => db.close());
+
+  test(
+    'widget snapshot uses local day and period-scoped habit progress',
+    () async {
+      final now = DateTime(2026, 5, 1, 12);
+      final habits = DriftHabitRepository(db, syncQueue);
+      final id = (await habits.createHabit(
+        HabitDraft(
+          title: 'Water',
+          startDate: now,
+          targetPerDay: 2,
+          periodTargets: {HabitDayPeriod.morning: 1, HabitDayPeriod.evening: 1},
+        ),
+        now: now,
+      )).getOrThrow();
+      (await habits.addCheckIn(
+        id,
+        now,
+        now: now,
+        period: HabitDayPeriod.morning,
+      )).getOrThrow();
+      await controller.handleCommand({
+        'type': watchTaskCreateQuickAdd,
+        'input': 'Design review 2026-05-01',
+      });
+      await controller.handleCommand({
+        'type': watchTaskCreateQuickAdd,
+        'input': 'Overdue task 2026-04-30',
+      });
+      final snapshot = await controller.buildSnapshot();
+      final widgets = snapshot['widgets'] as Map<String, Object?>;
+      expect(widgets['day'], '2026-05-01');
+      expect(widgets['completedHabits'], 0);
+      expect(widgets['totalHabits'], 1);
+      expect(widgets['habits'], [
+        {
+          'id': id,
+          'title': 'Water',
+          'count': 1,
+          'target': 2,
+          'completed': false,
+        },
+      ]);
+      expect(
+        (widgets['agenda'] as List).map((task) => (task as Map)['title']),
+        ['Design review'],
+      );
+      final week = widgets['week'] as List;
+      expect(week, hasLength(7));
+      expect((week.first as Map)['day'], '2026-04-27');
+      expect((week.last as Map)['day'], '2026-05-03');
+      expect(snapshot.containsKey('accountSession'), isFalse);
+    },
+  );
 
   test('watch does not publish an in-flight snapshot after disposal', () async {
     final calls = <MethodCall>[];
@@ -141,7 +204,7 @@ void main() {
       environment: 'production',
       release: '0123456789abcdef0123456789abcdef01234567',
       webAppUrl: 'https://app.pomodoist.com',
-      supabaseUrl: 'https://supabase-test.pomodoist.com',
+      supabaseUrl: 'https://pomodoist.supabase.co',
       supabaseAnonKey: 'production-anon-key',
       turnstileSiteKey: 'turnstile-public-key',
       sentryDsn: 'https://public@o12345.ingest.sentry.io/42',
@@ -166,7 +229,7 @@ void main() {
     expect(payload['environment'], 'production');
     expect(payload['release'], '0123456789abcdef0123456789abcdef01234567');
     expect(payload['webAppUrl'], 'https://app.pomodoist.com');
-    expect(payload['supabaseUrl'], 'https://supabase-test.pomodoist.com');
+    expect(payload['supabaseUrl'], 'https://pomodoist.supabase.co');
     expect(payload['supabaseAnonKey'], 'production-anon-key');
     expect(payload['anonKey'], 'production-anon-key');
     expect(payload['turnstileSiteKey'], 'turnstile-public-key');
@@ -390,6 +453,30 @@ void main() {
     expect(second['appliedCommandId'], 'watch-command-1');
     expect(sync['appliedCommandIds'], contains('watch-command-1'));
     expect(tasks.where((task) => task.content == 'Buy milk'), hasLength(1));
+  });
+
+  test('stale widget action cannot pause another interval', () async {
+    await controller.handleCommand({'type': watchFocusStartDefault});
+    final interval = (await focusRepository.watchActiveInterval().first)!;
+    final stale = await controller.handleCommand({
+      'type': watchFocusPause,
+      'expectedIntervalId': 'previous-interval',
+    });
+    expect(stale['ok'], isFalse);
+    expect(stale['conflict'], isTrue);
+    expect(
+      (await focusRepository.watchActiveInterval().first)!.status,
+      'running',
+    );
+    final current = await controller.handleCommand({
+      'type': watchFocusPause,
+      'expectedIntervalId': interval.id,
+    });
+    expect(current['ok'], isTrue);
+    expect(
+      (await focusRepository.watchActiveInterval().first)!.status,
+      'paused',
+    );
   });
 
   test('applies focus command occurredAt timestamps', () async {

@@ -74,7 +74,13 @@ void main() {
         final flavor = _flavor(entry.key);
         for (final name in entry.value) {
           // Check target overrides as well as the inherited project group.
-          for (final target in ['Project', 'Runner', 'Watch', 'Widget']) {
+          for (final target in [
+            'Project',
+            'Runner',
+            'Watch',
+            'Widget',
+            'WatchWidgets',
+          ]) {
             final settings = project.buildSettings(name, target)!;
             expect(
               settings['POMODOIST_APP_GROUP'],
@@ -108,6 +114,7 @@ void main() {
             'Watch': flavor.watchBundleId,
             'WatchTests': flavor.watchTestsBundleId,
             'Widget': flavor.focusWidgetBundleId,
+            'WatchWidgets': '${flavor.watchBundleId}.widgets',
           };
           expect(
             project.buildSettings(
@@ -158,6 +165,7 @@ void main() {
         'Runner': 'Runner/Runner.entitlements',
         'Watch': 'PomodoistWatch/PomodoistWatch.entitlements',
         'Widget': 'PomodoistFocusWidget/PomodoistFocusWidget.entitlements',
+        'WatchWidgets': 'PomodoistWatch/PomodoistWatch.entitlements',
       };
       for (final entry in flavored.entries) {
         for (final name in entry.value) {
@@ -294,6 +302,7 @@ const List<String> _targets = [
   'Watch',
   'WatchTests',
   'Widget',
+  'WatchWidgets',
 ];
 
 AppFlavor _flavor(String name) =>
@@ -398,6 +407,7 @@ String _listTarget(String header) {
     'PomodoistWatch' => 'Watch',
     'PomodoistWatchTests' => 'WatchTests',
     'PomodoistFocusWidgetExtension' => 'Widget',
+    'PomodoistWatchWidgets' => 'WatchWidgets',
     _ => throw StateError('unknown configuration list owner: $header'),
   };
 }

@@ -314,7 +314,7 @@ run_remote \
   "$production_name" \
   production \
   https://app.pomodoist.com \
-  https://supabase-test.pomodoist.com \
+  https://pomodoist.supabase.co \
   0x4AAAAAAAabcdefghijklmnopqrstuv
 production_url=$(container_url "$production_name")
 wait_for_http "$production_url/healthz"
@@ -346,7 +346,7 @@ grep -q '"environment":"selfhosted"' "$selfhosted_config" ||
 assert_header "$selfhosted_url/healthz" \
   'connect-src .*http://localhost:55421 .*ws://localhost:55421'
 if curl --fail --silent --head "$selfhosted_url/healthz" |
-  grep -Eq 'supabase-test\.pomodoist\.com|ewauihswbwduvklrozke\.supabase\.co|challenges\.cloudflare\.com'; then
+  grep -Eq 'supabase-test\.pomodoist\.com|pomodoist\.supabase\.co|ewauihswbwduvklrozke\.supabase\.co|challenges\.cloudflare\.com'; then
   fail 'selfhosted CSP included unused hosted endpoints'
 fi
 
@@ -386,6 +386,16 @@ expect_startup_failure 'invalid production Supabase host' $common_env \
   --env POMODOIST_ENVIRONMENT=production \
   --env POMODOIST_WEB_URL=https://app.pomodoist.com \
   --env SUPABASE_URL=https://evil.example
+# shellcheck disable=SC2086
+expect_startup_failure 'production must not use the staging backend' $common_env \
+  --env POMODOIST_ENVIRONMENT=production \
+  --env POMODOIST_WEB_URL=https://app.pomodoist.com \
+  --env SUPABASE_URL=https://supabase-test.pomodoist.com
+# shellcheck disable=SC2086
+expect_startup_failure 'staging must not use the production backend' $common_env \
+  --env POMODOIST_ENVIRONMENT=staging \
+  --env POMODOIST_WEB_URL=https://app-test.pomodoist.com \
+  --env SUPABASE_URL=https://pomodoist.supabase.co
 expect_startup_failure 'remote HTTP selfhosted web URL' \
   --env POMODOIST_ENVIRONMENT=selfhosted \
   --env POMODOIST_RELEASE="$release" \

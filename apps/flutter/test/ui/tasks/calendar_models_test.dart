@@ -4,7 +4,8 @@ import 'package:pomodoist/domain/models/tasks/calendar_models.dart';
 void main() {
   test('mobile mode defaults independently and survives routine edits', () {
     final legacy = CalendarSettings.fromJsonString('{"mode":"week"}');
-    expect(legacy.mobileMode, CalendarMobileMode.day);
+    expect(legacy.mode, CalendarMode.week);
+    expect(legacy.mobileMode, CalendarMobileMode.routine);
     final saved = legacy
         .copyWith(mobileMode: CalendarMobileMode.routine)
         .copyWith(mode: CalendarMode.month, routineName: 'Mine');
@@ -15,7 +16,7 @@ void main() {
       CalendarSettings.fromJsonString(
         '{"mode":"month","mobileMode":"week"}',
       ).mobileMode,
-      CalendarMobileMode.day,
+      CalendarMobileMode.routine,
     );
   });
 

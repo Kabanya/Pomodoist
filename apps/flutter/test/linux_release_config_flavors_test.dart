@@ -8,8 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// `.github/workflows/linux-appimage-release.yml` writes one JSON configuration
 /// per flavor and `make linux-release` validates it before Flutter starts, so
 /// the validator has to accept the development and staging shapes as well as
-/// the production one. Hosted flavors share a backend and keep separate web
-/// identities.
+/// the production one — while still refusing a development or staging artifact
+/// that is pointed at the production backend.
 void main() {
   test('accepts the development configuration the workflow writes', () {
     final result = _validate(_developmentConfig());
@@ -43,19 +43,20 @@ void main() {
     expect(result.stdout.toString(), contains('valid'));
   });
 
-  test('development keeps its web identity with the shared hosted backend', () {
+  test('rejects a development configuration pointed at the production '
+      'backend', () {
     final webApp = _validate({
       ..._developmentConfig(),
       'WEB_APP_URL': 'https://app.pomodoist.com',
     });
     final supabase = _validate({
       ..._developmentConfig(),
-      'SUPABASE_URL': 'https://supabase-test.pomodoist.com',
+      'SUPABASE_URL': 'https://pomodoist.supabase.co',
       'SUPABASE_ANON_KEY': 'public-anon-key',
     });
 
     expect(webApp.exitCode, 64, reason: webApp.stderr.toString());
-    expect(supabase.exitCode, 0, reason: supabase.stderr.toString());
+    expect(supabase.exitCode, 64, reason: supabase.stderr.toString());
   });
 
   test('rejects a development Supabase pair that is only half supplied', () {
@@ -90,7 +91,7 @@ void main() {
     expect(result.exitCode, 64);
   });
 
-  test('rejects staging with a production web URL or retired backend', () {
+  test('rejects a staging configuration pointed at the production domains', () {
     final webApp = _validate({
       ..._stagingConfig(),
       'WEB_APP_URL': 'https://app.pomodoist.com',
@@ -98,7 +99,7 @@ void main() {
     });
     final supabase = _validate({
       ..._stagingConfig(),
-      'SUPABASE_URL': 'https://ewauihswbwduvklrozke.supabase.co',
+      'SUPABASE_URL': 'https://pomodoist.supabase.co',
     });
 
     expect(webApp.exitCode, 64, reason: webApp.stderr.toString());

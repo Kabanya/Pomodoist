@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/config/agent_app_settings_dependencies.dart';
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/platform/platform_quick_add.dart';
 import 'package:pomodoist/domain/models/settings/app_language.dart';
@@ -11,6 +12,7 @@ final class AppViewState {
 }
 
 final appViewModelProvider = Provider<AppViewState>((ref) {
+  ref.watch(agentAppSettingsRuntimeProvider);
   ref.watch(accountLocaleSyncProvider);
   ref.watch(globalQuickAddRepositoryProvider);
   return AppViewState(language: ref.watch(appLanguageProvider));

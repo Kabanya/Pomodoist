@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "win32_window.h"
+#include "distraction_protection.h"
 
 // A window that does nothing but host a Flutter view.
 class FlutterWindow : public Win32Window {
@@ -25,6 +26,7 @@ protected:
                          LPARAM const lparam) noexcept override;
 
 private:
+  std::unique_ptr<distractions::Host> distraction_host_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> pomo_channel_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> app_icon_channel_;
   void ConfigureQuickAddChannel(FlutterDesktopEngineRef engine);

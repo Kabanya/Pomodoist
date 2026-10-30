@@ -347,6 +347,12 @@ class _GuestAccount implements AccountClient {
 
 class _GuestFocusRepository implements FocusRepository {
   @override
+  Future<Result<void>> setPresetDistractionProfile(
+    String presetId,
+    String? profileId,
+  ) async => const Result.ok(null);
+
+  @override
   Stream<List<FocusPresetItem>> watchPresets() => Stream.value(_presets);
 
   @override

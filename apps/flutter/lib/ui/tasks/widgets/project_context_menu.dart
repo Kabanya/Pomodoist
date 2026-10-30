@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,142 +60,150 @@ class _ProjectContextMenuState extends ConsumerState<ProjectContextMenu> {
     final parents = viewState.parents;
     final siblings = viewState.siblings;
     final index = viewState.index;
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.contextMenu): _controller.show,
-        const SingleActivator(LogicalKeyboardKey.f10, shift: true):
-            _controller.show,
-      },
-      child: AppContextMenuRegion(
-        controller: _controller,
-        items: [
-          if (project.id != inboxProjectId)
-            ShadContextMenuItem(
-              leading: const Icon(LucideIcons.info, size: 16),
-              onPressed: () => showProjectInfoDialog(context, project.id),
-              child: Text(l10n.projectInfoTitle),
-            ),
-          if (!project.isArchived && project.id != inboxProjectId) ...[
-            ShadContextMenuItem(
-              leading: const Icon(LucideIcons.folderPlus, size: 16),
-              onPressed: () =>
-                  showCreateProjectDialog(context, parentId: project.id),
-              child: Text(l10n.addSubproject),
-            ),
-            if (widget.allowMove)
+    return ShortcutHintsScope(
+      hints: [ShortcutHint(l10n.menuTooltip, 'Shift+F10')],
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.contextMenu):
+              _controller.show,
+          const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+              _controller.show,
+        },
+        child: AppContextMenuRegion(
+          controller: _controller,
+          items: [
+            if (project.id != inboxProjectId)
               ShadContextMenuItem(
-                leading: const Icon(LucideIcons.folderInput, size: 16),
-                onPressed: () => showMoveProjectDialog(context, ref, project),
-                child: Text(l10n.moveProject),
+                leading: const Icon(LucideIcons.info, size: 16),
+                onPressed: () => showProjectInfoDialog(context, project.id),
+                child: Text(l10n.projectInfoTitle),
               ),
-            if (widget.allowMove && index > 0)
+            if (!project.isArchived && project.id != inboxProjectId) ...[
               ShadContextMenuItem(
-                leading: const Icon(LucideIcons.arrowUp, size: 16),
-                onPressed: () => moveProjectInTree(
-                  context,
-                  ref,
-                  project.id,
-                  ProjectMoveTarget(
-                    parents[project.id],
-                    siblings[index - 1].id,
-                  ),
+                leading: const Icon(LucideIcons.folderPlus, size: 16),
+                onPressed: () =>
+                    showCreateProjectDialog(context, parentId: project.id),
+                child: Text(l10n.addSubproject),
+              ),
+              if (widget.allowMove)
+                ShadContextMenuItem(
+                  leading: const Icon(LucideIcons.folderInput, size: 16),
+                  onPressed: () => showMoveProjectDialog(context, ref, project),
+                  child: Text(l10n.moveProject),
                 ),
-                child: Text(l10n.projectMoveUp),
-              ),
-            if (widget.allowMove && index >= 0 && index + 1 < siblings.length)
-              ShadContextMenuItem(
-                leading: const Icon(LucideIcons.arrowDown, size: 16),
-                onPressed: () => moveProjectInTree(
-                  context,
-                  ref,
-                  project.id,
-                  ProjectMoveTarget(
-                    parents[project.id],
-                    index + 2 < siblings.length ? siblings[index + 2].id : null,
-                  ),
-                ),
-                child: Text(l10n.projectMoveDown),
-              ),
-          ],
-          if (!project.isArchived && project.id != inboxProjectId)
-            ShadContextMenuItem(
-              leading: const Icon(LucideIcons.users, size: 16),
-              onPressed: () => showShareProjectDialog(context, project),
-              child: Text(l10n.collaborationShareProject),
-            ),
-          ShadContextMenuItem(
-            leading: const Icon(LucideIcons.pencil, size: 16),
-            onPressed: () => showRenameProjectDialog(
-              context,
-              projectId: project.id,
-              projectName: project.name,
-            ),
-            child: Text(l10n.renameProject),
-          ),
-          ShadContextMenuItem(
-            leading: const Icon(LucideIcons.shapes, size: 16),
-            onPressed: () => _changeProjectIcon(context, ref, project),
-            child: Text(l10n.projectIcon),
-          ),
-          ShadContextMenuItem(
-            leading: const Icon(LucideIcons.palette, size: 16),
-            onPressed: () => changeProjectColor(context, ref, project),
-            child: Text(l10n.projectColor),
-          ),
-          ShadContextMenuItem(
-            leading: const Icon(LucideIcons.star, size: 16),
-            onPressed: () => toggleProjectFavorite(context, ref, project),
-            child: Text(
-              project.isFavorite
-                  ? l10n.removeProjectFromFavorites
-                  : l10n.addProjectToFavorites,
-            ),
-          ),
-          if (project.canEdit && project.id != inboxProjectId)
-            ShadContextMenuItem(
-              leading: Icon(
-                project.isArchived
-                    ? LucideIcons.archiveRestore
-                    : LucideIcons.archive,
-                size: 16,
-              ),
-              onPressed: () => _updateProject(
-                context,
-                ref,
-                project.id,
-                UpdateProjectPatch(isArchived: !project.isArchived),
-              ),
-              child: Text(
-                project.isArchived ? l10n.restoreProject : l10n.archiveProject,
-              ),
-            ),
-          ShadContextMenuItem(
-            leading: Icon(
-              LucideIcons.trash2,
-              size: 16,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => _confirmDeleteProject(context, ref, project),
-            child: Text(l10n.deleteProject),
-          ),
-        ],
-        child: widget.showMenuButton
-            ? Row(
-                children: [
-                  Expanded(child: widget.child),
-                  Tooltip(
-                    message: '${l10n.taskMore}: ${project.displayName(l10n)}',
-                    child: ShadIconButton.ghost(
-                      onPressed: _controller.show,
-                      onSecondaryTapUp: (_) => _controller.show(),
-                      icon: const Icon(LucideIcons.ellipsis, size: 18),
-                      width: 44,
-                      height: 44,
+              if (widget.allowMove && index > 0)
+                ShadContextMenuItem(
+                  leading: const Icon(LucideIcons.arrowUp, size: 16),
+                  onPressed: () => moveProjectInTree(
+                    context,
+                    ref,
+                    project.id,
+                    ProjectMoveTarget(
+                      parents[project.id],
+                      siblings[index - 1].id,
                     ),
                   ),
-                ],
-              )
-            : widget.child,
+                  child: Text(l10n.projectMoveUp),
+                ),
+              if (widget.allowMove && index >= 0 && index + 1 < siblings.length)
+                ShadContextMenuItem(
+                  leading: const Icon(LucideIcons.arrowDown, size: 16),
+                  onPressed: () => moveProjectInTree(
+                    context,
+                    ref,
+                    project.id,
+                    ProjectMoveTarget(
+                      parents[project.id],
+                      index + 2 < siblings.length
+                          ? siblings[index + 2].id
+                          : null,
+                    ),
+                  ),
+                  child: Text(l10n.projectMoveDown),
+                ),
+            ],
+            if (!project.isArchived && project.id != inboxProjectId)
+              ShadContextMenuItem(
+                leading: const Icon(LucideIcons.users, size: 16),
+                onPressed: () => showShareProjectDialog(context, project),
+                child: Text(l10n.collaborationShareProject),
+              ),
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.pencil, size: 16),
+              onPressed: () => showRenameProjectDialog(
+                context,
+                projectId: project.id,
+                projectName: project.name,
+              ),
+              child: Text(l10n.renameProject),
+            ),
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.shapes, size: 16),
+              onPressed: () => _changeProjectIcon(context, ref, project),
+              child: Text(l10n.projectIcon),
+            ),
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.palette, size: 16),
+              onPressed: () => changeProjectColor(context, ref, project),
+              child: Text(l10n.projectColor),
+            ),
+            ShadContextMenuItem(
+              leading: const Icon(LucideIcons.star, size: 16),
+              onPressed: () => toggleProjectFavorite(context, ref, project),
+              child: Text(
+                project.isFavorite
+                    ? l10n.removeProjectFromFavorites
+                    : l10n.addProjectToFavorites,
+              ),
+            ),
+            if (project.canEdit && project.id != inboxProjectId)
+              ShadContextMenuItem(
+                leading: Icon(
+                  project.isArchived
+                      ? LucideIcons.archiveRestore
+                      : LucideIcons.archive,
+                  size: 16,
+                ),
+                onPressed: () => _updateProject(
+                  context,
+                  ref,
+                  project.id,
+                  UpdateProjectPatch(isArchived: !project.isArchived),
+                ),
+                child: Text(
+                  project.isArchived
+                      ? l10n.restoreProject
+                      : l10n.archiveProject,
+                ),
+              ),
+            ShadContextMenuItem(
+              leading: Icon(
+                LucideIcons.trash2,
+                size: 16,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () => _confirmDeleteProject(context, ref, project),
+              child: Text(l10n.deleteProject),
+            ),
+          ],
+          child: widget.showMenuButton
+              ? Row(
+                  children: [
+                    Expanded(child: widget.child),
+                    Tooltip(
+                      message: '${l10n.taskMore}: ${project.displayName(l10n)}',
+                      child: ShadIconButton.ghost(
+                        onPressed: _controller.show,
+                        onSecondaryTapUp: (_) => _controller.show(),
+                        icon: const Icon(LucideIcons.ellipsis, size: 18),
+                        width: 44,
+                        height: 44,
+                      ),
+                    ),
+                  ],
+                )
+              : widget.child,
+        ),
       ),
     );
   }

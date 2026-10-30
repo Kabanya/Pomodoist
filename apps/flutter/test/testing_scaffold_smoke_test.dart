@@ -344,22 +344,6 @@ void main() {
         await service.dispose();
       });
 
-      test('quick add hint doubles answer hints', () async {
-        final history = FakeQuickAddHintHistory()
-          ..titles = const ['one', 'two', 'three'];
-
-        expect(await history.countExistingUserTasks(), 0);
-        expect(await history.recentTaskTitles(limit: 2), ['one', 'two']);
-        expect(history.recentTaskTitlesCalls.single.limit, 2);
-
-        final generator = FakeQuickAddHintGenerator();
-        expect(
-          await generator.generate(recentTaskTitles: const [], locale: 'en'),
-          'Plan the day #Work @planning 09:00',
-        );
-        expect(generator.generateCalls.single.locale, 'en');
-      });
-
       test('startup monitor runs and captures failures', () async {
         final monitor = FakeStartupMonitor();
         final policy = SentryRuntimePolicy.fromValues(

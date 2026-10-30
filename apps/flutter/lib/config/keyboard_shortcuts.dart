@@ -202,6 +202,7 @@ Map<AppShortcutCommand, AppShortcutBinding> defaultAppShortcutBindings(
 
   return {
     AppShortcutCommand.toggleSidebar: binding(PhysicalKeyboardKey.keyB, 'B'),
+    AppShortcutCommand.togglePomo: binding(PhysicalKeyboardKey.keyE, 'E'),
     AppShortcutCommand.toggleTaskDetails: _platformBinding(
       platform,
       PhysicalKeyboardKey.keyB,
@@ -357,6 +358,11 @@ class KeyboardShortcutsController
 
   Future<void> load() => _loadFuture ??= _load();
 
+  Future<void> reload() async {
+    await load();
+    await _load();
+  }
+
   Future<AppShortcutCommand?> setBinding(
     AppShortcutCommand command,
     AppShortcutBinding binding,
@@ -383,7 +389,10 @@ class KeyboardShortcutsController
     final defaults = defaultAppShortcutBindings(_platform);
     final raw = (await ref.read(keyboardShortcutsRepositoryProvider).read())
         .getOrThrow();
-    if (raw == null) return;
+    if (raw == null) {
+      if (ref.mounted) state = Map.unmodifiable(defaults);
+      return;
+    }
 
     Object? decoded;
     try {
@@ -431,6 +440,7 @@ class KeyboardShortcutsController
       AppShortcutCommand.toggleTaskDetails,
       AppShortcutCommand.toggleTaskDetailsAlternate,
       AppShortcutCommand.focusAlternate,
+      AppShortcutCommand.togglePomo,
     ]) {
       if (!decodedMap.containsKey(command.storageKey)) {
         _preserveNewShortcut(loaded, _platform, command);
@@ -459,6 +469,7 @@ class KeyboardShortcutsController
     if (ref.mounted) state = Map.unmodifiable(loaded);
     if (ref.mounted &&
         (displaced.isNotEmpty ||
+            !decodedMap.containsKey(AppShortcutCommand.togglePomo.storageKey) ||
             !decodedMap.containsKey(
               AppShortcutCommand.focusAlternate.storageKey,
             ))) {
@@ -493,6 +504,7 @@ class KeyboardShortcutsController
           AppShortcutCommand.toggleTaskDetails,
           AppShortcutCommand.toggleTaskDetailsAlternate,
           AppShortcutCommand.focusAlternate,
+          AppShortcutCommand.togglePomo,
         ]) {
           if (loaded[detailsCommand]?.signature == candidate.signature) {
             _preserveNewShortcut(loaded, _platform, detailsCommand, candidate);
@@ -535,6 +547,8 @@ void _preserveNewShortcut(
   final firstLetter = PhysicalKeyboardKey.keyA.usbHidUsage;
   final letters = command == AppShortcutCommand.focusAlternate
       ? 'FGHIJKLMNOPQRSTUVWXYZ'
+      : command == AppShortcutCommand.togglePomo
+      ? 'EFGHIJKLMNOPQRSTUVWXYZ'
       : 'BCDEFGHIJKLMNOPQRSTUVWXYZ';
   for (final letter in letters.codeUnits) {
     final candidate = _platformBinding(

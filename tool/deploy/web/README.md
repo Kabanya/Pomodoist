@@ -1,18 +1,73 @@
 # Web image build contract
 
-Hosted staging and production use `https://supabase-test.pomodoist.com` and
-its public anon key. Their web domains and application identities remain
-separate, but account and task data are shared. Native release builds use the
-same backend when no explicit Supabase pair is supplied. The retired Supabase
-Cloud endpoint is rejected for production. This endpoint change does not copy
-accounts or data from the retired backend.
-
 The web image is built **once** and serves staging, production and self-hosted
 deployments. Everything that differs between them arrives as container
 environment variables at runtime; the image itself is identical for all three.
 GitHub Actions builds and smoke-tests the image on `ubuntu-24.04` for
 `linux/amd64`, then publishes a private GHCR image. Coolify pulls and runs it on
 the existing VPS. Environment configuration and domains stay in Coolify.
+
+## Backend separation and release prerequisite
+
+Production uses `https://pomodoist.supabase.co` with that Cloud
+project's public key. This free vanity subdomain was confirmed active for
+project `ewauihswbwduvklrozke` on 2026-10-30; it requires no paid Custom Domain
+add-on or changes to the `pomodoist.com` DNS zone. HTTPS settings and Google/Apple
+OAuth authorize redirects respond successfully through the vanity hostname;
+a complete signed-in callback still needs device/browser verification.
+The OAuth server metadata continues to declare
+`https://ewauihswbwduvklrozke.supabase.co/auth/v1` as its issuer, so MCP token
+validation must retain that canonical issuer. Staging alone uses Xubuntu at
+`https://supabase-test.pomodoist.com` with its own public key. Native production
+releases use the Cloud pair when no explicit pair is supplied. Official web,
+Chrome and Telegram configurations reject the other environment's backend;
+custom self-hosted endpoints remain supported. Local development profiles do
+not connect to Xubuntu.
+
+Keep `.env.setup` and its generated production profiles consistent. Empty
+values in `.env.setup` do not clear existing generated values: when removing a
+development backend, clear both `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the
+existing local profile as well. Never commit private configuration files.
+
+Cloud was upgraded on **2026-10-30** from migration `20261022080300` through
+`20261029081042`. These five repository migrations were applied in order using
+a temporary migration directory assembled from the actual Cloud history. The
+self-hosted baseline was excluded; no migration-history repair was performed:
+
+| Applied migration (under `server/supabase/migrations/`) | Installed behavior |
+| --- | --- |
+| `20261026081733_pomodoist_core_distraction_blocking_focus.sql` | Shared Focus authority and resource classification/cache RPCs |
+| `20261028161223_pomodoist_core_focus_receipt_limit.sql` | Bounded Focus command receipts |
+| `20261028162356_pomodoist_core_focus_transitions_and_locks.sql` | Concurrent Focus transitions and lifecycle locking |
+| `20261028164545_pomodoist_core_focus_open_pause.sql` | Correct credit for an open pause at completion |
+| `20261029081042_pomodoist_core_app_settings.sql` | Agent/device settings RPCs and private request metadata |
+
+Post-upgrade inspection confirmed these SQL entrypoints and their role grants:
+`public.pomodoist_focus(jsonb)`,
+`public.pomodoist_resource_classification(jsonb)`,
+`public.pomodoist_resource_cache_store(jsonb)`,
+`public.pomodoist_app_settings_agent(uuid,uuid,uuid,jsonb)` and
+`api_v1.pomodoist_app_settings_device(jsonb)`. Their private implementations,
+permissions and tables were installed by the migrations above. Check the
+`pomodoist-ai` and `pomodoist-mcp` Edge Functions against the selected release
+as part of that deployment; the classification and app-settings consumers
+require the corresponding SQL contracts.
+
+The upgrade preserved all 214 accounts and profiles, 12,917 sync entities and
+1,225 sync operation receipts. Per-entity-type row counts and checksums matched
+before and after the migrations; the shared entity count remained 579. No
+Xubuntu data was copied and no accounts or local SQLite databases were reset.
+A completed Cloud physical backup was available before the upgrade.
+
+The SQL migration prerequisite is satisfied. This is not a claim that the
+complete production release has passed acceptance: the Cloud `pomodoist-ai`
+and `pomodoist-mcp` Edge Functions still need release compatibility checks,
+and authenticated device/browser flows need verification. Do not replay the
+initial self-hosted baseline against the existing Cloud database.
+
+Production runtime URL and public key in Coolify were updated together to the
+Cloud vanity pair for the next image rollout; staging variables were retained.
+Native build publication remains a separate release step.
 
 ## What the image accepts
 

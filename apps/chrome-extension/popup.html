@@ -32,6 +32,7 @@
     </section>
     <section id="timer-panel" role="tabpanel" aria-labelledby="tab-timer" hidden>
       <p id="timer-phase" class="muted" role="status" aria-live="polite"><span data-i18n="Focus">Focus</span></p>
+      <p id="focus-task" class="muted"></p>
       <p id="timer-display" class="timer-display">25:00</p>
       <progress id="timer-progress" class="timer-progress" max="1" value="1" aria-label="Time remaining"></progress>
       <div class="presets" role="group" aria-label="Choose a timer length">
@@ -40,8 +41,12 @@
         <button type="button" data-minutes="25"><span data-i18n="25 minutes">25 minutes</span></button>
         <button type="button" data-minutes="50"><span data-i18n="50 minutes">50 minutes</span></button>
       </div>
-      <div class="toolbar"><button id="timer-reset" type="button"><span data-i18n="Reset">Reset</span></button><span></span><button id="timer-toggle" class="primary" type="button"><span data-i18n="Start">Start</span></button></div>
-      <p class="muted small"><span data-i18n="This timer runs only in the popup and is not saved to Pomodoist Focus.">This timer runs only in the popup and is not saved to Pomodoist Focus.</span></p>
+      <div class="toolbar"><button id="timer-reset" type="button"><span data-i18n="Stop everywhere">Stop everywhere</span></button><span></span><button id="timer-toggle" class="primary" type="button"><span data-i18n="Start">Start</span></button></div>
+      <label><span data-i18n="Protection profile">Protection profile</span><select id="focus-profile"></select></label>
+      <label class="check"><input id="strict-focus" type="checkbox"><span data-i18n="Strict Focus">Strict Focus</span></label>
+      <label><span data-i18n="Strict exit">Strict exit</span><select id="exit-policy"><option value="60" data-i18n="60-second countdown">60-second countdown</option><option value="0" data-i18n="Confirm immediately">Confirm immediately</option></select></label>
+      <button id="cancel-stop" type="button" hidden data-i18n="Cancel exit">Cancel exit</button>
+      <p class="muted small" data-i18n="Focus is shared with your desktop. Protection continues when this popup closes.">Focus is shared with your desktop. Protection continues when this popup closes.</p>
     </section>
     <section id="editor" hidden aria-labelledby="edit-heading">
       <h2 id="edit-heading"><span data-i18n="Edit task">Edit task</span></h2>
@@ -56,5 +61,26 @@
     </section>
     <footer><div><span id="connection" role="status" aria-live="polite"><span data-i18n="Loading…">Loading…</span></span><span id="account" class="small muted"></span></div><button id="logout" type="button"><span data-i18n="Sign out">Sign out</span></button></footer>
   </main>
+  <section id="protection-settings" aria-labelledby="protection-heading">
+    <h2 id="protection-heading" data-i18n="Distraction protection">Distraction protection</h2>
+    <label class="check"><input id="enable-protection" type="checkbox"><span data-i18n="Enable website protection and domain discovery">Enable website protection and domain discovery</span></label>
+    <p id="protection-status" role="status" class="small muted"></p>
+    <label><span data-i18n="Focus source">Focus source</span><select id="focus-source"><option value="cloud" data-i18n="Account cloud">Account cloud</option><option value="desktop" data-i18n="Paired desktop">Paired desktop</option></select></label>
+    <details><summary data-testid="desktop-pairing-toggle" data-i18n="Pair desktop for offline Focus">Pair desktop for offline Focus</summary>
+      <p class="small muted" data-i18n="Open desktop protection settings for a one-use pairing code. Use the same account and environment.">Open desktop protection settings for a one-use pairing code. Use the same account and environment.</p>
+      <form id="pair-form"><label><span data-i18n="Pairing code">Pairing code</span><input id="pair-code" autocomplete="off" minlength="4" maxlength="128" required></label><details><summary data-i18n="Desktop port">Desktop port</summary><label><span data-i18n="Desktop port">Desktop port</span><input id="bridge-port" type="number" min="1" max="65535"></label></details><button type="submit" data-i18n="Pair">Pair</button></form>
+    </details>
+    <label class="check"><input id="auto-classify" type="checkbox"><span data-i18n="Automatically categorize new domains (Pro)">Automatically categorize new domains (Pro)</span></label>
+    <p class="small muted" data-i18n="Task analysis and new automatic categories share the monthly AI limit. Cached categories and manual corrections are free.">Task analysis and new automatic categories share the monthly AI limit. Cached categories and manual corrections are free.</p>
+    <p id="classification-error" class="small muted" role="status"></p>
+    <details><summary data-i18n="Profiles and domains">Profiles and domains</summary>
+      <label><span data-i18n="Edit profile">Edit profile</span><select id="edit-profile"></select></label>
+      <form id="profile-form"><label><span data-i18n="Profile name">Profile name</span><input id="profile-name" maxlength="100" required></label><label><span data-i18n="Blocked categories">Blocked categories</span><select id="profile-categories" multiple size="5"></select></label>
+        <label class="check"><input type="checkbox" id="block-pause" checked><span data-i18n="Block while paused">Block while paused</span></label><label class="check"><input type="checkbox" id="block-short"><span data-i18n="Block during short breaks">Block during short breaks</span></label><label class="check"><input type="checkbox" id="block-long"><span data-i18n="Block during long breaks">Block during long breaks</span></label><button type="submit" data-i18n="Save profile">Save profile</button></form>
+      <form id="domain-form"><label><span data-i18n="Domain">Domain</span><input id="domain-name" list="discovered-domains" maxlength="253" placeholder="example.com" required><datalist id="discovered-domains"></datalist></label><label><span data-i18n="Category">Category</span><select id="domain-category"></select></label><label><span data-i18n="Profile override">Profile override</span><select id="domain-override"><option value="category" data-i18n="Use category">Use category</option><option value="allow" data-i18n="Always allow">Always allow</option><option value="block" data-i18n="Always block">Always block</option></select></label><button type="submit" data-i18n="Save domain">Save domain</button></form>
+      <p class="small muted" data-i18n="Unknown domains are allowed. Only selected assignments sync; discovery stays on this browser.">Unknown domains are allowed. Only selected assignments sync; discovery stays on this browser.</p>
+    </details>
+    <button id="emergency-release" type="button" class="danger" data-i18n="Emergency release on this browser">Emergency release on this browser</button>
+  </section>
   <p id="startup" role="status" class="muted"><span data-i18n="Opening your tasks…">Opening your tasks…</span></p>
 </body></html>

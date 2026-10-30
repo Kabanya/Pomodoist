@@ -388,5 +388,290 @@
   },
   "break_over_ready_to_focus": {
     "message": "휴식이 끝났습니다. 다시 집중할까요?"
+  },
+  "protection_129": {
+    "message": "60초 카운트다운"
+  },
+  "protection_130": {
+    "message": "계정 클라우드"
+  },
+  "protection_131": {
+    "message": "Allow access to the desktop bridge."
+  },
+  "protection_132": {
+    "message": "Allow website access to enable protection."
+  },
+  "protection_133": {
+    "message": "항상 허용"
+  },
+  "protection_134": {
+    "message": "항상 차단"
+  },
+  "protection_135": {
+    "message": "긴 휴식 중에도 차단"
+  },
+  "protection_136": {
+    "message": "짧은 휴식 중에도 차단"
+  },
+  "protection_137": {
+    "message": "일시 정지 중에도 차단"
+  },
+  "protection_138": {
+    "message": "차단할 카테고리"
+  },
+  "protection_139": {
+    "message": "종료 취소"
+  },
+  "protection_140": {
+    "message": "카테고리"
+  },
+  "protection_141": {
+    "message": "확인 후 즉시 종료"
+  },
+  "protection_142": {
+    "message": "Desktop account or app environment does not match."
+  },
+  "protection_143": {
+    "message": "Desktop app unavailable. Local protection expires at the last confirmed deadline."
+  },
+  "protection_144": {
+    "message": "데스크톱 포트"
+  },
+  "protection_145": {
+    "message": "Desktop response too large."
+  },
+  "protection_146": {
+    "message": "방해 요소 차단"
+  },
+  "protection_147": {
+    "message": "도메인"
+  },
+  "protection_148": {
+    "message": "프로필 편집"
+  },
+  "protection_149": {
+    "message": "이 브라우저에서 긴급 해제"
+  },
+  "protection_150": {
+    "message": "웹사이트 보호 및 도메인 검색 사용"
+  },
+  "protection_151": {
+    "message": "엄격한 집중을 지금 종료할까요?"
+  },
+  "protection_152": {
+    "message": "Enter a profile name."
+  },
+  "protection_153": {
+    "message": "Enter a valid desktop port."
+  },
+  "protection_154": {
+    "message": "Enter a valid domain."
+  },
+  "protection_155": {
+    "message": "Enter the desktop pairing code."
+  },
+  "protection_156": {
+    "message": "Focus belongs to another account."
+  },
+  "protection_157": {
+    "message": "집중 세션은 데스크톱과 공유됩니다. 이 창을 닫아도 보호는 계속돼요."
+  },
+  "protection_158": {
+    "message": "집중 세션 연결"
+  },
+  "protection_159": {
+    "message": "시크릿 모드 허용됨"
+  },
+  "protection_160": {
+    "message": "시크릿 모드 사용 안 함"
+  },
+  "protection_161": {
+    "message": "Invalid Focus command."
+  },
+  "protection_162": {
+    "message": "Invalid Focus deadline."
+  },
+  "protection_163": {
+    "message": "Invalid Focus response."
+  },
+  "protection_164": {
+    "message": "Invalid Focus server clock."
+  },
+  "protection_165": {
+    "message": "Invalid Focus session."
+  },
+  "protection_166": {
+    "message": "Invalid Focus source."
+  },
+  "protection_167": {
+    "message": "Invalid desktop protection lease."
+  },
+  "protection_168": {
+    "message": "새 프로필"
+  },
+  "protection_169": {
+    "message": "차단 프로필 없음"
+  },
+  "protection_170": {
+    "message": "데스크톱 보호 설정에서 일회용 연결 코드를 확인하세요. 같은 계정과 환경을 사용하세요."
+  },
+  "protection_171": {
+    "message": "연결"
+  },
+  "protection_172": {
+    "message": "오프라인 집중을 위해 데스크톱 연결"
+  },
+  "protection_173": {
+    "message": "Pair the desktop app first."
+  },
+  "protection_174": {
+    "message": "연결된 데스크톱"
+  },
+  "protection_175": {
+    "message": "연결 코드"
+  },
+  "protection_176": {
+    "message": "프로필 이름"
+  },
+  "protection_177": {
+    "message": "프로필 개별 규칙"
+  },
+  "protection_178": {
+    "message": "프로필 및 도메인"
+  },
+  "protection_179": {
+    "message": "보호가 종료되었습니다. 준비되면 페이지로 돌아갈 수 있어요."
+  },
+  "protection_180": {
+    "message": "보호 프로필"
+  },
+  "protection_181": {
+    "message": "이 브라우저에서만 보호를 해제할까요? 공유 집중 세션은 계속돼요."
+  },
+  "protection_182": {
+    "message": "이 브라우저의 엄격한 보호를 지금 해제할까요?"
+  },
+  "protection_183": {
+    "message": "다시 시작"
+  },
+  "protection_184": {
+    "message": "작업으로 돌아가기"
+  },
+  "protection_185": {
+    "message": "작업으로 돌아가세요."
+  },
+  "protection_186": {
+    "message": "도메인 저장"
+  },
+  "protection_187": {
+    "message": "프로필 저장"
+  },
+  "protection_188": {
+    "message": "Sign in or pair the desktop app."
+  },
+  "protection_189": {
+    "message": "모든 기기에서 중지"
+  },
+  "protection_190": {
+    "message": "엄격한 집중"
+  },
+  "protection_191": {
+    "message": "엄격 모드 종료"
+  },
+  "protection_192": {
+    "message": "엄격 모드 종료 카운트다운이 진행 중이에요."
+  },
+  "protection_193": {
+    "message": "Strict exit countdown is active. Keep protection enabled until it finishes."
+  },
+  "protection_194": {
+    "message": "집중할 시간이에요"
+  },
+  "protection_195": {
+    "message": "Too many website rules. Reduce profile assignments before enabling protection."
+  },
+  "protection_196": {
+    "message": "알 수 없는 도메인은 허용됩니다. 저장한 분류만 동기화되며 검색 목록은 이 브라우저에만 남아요."
+  },
+  "protection_197": {
+    "message": "카테고리 사용"
+  },
+  "protection_198": {
+    "message": "웹사이트 접근 허용됨 · 보호 대기 중"
+  },
+  "protection_199": {
+    "message": "웹사이트 접근 권한이 필요해요"
+  },
+  "protection_200": {
+    "message": "웹사이트 보호 사용 중"
+  },
+  "protection_201": {
+    "message": "페이지가 유지됩니다. 미디어는 일시 정지 상태를 유지해요."
+  },
+  "protection_202": {
+    "message": "개발"
+  },
+  "protection_203": {
+    "message": "교육"
+  },
+  "protection_204": {
+    "message": "게임"
+  },
+  "protection_205": {
+    "message": "메시지"
+  },
+  "protection_206": {
+    "message": "음악"
+  },
+  "protection_207": {
+    "message": "뉴스"
+  },
+  "protection_208": {
+    "message": "기타"
+  },
+  "protection_209": {
+    "message": "생산성"
+  },
+  "protection_210": {
+    "message": "쇼핑"
+  },
+  "protection_211": {
+    "message": "소셜"
+  },
+  "protection_212": {
+    "message": "미분류"
+  },
+  "protection_213": {
+    "message": "동영상"
+  },
+  "protection_214": {
+    "message": "AI 사용량을 확인할 수 없어요."
+  },
+  "protection_215": {
+    "message": "자동 분류에는 Pro가 필요해요."
+  },
+  "protection_216": {
+    "message": "자동 분류를 사용할 수 없어요. 카테고리를 직접 선택하세요."
+  },
+  "protection_217": {
+    "message": "새 도메인 자동 분류 (Pro)"
+  },
+  "protection_218": {
+    "message": "도메인 개별 규칙을 설정할 프로필을 선택하세요."
+  },
+  "protection_219": {
+    "message": "Invalid AI quota response."
+  },
+  "protection_220": {
+    "message": "AI 사용량 새로 고침"
+  },
+  "protection_221": {
+    "message": "작업 분석과 새 자동 분류는 월간 AI 한도를 공유합니다. 캐시된 분류와 수동 수정은 무료예요."
+  },
+  "protection_222": {
+    "message": "AI 요청 {used}/{limit} 사용 · {date}에 초기화"
+  },
+  "website_protection_unavailable": {
+    "message": "웹사이트 보호를 사용할 수 없습니다. chrome://extensions에서 Pomodoist를 업데이트하거나 새로고침하세요."
   }
 }

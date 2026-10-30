@@ -273,7 +273,7 @@ def smoke(image, sha):
     """The exact same prebuilt image must support both runtime environments."""
     for environment in ('staging', 'production'):
         web = 'https://app-test.pomodoist.com' if environment == 'staging' else 'https://app.pomodoist.com'
-        supabase = 'https://supabase-test.pomodoist.com'
+        supabase = 'https://supabase-test.pomodoist.com' if environment == 'staging' else 'https://pomodoist.supabase.co'
         args = ['docker', 'run', '--detach', '--publish', '127.0.0.1::8080']
         for key, value in {'POMODOIST_ENVIRONMENT': environment, 'POMODOIST_RELEASE': sha,
                            'POMODOIST_WEB_URL': web, 'SUPABASE_URL': supabase,
