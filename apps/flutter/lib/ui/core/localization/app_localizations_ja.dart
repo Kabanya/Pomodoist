@@ -3981,12 +3981,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsPreviewCompletedTask => 'メモを確認する';
 
   @override
-  String get habitsListView => 'リスト';
-
-  @override
-  String get habitsRhythmView => '一日のリズム';
-
-  @override
   String get habitsRemaining => '残り';
 
   @override
@@ -4015,9 +4009,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => 'リマインダー時刻に基づきます。';
-
-  @override
-  String get habitsViewPreferenceError => '表示設定を保存または読み込めませんでした。';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -4853,4 +4844,43 @@ class AppLocalizationsJa extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return '1回 $minutes 分';
   }
+
+  @override
+  String get habitCheckIn => '記録する';
+
+  @override
+  String get habitWeekHistory => '今週';
+
+  @override
+  String habitProgressOn(String date) {
+    return '$dateの進捗';
+  }
+
+  @override
+  String get habitsDayRhythm => '一日のリズム';
+
+  @override
+  String get habitsProgressCircle => '進捗サークル';
+
+  @override
+  String get habitsPresentationError => '表示方法を保存できませんでした。';
+
+  @override
+  String get habitsRemainingToday => '今日の残り';
+
+  @override
+  String get habitsCompletedToday => '今日の完了';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return '$dateの残り';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return '$dateの完了';
+  }
+
+  @override
+  String get habitsProgressCaption => '習慣を完了';
 }

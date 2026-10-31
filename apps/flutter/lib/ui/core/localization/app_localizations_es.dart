@@ -4131,12 +4131,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsPreviewCompletedTask => 'Revisar notas';
 
   @override
-  String get habitsListView => 'Lista';
-
-  @override
-  String get habitsRhythmView => 'Ritmo del día';
-
-  @override
   String get habitsRemaining => 'Pendientes';
 
   @override
@@ -4166,10 +4160,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => 'Según la hora del recordatorio.';
-
-  @override
-  String get habitsViewPreferenceError =>
-      'No se pudo guardar o cargar la vista elegida.';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -5029,4 +5019,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return '$minutes min cada uno';
   }
+
+  @override
+  String get habitCheckIn => 'Registrar';
+
+  @override
+  String get habitWeekHistory => 'Esta semana';
+
+  @override
+  String habitProgressOn(String date) {
+    return 'Progreso del $date';
+  }
+
+  @override
+  String get habitsDayRhythm => 'Ritmo del día';
+
+  @override
+  String get habitsProgressCircle => 'Círculo de progreso';
+
+  @override
+  String get habitsPresentationError => 'No se pudo guardar esta vista.';
+
+  @override
+  String get habitsRemainingToday => 'Pendiente hoy';
+
+  @override
+  String get habitsCompletedToday => 'Completado hoy';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return 'Pendiente el $date';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return 'Completado el $date';
+  }
+
+  @override
+  String get habitsProgressCaption => 'hábitos completados';
 }

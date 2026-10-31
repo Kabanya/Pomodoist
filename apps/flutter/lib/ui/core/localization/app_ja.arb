@@ -1921,8 +1921,6 @@
   "settingsPreviewProject": "個人",
   "settingsPreviewLongTask": "資料を準備し、次のステップを計画する",
   "settingsPreviewCompletedTask": "メモを確認する",
-  "habitsListView": "リスト",
-  "habitsRhythmView": "一日のリズム",
   "habitsRemaining": "残り",
   "habitsDone": "完了",
   "habitsPlanned": "予定",
@@ -1933,7 +1931,6 @@
   "habitPeriodMultipleReason": "目標には一日に複数回の繰り返しが含まれます。",
   "habitPeriodNoTimeReason": "リマインダー時刻が設定されていません。",
   "habitPeriodReminderReason": "リマインダー時刻に基づきます。",
-  "habitsViewPreferenceError": "表示設定を保存または読み込めませんでした。",
   "habitPeriodExplanation": "{period}：{reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -2223,5 +2220,16 @@
   "settingsMenuBarTimerError": "メニューバーのタイマーを更新できませんでした。もう一度お試しください。",
   "quickAddEnterEstimate": "数値を入力",
   "quickAddEstimateTotalTime": "集中時間 {minutes} 分",
-  "quickAddEstimateInterval": "1回 {minutes} 分"
+  "quickAddEstimateInterval": "1回 {minutes} 分",
+  "habitCheckIn": "記録する",
+  "habitWeekHistory": "今週",
+  "habitProgressOn": "{date}の進捗",
+  "habitsDayRhythm": "一日のリズム",
+  "habitsProgressCircle": "進捗サークル",
+  "habitsPresentationError": "表示方法を保存できませんでした。",
+  "habitsRemainingToday": "今日の残り",
+  "habitsCompletedToday": "今日の完了",
+  "habitsRemainingOn": "{date}の残り",
+  "habitsCompletedOn": "{date}の完了",
+  "habitsProgressCaption": "習慣を完了"
 }

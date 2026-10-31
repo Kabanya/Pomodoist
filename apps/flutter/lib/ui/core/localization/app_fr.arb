@@ -1310,8 +1310,6 @@
   "settingsPreviewProject": "Personnel",
   "settingsPreviewLongTask": "Préparer les documents et planifier les prochaines étapes",
   "settingsPreviewCompletedTask": "Relire les notes",
-  "habitsListView": "Liste",
-  "habitsRhythmView": "Rythme du jour",
   "habitsRemaining": "Restantes",
   "habitsDone": "Terminées",
   "habitsPlanned": "Prévues",
@@ -1322,7 +1320,6 @@
   "habitPeriodMultipleReason": "L’objectif comprend plusieurs répétitions dans la journée.",
   "habitPeriodNoTimeReason": "Aucune heure de rappel définie.",
   "habitPeriodReminderReason": "Selon l’heure du rappel.",
-  "habitsViewPreferenceError": "Impossible d’enregistrer ou de charger la vue choisie.",
   "habitPeriodExplanation": "{period} : {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -1612,5 +1609,16 @@
   "settingsMenuBarTimerError": "Impossible de mettre à jour le minuteur de la barre des menus. Réessayez.",
   "quickAddEnterEstimate": "Saisir un nombre",
   "quickAddEstimateTotalTime": "{minutes} min de concentration",
-  "quickAddEstimateInterval": "{minutes} min chacun"
+  "quickAddEstimateInterval": "{minutes} min chacun",
+  "habitCheckIn": "Valider",
+  "habitWeekHistory": "Cette semaine",
+  "habitProgressOn": "Progrès du {date}",
+  "habitsDayRhythm": "Rythme du jour",
+  "habitsProgressCircle": "Cercle de progression",
+  "habitsPresentationError": "Impossible de mémoriser cette vue.",
+  "habitsRemainingToday": "Restant aujourd’hui",
+  "habitsCompletedToday": "Terminé aujourd’hui",
+  "habitsRemainingOn": "Restant le {date}",
+  "habitsCompletedOn": "Terminé le {date}",
+  "habitsProgressCaption": "habitudes terminées"
 }

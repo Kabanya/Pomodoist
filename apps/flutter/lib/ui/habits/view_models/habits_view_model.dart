@@ -8,10 +8,6 @@ import 'package:pomodoist/domain/models/habits/habit_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/notifications/habit_reminder_status.dart';
 import 'package:pomodoist/utils/result.dart';
-import 'package:pomodoist/config/task_preferences_dependencies.dart';
-import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
-
-const habitsViewModeKey = 'habits.viewMode.v1';
 
 class HabitDayRow {
   const HabitDayRow({
@@ -71,10 +67,9 @@ class HabitsViewState {
     this.habits = const [],
     this.loadError = false,
     this.actionError = false,
-    this.viewMode = HabitViewMode.list,
-    this.viewSettingsLoading = false,
-    this.viewSaving = false,
-    this.viewError = false,
+    this.selectedHabitId,
+    this.selectedPeriod,
+    this.overviewOpen = false,
   });
   final DateTime today, selectedDay;
   final List<Habit> habits;
@@ -83,8 +78,11 @@ class HabitsViewState {
   final HabitReminderStatus reminderStatus;
   final int planned, completed;
   final bool loading, finished, saving, loadError, actionError;
-  final HabitViewMode viewMode;
-  final bool viewSettingsLoading, viewSaving, viewError;
+  final String? selectedHabitId;
+  final HabitDayPeriod? selectedPeriod;
+  final bool overviewOpen;
+  HabitDayRow? get selectedRow =>
+      rows.where((row) => row.habit.id == selectedHabitId).firstOrNull;
   List<HabitDayRow> get remainingRows =>
       rows.where((r) => !r.complete).toList();
   List<HabitDayRow> get completedRows => rows.where((r) => r.complete).toList();
@@ -120,17 +118,14 @@ final habitsViewModelProvider =
 
 class HabitsViewModel extends Notifier<HabitsViewState> {
   late HabitRepository _repository;
-  late PreferencesRepository _preferences;
-  Future<void>? _settingsLoad;
-  HabitViewMode _viewMode = HabitViewMode.list;
-  bool _viewLoaded = false, _viewSaving = false, _viewError = false;
+  String? _selectedHabitId;
+  HabitDayPeriod? _selectedPeriod;
+  bool _overviewOpen = false;
   DateTime? _selected, _lastToday;
   bool _finished = false, _saving = false, _actionError = false;
   @override
   HabitsViewState build() {
     _repository = ref.watch(habitRepositoryProvider);
-    _preferences = ref.read(preferencesRepositoryProvider);
-    _settingsLoad ??= Future.microtask(_loadViewMode);
     ref.listen(habitsProvider, (_, _) => _refresh());
     ref.listen(habitCheckInsProvider, (_, _) => _refresh());
     ref.listen(projectsProvider, (_, _) => _refresh());
@@ -178,6 +173,11 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
           h.isFinishedOn(today) == _finished &&
           (_finished || h.isScheduledOn(_selected!)),
     );
+    final weekStart = DateTime(
+      _selected!.year,
+      _selected!.month,
+      _selected!.day - _selected!.weekday + 1,
+    );
     final rows = visible.map((h) {
       final periodCounts = countsFor(h, _selected!);
       final count = periodCounts.values.fold(0, (a, b) => a + b);
@@ -185,9 +185,8 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
       final target = schedule.targetPerDay;
       final targets = schedule.targetsFor(h.reminderMinutes);
       final days = List.generate(
-        5,
-        (i) =>
-            DateTime(_selected!.year, _selected!.month, _selected!.day - 4 + i),
+        7,
+        (i) => DateTime(weekStart.year, weekStart.month, weekStart.day + i),
       );
       final historyCounts = {for (final day in days) day: countsFor(h, day)};
       final periodHistory =
@@ -236,6 +235,25 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
         canUndo: !_selected!.isAfter(today) && count > 0,
       );
     }).toList();
+    final loading = habits.isLoading || checks.isLoading || projects.isLoading;
+    final loadError = habits.hasError || checks.hasError || projects.hasError;
+    if (!loading && !loadError) {
+      final selected = rows
+          .where((r) => r.habit.id == _selectedHabitId)
+          .firstOrNull;
+      final fallback =
+          rows.where((r) => !r.complete).firstOrNull ?? rows.firstOrNull;
+      final row = selected ?? fallback;
+      _selectedHabitId = row?.habit.id;
+      if (row == null) {
+        _selectedPeriod = null;
+        _overviewOpen = false;
+      } else if (_finished) {
+        _selectedPeriod = null;
+      } else if (!row.targets.containsKey(_selectedPeriod)) {
+        _selectedPeriod = row.targets.keys.first;
+      }
+    }
     return HabitsViewState(
       today: today,
       selectedDay: _selected!,
@@ -245,68 +263,28 @@ class HabitsViewModel extends Notifier<HabitsViewState> {
       reminderStatus: ref.read(habitReminderStatusProvider),
       planned: scheduled.length,
       completed: complete,
-      loading: habits.isLoading || checks.isLoading || projects.isLoading,
-      loadError: habits.hasError || checks.hasError || projects.hasError,
+      loading: loading,
+      loadError: loadError,
       finished: _finished,
       saving: _saving,
       actionError: _actionError,
-      viewMode: _viewMode,
-      viewSettingsLoading: !_viewLoaded,
-      viewSaving: _viewSaving,
-      viewError: _viewError,
+      selectedHabitId: _selectedHabitId,
+      selectedPeriod: _selectedPeriod,
+      overviewOpen: _overviewOpen,
     );
   }
 
-  Future<void> _loadViewMode() async {
-    if (!ref.mounted) return;
-    try {
-      final values = (await _preferences.read([
-        habitsViewModeKey,
-      ])).getOrThrow();
-      if (!ref.mounted) return;
-      _viewMode =
-          HabitViewMode.values
-              .where((mode) => mode.name == values[habitsViewModeKey])
-              .firstOrNull ??
-          HabitViewMode.list;
-      _viewError = false;
-    } catch (_) {
-      if (!ref.mounted) return;
-      _viewError = true;
-    } finally {
-      if (ref.mounted) {
-        _viewLoaded = true;
-        _refresh();
-      }
-    }
+  void selectHabit(String id, {HabitDayPeriod? period}) {
+    if (!state.rows.any((row) => row.habit.id == id)) return;
+    _selectedHabitId = id;
+    _selectedPeriod = period;
+    _overviewOpen = true;
+    _refresh();
   }
 
-  Future<void> setViewMode(HabitViewMode mode) async {
-    if (_viewSaving) return;
-    _viewSaving = true;
+  void closeOverview() {
+    _overviewOpen = false;
     _refresh();
-    try {
-      await _settingsLoad;
-      (await _preferences.write({habitsViewModeKey: mode.name})).getOrThrow();
-      if (!ref.mounted) return;
-      _viewMode = mode;
-      _viewError = false;
-    } catch (_) {
-      if (!ref.mounted) return;
-      _viewError = true;
-    } finally {
-      if (ref.mounted) {
-        _viewSaving = false;
-        _refresh();
-      }
-    }
-  }
-
-  Future<void> retryViewMode() {
-    if (_viewSaving || !_viewLoaded) return Future.value();
-    _viewLoaded = false;
-    _refresh();
-    return _settingsLoad = _loadViewMode();
   }
 
   void _refresh() {

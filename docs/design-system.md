@@ -218,6 +218,9 @@ the toolbar and extension list.
 On iOS/iPadOS use alternate app icons; on Android use launcher aliases while
 keeping MainActivity and its deep links enabled. Enable the new alias before
 disabling the previous one. Watch uses the default Pomo icon without a selector.
+On macOS, center the artwork in an 824px square on the 1024px transparent canvas
+so its visible size matches neighboring Dock icons; scale this inset at every
+resolution for both choices and all flavors.
 On macOS selection changes the running Dock icon; Finder and the closed app use
 Pomo. Windows updates window icons and the current installation's Start menu
 shortcut, preserving its target, arguments and AppUserModelID. Linux updates GTK
@@ -825,7 +828,8 @@ primary text when needed to retain 4.5:1 contrast on normal and interaction fill
 Use native `TextSpan.backgroundColor` without changing text metrics, selection
 or composing underlines. Tokens reflect the phrase's effective priority.
 On mobile and desktop, the composer hint uses light weight (300) and secondary
-text at 65% opacity to stay unobtrusive.
+text at 65% opacity to stay unobtrusive. The detailed creation editor's title
+field follows the same regular entered-text weight and light hint treatment.
 `QuickAddComposer` owns this styling, so the dialog and the separate window
 stay consistent. Details stay below the editable input; the separate window
 scrolls when needed.
@@ -834,7 +838,8 @@ Date, project, priority, Pomodoro estimate and Comment controls retain soft fill
 and thin tinted borders even without a value. Open menus and the expanded Comment
 control use a stronger semantic border. Hover and press retain the semantic color
 with a slightly stronger fill; disabled states retain the shared button behavior.
-Keep 8 px control corners, existing sizes and wrapping, and keyboard focus outlines.
+Keep 8 px control corners, wrapping, and keyboard focus outlines. All five controls
+use the same height: 40 px on desktop and 48 px in touch forms.
 Apply this treatment to inline Quick Add, dialogs, the separate window and editable
 voice drafts including subtasks, using the existing shared components.
 
@@ -863,7 +868,11 @@ alongside the other metadata; hide it again when that input is cleared. Expandin
 reveals a softly tinted multiline field below the metadata; collapsing it keeps
 the text, and a checkmark on the chip indicates a nonempty comment. Use the
 existing localized task-comment labels, 40 px desktop and 48 px touch controls,
-and the shared palette in both themes. Enter adds a newline in the comment.
+and the shared palette in both themes. Enter finishes the comment: collapse the
+field, retain its draft, and return focus to the task title without creating a
+task. Shift+Enter inserts a newline. The software keyboard's Done action also
+finishes the comment; active IME composition must not close it. While the comment
+is focused, the Enter shortcut hint describes finishing rather than task creation.
 The comment is literal task description text, never parsed as Quick Add metadata;
 create and synchronize it atomically with the task. Keep both drafts after a
 failure and clear them only after successful text creation.
@@ -2007,28 +2016,73 @@ habits; rows retain partial progress and clamp displayed counts to the daily
 goal. Future days are read-only. Ended habits remain available in Finished
 so earlier dates can still be corrected.
 
-The default List view uses a compact header, with the Monday-first week strip
-and completed-habit summary beside each other when at least 700 px of content
-width is available, stacked otherwise. Calendar controls retain 44 px targets;
-the strip scrolls horizontally when text scaling needs more room. Preserve the
-selected date, editor draft and action state when switching List / Day rhythm.
-The selected view is a device-local preference; failed writes retain the previous
-view and expose retry feedback. Finished remains an ordinary historical list.
+Day rhythm is the default active-habit view. Its header shows the localized
+subtitle and New habit action; Active / Finished remains available. Ignore the
+obsolete `habits.viewMode.v1` preference without deleting stored settings. The
+Monday-first week strip distinguishes the selected date from Today, includes
+week navigation and a Today action, and scrolls horizontally rather than
+shrinking 44 px targets. Below it, show the selected date and fully completed /
+planned habit summary.
 
-List / Day rhythm use separate choice chips matching Active / Finished in size,
-fill, typography, 8 px corner radius and selected checkmark. Each has a 1 px
-outline: accent for the selected view and the palette border color otherwise.
-Keep 8 px gaps and allow wrapping on narrow screens. Disable the view chips while
-their preference is loading or saving, and hide them in Finished.
+On web and native macOS, Windows and Linux, offer Day rhythm / Progress circle
+when the main area is at least 960 px wide. Native iOS and Android never offer
+this switch. Measure the area before any contextual panel reserves its 440 px;
+nested panel hosts must not change this capability. Store `rhythm` or `progress`
+locally through the preferences repository at `habits.presentation.v1`. Narrow
+windows temporarily use Day rhythm without overwriting the saved choice.
+Preference failures retain the session choice and expose Retry; only the switch
+is disabled during its save, independently of habit check-ins.
+
+Progress circle keeps the common date, filter and selection. Place the full-width
+week strip above an equal-segment circle and incomplete-habit list; completed
+habits move to a responsive card grid below. Each visible active habit has one
+segment in stable repository order. Only fully completed habits use accent fill;
+partial progress remains neutral. The center counts completed / planned habits.
+Surrounding signs are 56 px buttons and disappear when adjacent signs and their
+completion badges cannot fit without overlap. All habits remain in the lists.
+Rows show the daily count, reminder time or scheduled periods, and a separate
+56 px circular check-in button. Use dots for up to 12 repetitions and a progress
+bar for larger goals. Menu actions reuse undo, edit, icon selection and confirmed
+deletion. Other-date section titles name the selected date. Finished shows its
+historical cards without a daily circle. There are no decorative animations.
+
+Selecting a progress sign, row or card opens the existing 440 px overview; Escape
+and Back restore focus through the shared panel host. The editor replaces that
+overview, preserving its selection and presentation on return. Resizing retains
+the editor draft. If the panel leaves less than 880 px for progress content,
+stack the circle and incomplete list vertically without changing presentation.
+
+At 960 px of available main-area width, place a 440 px overview on the right,
+separated by a subtle divider. List and overview scroll independently. Below
+960 px, selecting a row opens the same overview in the shared full-screen
+contextual panel. On compact shells, hide the top bar, bottom navigation and
+floating task action while it is open. Back and Escape restore the list's date,
+scroll position and keyboard focus. Selection is transient, not a new URL or
+synchronized setting. Choose the first incomplete habit, otherwise the first
+available one; retain selection after completion and date changes when possible.
+If its period disappears, select the habit's first valid period. Empty results
+clear selection and close the compact overview.
+
+The overview presents the daily total independently of the selected row's period:
+habit sign and title, project and schedule, selected-date count / goal, percentage,
+progress bar, check-in, seven-day history, reminder and edit actions. Reminder
+and Edit open the existing editor; only one contextual panel is visible. Closing
+the editor restores the selected overview. Future days are read-only. Weekly
+history uses each date's effective schedule and period-aware counts, caps display
+at the goal, and distinguishes future, unscheduled and uncompleted days. Clicking
+a history day selects that date. Multi-period overview check-in uses the shared
+action menu to choose an unfinished period; row actions mark their own period.
+Keep undo and confirmed deletion in the overview's action menu.
 
 Habit signs use one optional synced `icon` value: a stable Lucide catalog name
 or one complete Unicode emoji. Null uses the existing repeat icon. Keep a neutral
 32 px square with 8 px corners, an 18 px icon or 20 px emoji, and a 44 px button
 target. Render unknown signs with the default icon without discarding stored data.
-List, Day rhythm and Finished use the same sign and keyboard-accessible picker.
+Day rhythm, the overview and Finished use the same sign and keyboard-accessible
+picker.
 
 The habit editor places the sign button beside the name input; selections remain
-in the draft until Save. Selecting a sign from a row saves only the sign and its
+in the draft until Save. Selecting a sign from the overview saves only the sign and its
 update timestamp immediately. The picker offers the complete installed emoji
 catalog with localized categories, search and skin tones, plus 16 habit icons.
 Reset selects the default sign; Cancel discards an uncommitted choice. Keep failed
@@ -2042,15 +2096,14 @@ accept the optional icon before releasing updated clients. Older payloads that
 omit the icon retain the server value; explicit null clears it. Habit icon writes
 must not revise schedules or check-ins.
 
-Active List rows are divided into Remaining and Done, with counts. Partial goals
-stay in Remaining; completing or undoing a check-in moves the row between groups.
-Rows use flat dividers, a neutral repeat icon and trailing check-in/overflow
-controls. Show project, schedule and optional reminder below the title. Remaining
-rows show five historical days with localized weekday labels, tooltips and date /
-count semantics: solid accent is complete, accent outline is partial, neutral fill
-has no check-ins, and neutral outline is unscheduled or future. Multi-check-in
-goals also have a compact progress bar. Done rows use muted titles, less vertical
-padding and omit the history and progress bar. The summary counts each habit once.
+Day rhythm rows use a continuous vertical rail with circular period symbols,
+compact titles, count / goal and a 44 px check-in or completed control. Use a soft
+accent surface and selected semantics for the selected habit and period. Habit
+signs in rows and the overview use neutral circular 44 px and 64 px surfaces;
+the editor and icon picker retain their existing 32 px signs. Keep history in
+the overview, rather than duplicating it under each row. Finished remains a flat
+historical list with the same overview. All views share the palette, Geist and
+GeistMono typography, focus feedback and Reduce Motion conventions.
 
 Day rhythm groups habits into Throughout the day, Morning, Afternoon, Evening
 and Night, in that order, hiding empty groups. Each heading counts completed
@@ -2058,12 +2111,12 @@ period goals / planned period goals, with incomplete rows before complete rows.
 Automatic and Throughout the day retain a single shared goal. The By parts of
 day mode selects one or more of Morning, Afternoon, Evening and Night, with an
 integer goal for each. The daily goal is their sum, from 1 to 99. Each selected
-period shows the habit with its own count, progress and five-day history. List
-and Finished retain one row per habit; the summary counts each habit once and
-completion requires every period goal. In List, adding to a multi-period habit
-opens a period menu with counts; in Day rhythm, the row determines the period.
-Undo removes the most recent mark in that row's period, or the most recent mark
-overall in List. Check-in wall-clock time never determines its period. Night
+period shows the habit with its own count and check-in action. Finished retains
+one row per habit; the summary counts each habit once and completion requires
+every period goal. In the overview, adding to a multi-period habit opens a period
+menu with each period's remaining goal; in Day rhythm, the row determines the period.
+Undo removes the most recent mark overall from the overview. Check-in wall-clock
+time never determines its period. Night
 belongs to the selected calendar date. Reminders remain one optional time and
 do not multiply with periods or targets.
 
@@ -2097,7 +2150,7 @@ keep the Habits screen mounted behind the editor. Below the 820 px shell
 breakpoint, the editor fills the
 viewport and replaces the shell header, bottom navigation and floating Add task
 button. Preserve system safe areas, keep Close and Save pinned, and scroll the
-form between them. The `habit` query parameter controls selection and closing;
+form between them. The `habit` query parameter controls the editor and closing;
 Escape and Back close the panel except while saving. Resizing preserves drafts
 and the background's selected date and scroll position.
 Forms retain failed drafts and expose saving, loading, empty and error states.
@@ -2115,8 +2168,11 @@ Dates are local calendar values, event timestamps are UTC, and schedule edits
 take effect today without rewriting previous rules. Local reminders share one
 serialized replacement queue, cover the next 30 calendar days and occupy at
 most 30 slots, preserving iOS capacity for other notifications and Focus.
-Validation for this feature is unit tests, SQL tests, localization/Drift
-generation and static/architecture analysis only.
+Validate model and repository behavior, panel navigation and responsive widgets,
+localization generation, and static/architecture boundaries. Compare the rendered
+screen against the selected reference at the same main-area size, and inspect
+compact and dark presentations. Schema changes also require SQL tests and Drift
+generation; the rhythm/overview redesign does not change storage or sync.
 
 ## Blocking preset desk
 

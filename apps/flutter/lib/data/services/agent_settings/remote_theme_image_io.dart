@@ -40,7 +40,7 @@ Future<Uint8List> downloadRemoteThemeImage(Uri uri) async {
       );
     }
     // Connect to the validated address, avoiding a second DNS lookup/rebinding.
-    return Socket.startConnect(addresses.first, target.port);
+    return SecureSocket.startConnect(addresses.first, target.port);
   };
   Future<Uint8List> download() async {
     var current = uri;

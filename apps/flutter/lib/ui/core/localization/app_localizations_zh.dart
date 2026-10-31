@@ -3894,12 +3894,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPreviewCompletedTask => '检查笔记';
 
   @override
-  String get habitsListView => '列表';
-
-  @override
-  String get habitsRhythmView => '每日节奏';
-
-  @override
   String get habitsRemaining => '待完成';
 
   @override
@@ -3928,9 +3922,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => '根据提醒时间分组。';
-
-  @override
-  String get habitsViewPreferenceError => '无法保存或加载所选视图。';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -4757,4 +4748,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return '每次 $minutes 分钟';
   }
+
+  @override
+  String get habitCheckIn => '打卡';
+
+  @override
+  String get habitWeekHistory => '本周';
+
+  @override
+  String habitProgressOn(String date) {
+    return '$date进度';
+  }
+
+  @override
+  String get habitsDayRhythm => '每日节奏';
+
+  @override
+  String get habitsProgressCircle => '进度环';
+
+  @override
+  String get habitsPresentationError => '无法记住此视图。';
+
+  @override
+  String get habitsRemainingToday => '今日待完成';
+
+  @override
+  String get habitsCompletedToday => '今日已完成';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return '$date待完成';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return '$date已完成';
+  }
+
+  @override
+  String get habitsProgressCaption => '个习惯已完成';
 }

@@ -1310,8 +1310,6 @@
   "settingsPreviewProject": "شخصي",
   "settingsPreviewLongTask": "إعداد المواد والتخطيط للخطوات التالية",
   "settingsPreviewCompletedTask": "مراجعة الملاحظات",
-  "habitsListView": "القائمة",
-  "habitsRhythmView": "إيقاع اليوم",
   "habitsRemaining": "المتبقية",
   "habitsDone": "المكتملة",
   "habitsPlanned": "المخططة",
@@ -1322,7 +1320,6 @@
   "habitPeriodMultipleReason": "يتضمن الهدف عدة تكرارات على مدار اليوم.",
   "habitPeriodNoTimeReason": "لم يتم تحديد وقت للتذكير.",
   "habitPeriodReminderReason": "حسب وقت التذكير.",
-  "habitsViewPreferenceError": "تعذر حفظ العرض المختار أو تحميله.",
   "habitPeriodExplanation": "{period}: {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -1612,5 +1609,16 @@
   "settingsMenuBarTimerError": "تعذر تحديث مؤقت شريط القوائم. يرجى المحاولة مرة أخرى.",
   "quickAddEnterEstimate": "إدخال عدد",
   "quickAddEstimateTotalTime": "{minutes} دقيقة تركيز",
-  "quickAddEstimateInterval": "{minutes} دقيقة لكل جلسة"
+  "quickAddEstimateInterval": "{minutes} دقيقة لكل جلسة",
+  "habitCheckIn": "تسجيل الإنجاز",
+  "habitWeekHistory": "هذا الأسبوع",
+  "habitProgressOn": "التقدم في {date}",
+  "habitsDayRhythm": "إيقاع اليوم",
+  "habitsProgressCircle": "دائرة التقدم",
+  "habitsPresentationError": "تعذر حفظ طريقة العرض.",
+  "habitsRemainingToday": "المتبقي اليوم",
+  "habitsCompletedToday": "المكتمل اليوم",
+  "habitsRemainingOn": "المتبقي في {date}",
+  "habitsCompletedOn": "المكتمل في {date}",
+  "habitsProgressCaption": "عادات مكتملة"
 }

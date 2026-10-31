@@ -7097,18 +7097,6 @@ abstract class AppLocalizations {
   /// **'Review notes'**
   String get settingsPreviewCompletedTask;
 
-  /// No description provided for @habitsListView.
-  ///
-  /// In en, this message translates to:
-  /// **'List'**
-  String get habitsListView;
-
-  /// No description provided for @habitsRhythmView.
-  ///
-  /// In en, this message translates to:
-  /// **'Day rhythm'**
-  String get habitsRhythmView;
-
   /// No description provided for @habitsRemaining.
   ///
   /// In en, this message translates to:
@@ -7168,12 +7156,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Based on the reminder time.'**
   String get habitPeriodReminderReason;
-
-  /// No description provided for @habitsViewPreferenceError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save or load the view preference.'**
-  String get habitsViewPreferenceError;
 
   /// Resolved automatic habit group and the reason for choosing it.
   ///
@@ -8630,6 +8612,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min each'**
   String quickAddEstimateInterval(String minutes);
+
+  /// No description provided for @habitCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in'**
+  String get habitCheckIn;
+
+  /// No description provided for @habitWeekHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get habitWeekHistory;
+
+  /// Heading for habit progress on the selected local calendar date.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} progress'**
+  String habitProgressOn(String date);
+
+  /// No description provided for @habitsDayRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Day rhythm'**
+  String get habitsDayRhythm;
+
+  /// No description provided for @habitsProgressCircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress circle'**
+  String get habitsProgressCircle;
+
+  /// No description provided for @habitsPresentationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remember this view.'**
+  String get habitsPresentationError;
+
+  /// No description provided for @habitsRemainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining today'**
+  String get habitsRemainingToday;
+
+  /// No description provided for @habitsCompletedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed today'**
+  String get habitsCompletedToday;
+
+  /// Habit dashboard section heading for the selected calendar date.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining on {date}'**
+  String habitsRemainingOn(String date);
+
+  /// Habit dashboard section heading for the selected calendar date.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed on {date}'**
+  String habitsCompletedOn(String date);
+
+  /// No description provided for @habitsProgressCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'habits completed'**
+  String get habitsProgressCaption;
 }
 
 class _AppLocalizationsDelegate

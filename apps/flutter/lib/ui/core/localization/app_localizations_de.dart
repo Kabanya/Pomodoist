@@ -4136,12 +4136,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPreviewCompletedTask => 'Notizen prüfen';
 
   @override
-  String get habitsListView => 'Liste';
-
-  @override
-  String get habitsRhythmView => 'Tagesrhythmus';
-
-  @override
   String get habitsRemaining => 'Noch offen';
 
   @override
@@ -4171,10 +4165,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => 'Anhand der Erinnerungszeit.';
-
-  @override
-  String get habitsViewPreferenceError =>
-      'Die Ansichtspräferenz konnte nicht gespeichert oder geladen werden.';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -5032,4 +5022,44 @@ class AppLocalizationsDe extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return 'Je $minutes Minuten';
   }
+
+  @override
+  String get habitCheckIn => 'Abhaken';
+
+  @override
+  String get habitWeekHistory => 'Diese Woche';
+
+  @override
+  String habitProgressOn(String date) {
+    return 'Fortschritt am $date';
+  }
+
+  @override
+  String get habitsDayRhythm => 'Tagesrhythmus';
+
+  @override
+  String get habitsProgressCircle => 'Fortschrittskreis';
+
+  @override
+  String get habitsPresentationError =>
+      'Diese Ansicht konnte nicht gespeichert werden.';
+
+  @override
+  String get habitsRemainingToday => 'Heute noch offen';
+
+  @override
+  String get habitsCompletedToday => 'Heute erledigt';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return 'Offen am $date';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return 'Erledigt am $date';
+  }
+
+  @override
+  String get habitsProgressCaption => 'Gewohnheiten erledigt';
 }

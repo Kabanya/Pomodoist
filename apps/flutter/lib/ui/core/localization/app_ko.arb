@@ -1921,8 +1921,6 @@
   "settingsPreviewProject": "개인",
   "settingsPreviewLongTask": "자료를 준비하고 다음 단계를 계획하기",
   "settingsPreviewCompletedTask": "메모 검토하기",
-  "habitsListView": "목록",
-  "habitsRhythmView": "하루 리듬",
   "habitsRemaining": "남은 습관",
   "habitsDone": "완료",
   "habitsPlanned": "예정",
@@ -1933,7 +1931,6 @@
   "habitPeriodMultipleReason": "목표에 하루 동안의 여러 반복이 포함됩니다.",
   "habitPeriodNoTimeReason": "알림 시간이 설정되지 않았습니다.",
   "habitPeriodReminderReason": "알림 시간을 기준으로 합니다.",
-  "habitsViewPreferenceError": "선택한 보기를 저장하거나 불러오지 못했습니다.",
   "habitPeriodExplanation": "{period}: {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -2223,5 +2220,16 @@
   "settingsMenuBarTimerError": "메뉴 막대 타이머를 업데이트하지 못했습니다. 다시 시도해 주세요.",
   "quickAddEnterEstimate": "숫자 입력",
   "quickAddEstimateTotalTime": "집중 시간 {minutes}분",
-  "quickAddEstimateInterval": "회당 {minutes}분"
+  "quickAddEstimateInterval": "회당 {minutes}분",
+  "habitCheckIn": "기록하기",
+  "habitWeekHistory": "이번 주",
+  "habitProgressOn": "{date} 진행 상황",
+  "habitsDayRhythm": "하루 리듬",
+  "habitsProgressCircle": "진행 원형",
+  "habitsPresentationError": "이 보기를 저장하지 못했습니다.",
+  "habitsRemainingToday": "오늘 남은 습관",
+  "habitsCompletedToday": "오늘 완료한 습관",
+  "habitsRemainingOn": "{date} 남은 습관",
+  "habitsCompletedOn": "{date} 완료한 습관",
+  "habitsProgressCaption": "습관 완료"
 }

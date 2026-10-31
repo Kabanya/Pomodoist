@@ -19,8 +19,6 @@ DateTime habitEndAfterDays(DateTime start, int days) {
   return DateTime(start.year, start.month, start.day + days - 1);
 }
 
-enum HabitViewMode { list, rhythm }
-
 enum HabitDayPeriod { automatic, anytime, morning, afternoon, evening, night }
 
 HabitDayPeriod resolveHabitDayPeriod({

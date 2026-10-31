@@ -224,9 +224,25 @@ class _TaskCreateDialogState extends ConsumerState<_TaskCreateDialog> {
                           enabled: !locked,
                           maxLines: 4,
                           textInputAction: TextInputAction.done,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.w400,
+                                fontVariations: const [
+                                  FontVariation('wght', 400),
+                                ],
+                                color: context.appColors.primaryText,
+                              ),
                           decoration: InputDecoration(
                             hintText: l10n.taskTitleHint,
+                            hintStyle: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w300,
+                                  fontVariations: const [
+                                    FontVariation('wght', 300),
+                                  ],
+                                  color: context.appColors.secondaryText
+                                      .withValues(alpha: .65),
+                                ),
                             prefixIcon: const Icon(
                               LucideIcons.listPlus,
                               size: 20,

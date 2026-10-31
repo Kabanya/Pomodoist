@@ -3989,12 +3989,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsPreviewCompletedTask => '메모 검토하기';
 
   @override
-  String get habitsListView => '목록';
-
-  @override
-  String get habitsRhythmView => '하루 리듬';
-
-  @override
   String get habitsRemaining => '남은 습관';
 
   @override
@@ -4023,9 +4017,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => '알림 시간을 기준으로 합니다.';
-
-  @override
-  String get habitsViewPreferenceError => '선택한 보기를 저장하거나 불러오지 못했습니다.';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -4866,4 +4857,43 @@ class AppLocalizationsKo extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return '회당 $minutes분';
   }
+
+  @override
+  String get habitCheckIn => '기록하기';
+
+  @override
+  String get habitWeekHistory => '이번 주';
+
+  @override
+  String habitProgressOn(String date) {
+    return '$date 진행 상황';
+  }
+
+  @override
+  String get habitsDayRhythm => '하루 리듬';
+
+  @override
+  String get habitsProgressCircle => '진행 원형';
+
+  @override
+  String get habitsPresentationError => '이 보기를 저장하지 못했습니다.';
+
+  @override
+  String get habitsRemainingToday => '오늘 남은 습관';
+
+  @override
+  String get habitsCompletedToday => '오늘 완료한 습관';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return '$date 남은 습관';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return '$date 완료한 습관';
+  }
+
+  @override
+  String get habitsProgressCaption => '습관 완료';
 }

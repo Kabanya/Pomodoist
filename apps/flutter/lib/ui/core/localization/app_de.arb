@@ -1310,8 +1310,6 @@
   "settingsPreviewProject": "Persönlich",
   "settingsPreviewLongTask": "Materialien vorbereiten und die nächsten Schritte planen",
   "settingsPreviewCompletedTask": "Notizen prüfen",
-  "habitsListView": "Liste",
-  "habitsRhythmView": "Tagesrhythmus",
   "habitsRemaining": "Noch offen",
   "habitsDone": "Erledigt",
   "habitsPlanned": "Geplant",
@@ -1322,7 +1320,6 @@
   "habitPeriodMultipleReason": "Das Tagesziel umfasst mehrere Wiederholungen.",
   "habitPeriodNoTimeReason": "Keine Erinnerungszeit festgelegt.",
   "habitPeriodReminderReason": "Anhand der Erinnerungszeit.",
-  "habitsViewPreferenceError": "Die Ansichtspräferenz konnte nicht gespeichert oder geladen werden.",
   "habitPeriodExplanation": "{period}: {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -1612,5 +1609,16 @@
   "settingsMenuBarTimerError": "Der Timer in der Menüleiste konnte nicht aktualisiert werden. Bitte erneut versuchen.",
   "quickAddEnterEstimate": "Zahl eingeben",
   "quickAddEstimateTotalTime": "{minutes} Min. Fokus",
-  "quickAddEstimateInterval": "Je {minutes} Minuten"
+  "quickAddEstimateInterval": "Je {minutes} Minuten",
+  "habitCheckIn": "Abhaken",
+  "habitWeekHistory": "Diese Woche",
+  "habitProgressOn": "Fortschritt am {date}",
+  "habitsDayRhythm": "Tagesrhythmus",
+  "habitsProgressCircle": "Fortschrittskreis",
+  "habitsPresentationError": "Diese Ansicht konnte nicht gespeichert werden.",
+  "habitsRemainingToday": "Heute noch offen",
+  "habitsCompletedToday": "Heute erledigt",
+  "habitsRemainingOn": "Offen am {date}",
+  "habitsCompletedOn": "Erledigt am {date}",
+  "habitsProgressCaption": "Gewohnheiten erledigt"
 }

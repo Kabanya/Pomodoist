@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
@@ -10,9 +9,6 @@ import 'package:pomodoist/domain/models/habits/habit_models.dart';
 import 'package:pomodoist/domain/models/notifications/habit_reminder_status.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/utils/clock.dart';
-import 'package:pomodoist/config/task_preferences_dependencies.dart';
-import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
-import 'package:pomodoist/utils/result.dart';
 
 void main() {
   test(
@@ -25,7 +21,6 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           clockProvider.overrideWithValue(FixedClock(now)),
-          preferencesRepositoryProvider.overrideWithValue(_Preferences()),
           projectsProvider.overrideWith((_) => Stream.value([])),
           habitReminderStatusProvider.overrideWith(_Status.new),
         ],
@@ -80,7 +75,6 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           clockProvider.overrideWithValue(FixedClock(now)),
-          preferencesRepositoryProvider.overrideWithValue(_Preferences()),
           projectsProvider.overrideWith((_) => Stream.value([])),
           habitReminderStatusProvider.overrideWith(_Status.new),
         ],
@@ -161,17 +155,15 @@ void main() {
     },
   );
   test(
-    'seven repetitions stay one row and completed/undo regroup both views',
+    'seven repetitions stay one habit and completion/undo regroup rhythm',
     () async {
       final now = DateTime(2026, 10, 3, 12);
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      final preferences = _Preferences();
       final container = ProviderContainer(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           clockProvider.overrideWithValue(FixedClock(now)),
-          preferencesRepositoryProvider.overrideWithValue(preferences),
           projectsProvider.overrideWith((_) => Stream.value([])),
           habitReminderStatusProvider.overrideWith(_Status.new),
         ],
@@ -207,7 +199,6 @@ void main() {
         container.read(habitsViewModelProvider).completedRows,
         hasLength(1),
       );
-      await vm.setViewMode(HabitViewMode.rhythm);
       expect(await vm.undoCheckIn(id), isTrue);
       await pumpEventQueue();
       expect(
@@ -249,102 +240,6 @@ void main() {
       final beforeStart = container.read(habitsViewModelProvider);
       expect(beforeStart.rows, isEmpty);
       expect(beforeStart.habits.single.id, id);
-    },
-  );
-
-  test(
-    'retry cannot overwrite a view selected while its read is pending',
-    () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
-      final preferences = _Preferences();
-      final container = ProviderContainer(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          preferencesRepositoryProvider.overrideWithValue(preferences),
-          habitsProvider.overrideWith((_) => Stream.value([])),
-          habitCheckInsProvider.overrideWith((_) => Stream.value([])),
-          projectsProvider.overrideWith((_) => Stream.value([])),
-          habitReminderStatusProvider.overrideWith(_Status.new),
-        ],
-      );
-      addTearDown(container.dispose);
-      container.listen(habitsViewModelProvider, (_, _) {});
-      await pumpEventQueue();
-      final vm = container.read(habitsViewModelProvider.notifier);
-      preferences.readGate = Completer<void>();
-      final retry = vm.retryViewMode();
-      final change = vm.setViewMode(HabitViewMode.rhythm);
-      await pumpEventQueue();
-      preferences.readGate!.complete();
-      await Future.wait([retry, change]);
-      expect(
-        container.read(habitsViewModelProvider).viewMode,
-        HabitViewMode.rhythm,
-      );
-      expect(preferences.values[habitsViewModeKey], 'rhythm');
-    },
-  );
-
-  test(
-    'view preference restores and failed writes retain the previous mode',
-    () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
-      final preferences = _Preferences();
-      ProviderContainer open() {
-        final container = ProviderContainer(
-          overrides: [
-            appDatabaseProvider.overrideWithValue(db),
-            preferencesRepositoryProvider.overrideWithValue(preferences),
-            habitsProvider.overrideWith((_) => Stream.value([])),
-            habitCheckInsProvider.overrideWith((_) => Stream.value([])),
-            projectsProvider.overrideWith((_) => Stream.value([])),
-            habitReminderStatusProvider.overrideWith(_Status.new),
-          ],
-        );
-        container.listen(habitsViewModelProvider, (_, _) {});
-        addTearDown(container.dispose);
-        return container;
-      }
-
-      final first = open();
-      await pumpEventQueue();
-      expect(first.read(habitsViewModelProvider).viewMode, HabitViewMode.list);
-      await first
-          .read(habitsViewModelProvider.notifier)
-          .setViewMode(HabitViewMode.rhythm);
-      expect(preferences.values[habitsViewModeKey], 'rhythm');
-      final second = open();
-      await pumpEventQueue();
-      expect(
-        second.read(habitsViewModelProvider).viewMode,
-        HabitViewMode.rhythm,
-      );
-      preferences.failWrite = true;
-      await second
-          .read(habitsViewModelProvider.notifier)
-          .setViewMode(HabitViewMode.list);
-      expect(
-        second.read(habitsViewModelProvider).viewMode,
-        HabitViewMode.rhythm,
-      );
-      expect(second.read(habitsViewModelProvider).viewError, isTrue);
-      preferences.failWrite = false;
-      await second
-          .read(habitsViewModelProvider.notifier)
-          .setViewMode(HabitViewMode.list);
-      expect(second.read(habitsViewModelProvider).viewError, isFalse);
-      preferences.failRead = true;
-      final failed = open();
-      await pumpEventQueue();
-      expect(failed.read(habitsViewModelProvider).viewMode, HabitViewMode.list);
-      expect(failed.read(habitsViewModelProvider).viewError, isTrue);
-      preferences.failRead = false;
-      preferences.values[habitsViewModeKey] = 'unknown';
-      await failed.read(habitsViewModelProvider.notifier).retryViewMode();
-      expect(failed.read(habitsViewModelProvider).viewMode, HabitViewMode.list);
-      expect(failed.read(habitsViewModelProvider).viewError, isFalse);
     },
   );
 
@@ -421,6 +316,8 @@ void main() {
         (DateTime(2026, 9, 30), 2, 2),
         (DateTime(2026, 10, 1), 0, null),
         (DateTime(2026, 10, 2), 1, 4),
+        (DateTime(2026, 10, 3), 0, 4),
+        (DateTime(2026, 10, 4), 0, 4),
       ]);
       expect(row.count, 1);
       container
@@ -428,7 +325,7 @@ void main() {
           .selectDay(DateTime(2026, 10, 3));
       final future = container.read(habitsViewModelProvider).rows.single;
       final futureHistory = future.history;
-      expect(futureHistory.last.day, DateTime(2026, 10, 3));
+      expect(futureHistory.last.day, DateTime(2026, 10, 4));
       expect(futureHistory.last.count, 0);
       expect(futureHistory.last.target, 4);
       expect(future.canAdd, isFalse);
@@ -436,9 +333,9 @@ void main() {
           .read(habitsViewModelProvider.notifier)
           .selectDay(DateTime(2026, 9, 30));
       final past = container.read(habitsViewModelProvider).rows.single;
-      expect(past.history.first.day, DateTime(2026, 9, 26));
-      expect(past.history.first.target, isNull);
-      expect(past.history.last.target, 2);
+      expect(past.history.first.day, DateTime(2026, 9, 28));
+      expect(past.history.first.target, 2);
+      expect(past.history[2].target, 2);
       expect(past.count, 2);
     },
   );
@@ -578,10 +475,10 @@ void main() {
       final row = container.read(habitsViewModelProvider).rows.single;
       expect(row.canAdd, isTrue);
       expect(row.project, isNull);
-      expect(row.history.last.target, 1);
+      expect(row.history[1].target, 1);
       vm.selectToday();
       expect(
-        container.read(habitsViewModelProvider).rows.single.history.last.target,
+        container.read(habitsViewModelProvider).rows.single.history[2].target,
         isNull,
       );
     },
@@ -591,35 +488,4 @@ void main() {
 class _Status extends HabitNotificationCoordinator {
   @override
   HabitReminderStatus build() => HabitReminderStatus.available;
-}
-
-class _Preferences implements PreferencesRepository {
-  final values = <String, Object>{};
-  bool failWrite = false, failRead = false;
-  Completer<void>? readGate;
-  @override
-  Future<Result<Map<String, Object>>> read(
-    Iterable<String> keys, {
-    bool reload = false,
-  }) => Result.capture(() async {
-    if (failRead) throw StateError('Read failed');
-    final snapshot = {
-      for (final key in keys)
-        if (values.containsKey(key)) key: values[key]!,
-    };
-    await readGate?.future;
-    return snapshot;
-  });
-  @override
-  Future<Result<void>> write(Map<String, Object?> changes) =>
-      Result.capture(() {
-        if (failWrite) throw StateError('Write failed');
-        for (final entry in changes.entries) {
-          if (entry.value == null) {
-            values.remove(entry.key);
-          } else {
-            values[entry.key] = entry.value!;
-          }
-        }
-      });
 }

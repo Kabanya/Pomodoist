@@ -54,6 +54,7 @@ class _PomoModelState extends State<PomoModel>
   bool _ready = false;
   bool _failed = false;
   bool _surfaceReady = false;
+  VoidCallback? _notifyTexture;
   (int, int)? _viewport;
 
   @override
@@ -315,6 +316,8 @@ class _PomoModelState extends State<PomoModel>
         _dirty = false;
         final emotion = widget.emotion;
         final animated = widget.animated;
+        // Pomo owns this engine; Quiet must also stop texture notifications.
+        if (!animated) t.ThermionFlutterPlugin.instance.pauseFrameScheduler();
         if (_appliedEmotion != emotion || _appliedAnimated != animated) {
           final index = _names.indexOf(emotion.name);
           final clip = _clips[emotion.name] as Map<String, dynamic>;
@@ -361,8 +364,10 @@ class _PomoModelState extends State<PomoModel>
         if (_surfaceReady) {
           if (animated) {
             await viewer.setRendering(true);
+            t.ThermionFlutterPlugin.instance.resumeFrameScheduler();
           } else {
             await viewer.renderSingleFrame();
+            if (mounted) _notifyTexture?.call();
           }
         }
       }
@@ -460,8 +465,16 @@ class _PomoModelState extends State<PomoModel>
         : t.ThermionWidgetInternal(
             view: _viewer!.view,
             onTextureUpdated: (descriptor) {
-              if (!mounted || descriptor == null) return;
-              _surfaceReady = true;
+              if (!mounted) return;
+              _surfaceReady = descriptor != null;
+              _notifyTexture = descriptor == null
+                  ? null
+                  : () {
+                      if (!descriptor.destroyed) {
+                        descriptor.markTextureFrameAvailable();
+                      }
+                    };
+              if (descriptor == null) return;
               _viewport = (descriptor.width, descriptor.height);
               _schedule();
             },

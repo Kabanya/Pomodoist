@@ -128,6 +128,13 @@ class _TaskDraftItemState extends ConsumerState<_TaskDraftItem> {
   bool _editing = false;
   bool _commentExpanded = false;
   final _commentKey = GlobalKey();
+  final _titleFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _titleFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +168,7 @@ class _TaskDraftItemState extends ConsumerState<_TaskDraftItem> {
                         children: [
                           InkWell(
                             key: ValueKey('voice-draft-open-${widget.index}'),
+                            focusNode: _titleFocus,
                             onTap: widget.enabled
                                 ? () => setState(() => _editing = true)
                                 : null,
@@ -183,6 +191,7 @@ class _TaskDraftItemState extends ConsumerState<_TaskDraftItem> {
                             inheritedProjectName: widget.inheritedProjectName,
                             priority: widget.priority,
                             enabled: widget.enabled,
+                            touchTargets: true,
                             onChanged: widget.onChanged,
                             trailing: _commentButton(),
                           ),
@@ -239,6 +248,7 @@ class _TaskDraftItemState extends ConsumerState<_TaskDraftItem> {
       children: [
         QuickAddInput(
           controller: widget.controller.quickAdd,
+          focusNode: _titleFocus,
           enabled: widget.enabled,
           maxLines: 3,
           onChanged: (_) => widget.onChanged(),
@@ -258,6 +268,7 @@ class _TaskDraftItemState extends ConsumerState<_TaskDraftItem> {
           inheritedProjectName: widget.inheritedProjectName,
           priority: widget.priority,
           enabled: widget.enabled,
+          touchTargets: true,
           onChanged: widget.onChanged,
           trailing: _commentButton(),
         ),
@@ -279,6 +290,9 @@ class _TaskDraftItemState extends ConsumerState<_TaskDraftItem> {
     enabled: widget.enabled,
     controller: widget.controller.description,
     onChanged: widget.onChanged,
-    onClose: () => setState(() => _commentExpanded = false),
+    onClose: () {
+      setState(() => _commentExpanded = false);
+      _titleFocus.requestFocus();
+    },
   );
 }

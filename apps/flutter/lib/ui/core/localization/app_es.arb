@@ -1310,8 +1310,6 @@
   "settingsPreviewProject": "Personal",
   "settingsPreviewLongTask": "Preparar materiales y planificar los próximos pasos",
   "settingsPreviewCompletedTask": "Revisar notas",
-  "habitsListView": "Lista",
-  "habitsRhythmView": "Ritmo del día",
   "habitsRemaining": "Pendientes",
   "habitsDone": "Completadas",
   "habitsPlanned": "Planificadas",
@@ -1322,7 +1320,6 @@
   "habitPeriodMultipleReason": "El objetivo incluye varias repeticiones durante el día.",
   "habitPeriodNoTimeReason": "No hay una hora de recordatorio.",
   "habitPeriodReminderReason": "Según la hora del recordatorio.",
-  "habitsViewPreferenceError": "No se pudo guardar o cargar la vista elegida.",
   "habitPeriodExplanation": "{period}: {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -1612,5 +1609,16 @@
   "settingsMenuBarTimerError": "No se pudo actualizar el temporizador de la barra de menús. Inténtalo de nuevo.",
   "quickAddEnterEstimate": "Introducir número",
   "quickAddEstimateTotalTime": "{minutes} min de concentración",
-  "quickAddEstimateInterval": "{minutes} min cada uno"
+  "quickAddEstimateInterval": "{minutes} min cada uno",
+  "habitCheckIn": "Registrar",
+  "habitWeekHistory": "Esta semana",
+  "habitProgressOn": "Progreso del {date}",
+  "habitsDayRhythm": "Ritmo del día",
+  "habitsProgressCircle": "Círculo de progreso",
+  "habitsPresentationError": "No se pudo guardar esta vista.",
+  "habitsRemainingToday": "Pendiente hoy",
+  "habitsCompletedToday": "Completado hoy",
+  "habitsRemainingOn": "Pendiente el {date}",
+  "habitsCompletedOn": "Completado el {date}",
+  "habitsProgressCaption": "hábitos completados"
 }

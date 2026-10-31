@@ -165,6 +165,7 @@ class _QuickAddBarState extends ConsumerState<QuickAddBar> {
                         projectId: widget.projectId,
                         priority: widget.defaultPriority,
                         enabled: !_busy,
+                        touchTargets: MediaQuery.sizeOf(context).width < 820,
                         onChanged: _syncDraft,
                         trailing: _QuickAddCommentButton(
                           controller: _commentController,

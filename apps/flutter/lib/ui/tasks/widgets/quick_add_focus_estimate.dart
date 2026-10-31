@@ -396,7 +396,7 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
             key: _trigger,
             focusNode: _triggerFocus,
             size: ShadButtonSize.sm,
-            height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
+            height: widget.touchTargets ? 48 : 40,
             width: widget.iconsOnly ? 40 : null,
             padding: widget.iconsOnly ? EdgeInsets.zero : null,
             enabled: widget.enabled,

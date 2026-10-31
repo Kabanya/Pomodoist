@@ -103,6 +103,38 @@ class _QuickAddCommentField extends StatelessWidget {
   final VoidCallback onChanged;
   final VoidCallback onClose;
 
+  void _finish() {
+    if (enabled && controller.value.composing.isCollapsed) onClose();
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    final keyboard = HardwareKeyboard.instance;
+    if (!enabled ||
+        event is! KeyDownEvent ||
+        (event.logicalKey != LogicalKeyboardKey.enter &&
+            event.logicalKey != LogicalKeyboardKey.numpadEnter) ||
+        keyboard.isControlPressed ||
+        keyboard.isMetaPressed ||
+        keyboard.isAltPressed ||
+        !controller.value.composing.isCollapsed) {
+      return KeyEventResult.ignored;
+    }
+    if (keyboard.isShiftPressed) {
+      final value = controller.value;
+      final range = value.selection.isValid
+          ? value.selection
+          : TextSelection.collapsed(offset: value.text.length);
+      controller.value = TextEditingValue(
+        text: value.text.replaceRange(range.start, range.end, '\n'),
+        selection: TextSelection.collapsed(offset: range.start + 1),
+      );
+      onChanged();
+    } else {
+      _finish();
+    }
+    return KeyEventResult.handled;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -148,25 +180,36 @@ class _QuickAddCommentField extends StatelessWidget {
                   ),
                 ],
               ),
-              TextField(
-                key: const Key('quick-add-comment-input'),
-                controller: controller,
+              ShortcutHintsScope(
+                hints: [ShortcutHint(context.l10n.commonDone, 'Enter')],
                 enabled: enabled,
-                autofocus: true,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                minLines: 1,
-                maxLines: 3,
-                onChanged: (_) => onChanged(),
-                decoration: InputDecoration(
-                  hintText: context.l10n.taskCommentHint,
-                  contentPadding: const EdgeInsets.all(8),
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: colors.accent, width: 2),
+                child: Focus(
+                  canRequestFocus: false,
+                  onKeyEvent: _onKeyEvent,
+                  child: TextField(
+                    key: const Key('quick-add-comment-input'),
+                    controller: controller,
+                    enabled: enabled,
+                    autofocus: true,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.done,
+                    minLines: 1,
+                    maxLines: 3,
+                    onChanged: (_) => onChanged(),
+                    // Keep IME composition intact until completion is accepted.
+                    onEditingComplete: () {},
+                    onSubmitted: (_) => _finish(),
+                    decoration: InputDecoration(
+                      hintText: context.l10n.taskCommentHint,
+                      contentPadding: const EdgeInsets.all(8),
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: colors.accent, width: 2),
+                      ),
+                    ),
                   ),
                 ),
               ),

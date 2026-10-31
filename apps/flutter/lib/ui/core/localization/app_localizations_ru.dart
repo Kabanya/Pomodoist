@@ -4123,12 +4123,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsPreviewCompletedTask => 'Проверить заметки';
 
   @override
-  String get habitsListView => 'Список';
-
-  @override
-  String get habitsRhythmView => 'Ритм дня';
-
-  @override
   String get habitsRemaining => 'Осталось';
 
   @override
@@ -4158,10 +4152,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => 'По времени напоминания.';
-
-  @override
-  String get habitsViewPreferenceError =>
-      'Не удалось сохранить или загрузить выбранный вид.';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -5021,4 +5011,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return 'По $minutes минут';
   }
+
+  @override
+  String get habitCheckIn => 'Отметить';
+
+  @override
+  String get habitWeekHistory => 'На этой неделе';
+
+  @override
+  String habitProgressOn(String date) {
+    return 'Прогресс за $date';
+  }
+
+  @override
+  String get habitsDayRhythm => 'Ритм дня';
+
+  @override
+  String get habitsProgressCircle => 'Круг прогресса';
+
+  @override
+  String get habitsPresentationError => 'Не удалось запомнить вид.';
+
+  @override
+  String get habitsRemainingToday => 'Осталось сегодня';
+
+  @override
+  String get habitsCompletedToday => 'Выполнено сегодня';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return 'Осталось на $date';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return 'Выполнено за $date';
+  }
+
+  @override
+  String get habitsProgressCaption => 'привычек выполнено';
 }

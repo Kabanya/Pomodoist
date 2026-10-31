@@ -28,27 +28,38 @@ IconData habitIconData(String? name) => switch (name) {
 };
 
 class HabitSign extends StatelessWidget {
-  const HabitSign({required this.icon, super.key});
+  const HabitSign({
+    required this.icon,
+    this.size = 32,
+    this.circular = false,
+    super.key,
+  });
   final String? icon;
+  final double size;
+  final bool circular;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final emoji = readAvatarEmoji(icon);
     return Container(
-      width: 32,
-      height: 32,
+      width: size,
+      height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: colors.surfaceTint,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(circular ? size / 2 : 8),
       ),
       child: emoji == null
-          ? Icon(habitIconData(icon), size: 18, color: colors.mutedText)
+          ? Icon(
+              habitIconData(icon),
+              size: size * .5 + 2,
+              color: colors.primaryText,
+            )
           : Text(
               emoji,
               textScaler: TextScaler.noScaling,
-              style: const TextStyle(fontSize: 20),
+              style: TextStyle(fontSize: size * .625),
             ),
     );
   }

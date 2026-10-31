@@ -4038,12 +4038,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsPreviewCompletedTask => 'مراجعة الملاحظات';
 
   @override
-  String get habitsListView => 'القائمة';
-
-  @override
-  String get habitsRhythmView => 'إيقاع اليوم';
-
-  @override
   String get habitsRemaining => 'المتبقية';
 
   @override
@@ -4073,9 +4067,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get habitPeriodReminderReason => 'حسب وقت التذكير.';
-
-  @override
-  String get habitsViewPreferenceError => 'تعذر حفظ العرض المختار أو تحميله.';
 
   @override
   String habitPeriodExplanation(String period, String reason) {
@@ -4933,4 +4924,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String quickAddEstimateInterval(String minutes) {
     return '$minutes دقيقة لكل جلسة';
   }
+
+  @override
+  String get habitCheckIn => 'تسجيل الإنجاز';
+
+  @override
+  String get habitWeekHistory => 'هذا الأسبوع';
+
+  @override
+  String habitProgressOn(String date) {
+    return 'التقدم في $date';
+  }
+
+  @override
+  String get habitsDayRhythm => 'إيقاع اليوم';
+
+  @override
+  String get habitsProgressCircle => 'دائرة التقدم';
+
+  @override
+  String get habitsPresentationError => 'تعذر حفظ طريقة العرض.';
+
+  @override
+  String get habitsRemainingToday => 'المتبقي اليوم';
+
+  @override
+  String get habitsCompletedToday => 'المكتمل اليوم';
+
+  @override
+  String habitsRemainingOn(String date) {
+    return 'المتبقي في $date';
+  }
+
+  @override
+  String habitsCompletedOn(String date) {
+    return 'المكتمل في $date';
+  }
+
+  @override
+  String get habitsProgressCaption => 'عادات مكتملة';
 }

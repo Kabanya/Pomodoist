@@ -67,10 +67,13 @@ Future<void> main() async {
               dismissed: false,
               focusOnly: false,
               quiet: mode == 'static',
-              reduceMotion: false,
+              reduceMotion: parameters['reduceMotion'] == 'true',
               scale: double.tryParse(parameters['scale'] ?? '') ?? 1,
             ),
           );
+      if (double.tryParse(parameters['scale'] ?? '') case final double scale) {
+        await container.read(pomoControllerProvider).changeScale(scale);
+      }
       await Future<void>.delayed(
         Duration(
           milliseconds: int.tryParse(parameters['settleMs'] ?? '') ?? 1000,
@@ -134,6 +137,7 @@ Future<void> main() async {
         final pixels = await app.capture(
           chain,
           view: view,
+          render: parameters['renderCapture'] != 'false',
           captureRenderTarget: true,
           pixelDataType: t.PixelDataType.UBYTE,
         );

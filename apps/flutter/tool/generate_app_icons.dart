@@ -40,8 +40,8 @@ import 'package:pomodoist/domain/models/app_flavor.dart';
 /// Directory holding the Pomo master and the three classic flavor masters.
 const _masterDirectory = 'assets/branding/app_icons';
 
-/// Fraction of the macOS canvas the rounded artwork occupies.
-const _macosCanvasFraction = 0.895;
+/// Match the 824px artwork width of neighboring Dock icons on a 1024px canvas.
+const _macosCanvasFraction = 824 / 1024;
 
 /// Corner radius of the macOS artwork, as a fraction of its own width.
 const _macosCornerFraction = 0.236;

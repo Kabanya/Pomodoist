@@ -1310,8 +1310,6 @@
   "settingsPreviewProject": "Личное",
   "settingsPreviewLongTask": "Подготовить материалы и спланировать следующие шаги",
   "settingsPreviewCompletedTask": "Проверить заметки",
-  "habitsListView": "Список",
-  "habitsRhythmView": "Ритм дня",
   "habitsRemaining": "Осталось",
   "habitsDone": "Выполнено",
   "habitsPlanned": "Запланировано",
@@ -1322,7 +1320,6 @@
   "habitPeriodMultipleReason": "Цель содержит несколько повторений в течение дня.",
   "habitPeriodNoTimeReason": "Время напоминания не задано.",
   "habitPeriodReminderReason": "По времени напоминания.",
-  "habitsViewPreferenceError": "Не удалось сохранить или загрузить выбранный вид.",
   "habitPeriodExplanation": "{period}: {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -1612,5 +1609,16 @@
   "settingsMenuBarTimerError": "Не удалось обновить таймер в строке меню. Попробуйте ещё раз.",
   "quickAddEnterEstimate": "Ввести число",
   "quickAddEstimateTotalTime": "{minutes} мин фокуса",
-  "quickAddEstimateInterval": "По {minutes} минут"
+  "quickAddEstimateInterval": "По {minutes} минут",
+  "habitCheckIn": "Отметить",
+  "habitWeekHistory": "На этой неделе",
+  "habitProgressOn": "Прогресс за {date}",
+  "habitsDayRhythm": "Ритм дня",
+  "habitsProgressCircle": "Круг прогресса",
+  "habitsPresentationError": "Не удалось запомнить вид.",
+  "habitsRemainingToday": "Осталось сегодня",
+  "habitsCompletedToday": "Выполнено сегодня",
+  "habitsRemainingOn": "Осталось на {date}",
+  "habitsCompletedOn": "Выполнено за {date}",
+  "habitsProgressCaption": "привычек выполнено"
 }

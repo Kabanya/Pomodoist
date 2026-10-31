@@ -2064,8 +2064,6 @@
   "@settingsPreviewCompletedTask": {
     "description": "Read-only example in Appearance settings."
   },
-  "habitsListView": "List",
-  "habitsRhythmView": "Day rhythm",
   "habitsRemaining": "Remaining",
   "habitsDone": "Done",
   "habitsPlanned": "Planned",
@@ -2076,7 +2074,6 @@
   "habitPeriodMultipleReason": "The goal has multiple repetitions across the day.",
   "habitPeriodNoTimeReason": "No reminder time is set.",
   "habitPeriodReminderReason": "Based on the reminder time.",
-  "habitsViewPreferenceError": "Could not save or load the view preference.",
   "habitPeriodExplanation": "{period}: {reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -2518,6 +2515,41 @@
   "@quickAddEstimateInterval": {
     "placeholders": {
       "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCheckIn": "Check in",
+  "habitWeekHistory": "This week",
+  "habitProgressOn": "{date} progress",
+  "@habitProgressOn": {
+    "description": "Heading for habit progress on the selected local calendar date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "habitsDayRhythm": "Day rhythm",
+  "habitsProgressCircle": "Progress circle",
+  "habitsPresentationError": "Could not remember this view.",
+  "habitsRemainingToday": "Remaining today",
+  "habitsCompletedToday": "Completed today",
+  "habitsRemainingOn": "Remaining on {date}",
+  "habitsCompletedOn": "Completed on {date}",
+  "habitsProgressCaption": "habits completed",
+  "@habitsRemainingOn": {
+    "description": "Habit dashboard section heading for the selected calendar date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@habitsCompletedOn": {
+    "description": "Habit dashboard section heading for the selected calendar date.",
+    "placeholders": {
+      "date": {
         "type": "String"
       }
     }

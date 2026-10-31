@@ -1,3 +1,6 @@
+import 'package:pomodoist/ui/habits/widgets/habit_overview.dart';
+import 'package:pomodoist/ui/habits/widgets/habit_presentation.dart';
+import 'package:pomodoist/ui/habits/view_models/habit_presentation_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:pomodoist/routing/habit_detail_navigation.dart';
 import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
@@ -12,27 +15,17 @@ import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_icon.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 
-String habitDayPeriodLabel(BuildContext context, HabitDayPeriod period) {
-  final l = context.l10n;
-  return switch (period) {
-    HabitDayPeriod.automatic => l.habitPeriodAutomatic,
-    HabitDayPeriod.anytime => l.habitPeriodAnytime,
-    HabitDayPeriod.morning => l.calendarMorning,
-    HabitDayPeriod.afternoon => l.calendarAfternoon,
-    HabitDayPeriod.evening => l.calendarEvening,
-    HabitDayPeriod.night => l.habitPeriodNight,
-  };
-}
-
 class HabitDetailsHost extends ConsumerWidget {
   const HabitDetailsHost({
     required this.habitId,
     required this.child,
+    this.showOverview = false,
     super.key,
   });
 
   final String? habitId;
   final Widget child;
+  final bool showOverview;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,14 +33,48 @@ class HabitDetailsHost extends ConsumerWidget {
       if (!ref.read(habitsViewModelProvider).saving) closeHabitDetails(context);
     }
 
-    return DetailsPanelHost(
-      onClose: close,
-      panel: habitId == null
-          ? null
-          : SafeArea(
-              child: _HabitDetailsContent(habitId: habitId!, onClose: close),
-            ),
-      child: child,
+    final view = showOverview ? ref.watch(habitsViewModelProvider) : null;
+    final requested = showOverview && habitProgressAvailable(double.infinity)
+        ? ref.watch(habitPresentationProvider).value
+        : HabitPresentation.rhythm;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available =
+            showOverview && habitProgressAvailable(constraints.maxWidth);
+        final presentation = available ? requested : HabitPresentation.rhythm;
+        final overview =
+            habitId == null &&
+            (constraints.maxWidth < 960 ||
+                presentation == HabitPresentation.progress) &&
+            view?.overviewOpen == true &&
+            view?.selectedRow != null;
+        void dismiss() {
+          if (overview) {
+            ref.read(habitsViewModelProvider.notifier).closeOverview();
+          } else {
+            close();
+          }
+        }
+
+        return DetailsPanelHost(
+          onClose: dismiss,
+          panel: habitId != null
+              ? SafeArea(
+                  child: _HabitDetailsContent(
+                    habitId: habitId!,
+                    onClose: close,
+                  ),
+                )
+              : overview
+              ? SafeArea(child: HabitOverview(onClose: dismiss))
+              : null,
+          child: HabitPresentationScope(
+            available: available,
+            presentation: presentation,
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

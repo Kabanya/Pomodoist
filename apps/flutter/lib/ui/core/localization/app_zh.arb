@@ -1310,8 +1310,6 @@
   "settingsPreviewProject": "个人",
   "settingsPreviewLongTask": "准备资料并规划下一步",
   "settingsPreviewCompletedTask": "检查笔记",
-  "habitsListView": "列表",
-  "habitsRhythmView": "每日节奏",
   "habitsRemaining": "待完成",
   "habitsDone": "已完成",
   "habitsPlanned": "已计划",
@@ -1322,7 +1320,6 @@
   "habitPeriodMultipleReason": "目标包含一天中的多次重复。",
   "habitPeriodNoTimeReason": "未设置提醒时间。",
   "habitPeriodReminderReason": "根据提醒时间分组。",
-  "habitsViewPreferenceError": "无法保存或加载所选视图。",
   "habitPeriodExplanation": "{period}：{reason}",
   "@habitPeriodExplanation": {
     "description": "Resolved automatic habit group and the reason for choosing it.",
@@ -1612,5 +1609,16 @@
   "settingsMenuBarTimerError": "无法更新菜单栏计时器，请重试。",
   "quickAddEnterEstimate": "输入数量",
   "quickAddEstimateTotalTime": "专注 {minutes} 分钟",
-  "quickAddEstimateInterval": "每次 {minutes} 分钟"
+  "quickAddEstimateInterval": "每次 {minutes} 分钟",
+  "habitCheckIn": "打卡",
+  "habitWeekHistory": "本周",
+  "habitProgressOn": "{date}进度",
+  "habitsDayRhythm": "每日节奏",
+  "habitsProgressCircle": "进度环",
+  "habitsPresentationError": "无法记住此视图。",
+  "habitsRemainingToday": "今日待完成",
+  "habitsCompletedToday": "今日已完成",
+  "habitsRemainingOn": "{date}待完成",
+  "habitsCompletedOn": "{date}已完成",
+  "habitsProgressCaption": "个习惯已完成"
 }

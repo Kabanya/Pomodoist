@@ -451,7 +451,7 @@ class _DetailsMenuState extends State<_DetailsMenu> {
             child: ShadButton.outline(
               focusNode: widget.focusNode,
               size: ShadButtonSize.sm,
-              height: widget.touchTargets ? 48 : (widget.desktop ? 40 : null),
+              height: widget.touchTargets ? 48 : 40,
               width: widget.iconsOnly ? 40 : null,
               padding: widget.iconsOnly ? EdgeInsets.zero : null,
               enabled: widget.enabled,

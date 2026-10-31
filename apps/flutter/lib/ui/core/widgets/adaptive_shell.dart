@@ -54,6 +54,7 @@ import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
 import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_toggle_button.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_editor.dart';
+import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
@@ -311,10 +312,19 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
     final mapFullscreen = widget.mapFullscreen;
     // Contextual editors and standalone task details replace compact chrome.
+    final habitOverviewOpen =
+        widget.dataReady &&
+        widget.location.startsWith('/habits') &&
+        ref.watch(
+          habitsViewModelProvider.select(
+            (view) => view.overviewOpen && view.selectedRow != null,
+          ),
+        );
     final compactDetailsOpen =
         !wide &&
         (widget.taskId != null ||
             widget.habitId != null ||
+            habitOverviewOpen ||
             widget.location.startsWith('/task/'));
     final focusLocation = _isFocusLocation(widget.location);
     final navigation =
@@ -386,6 +396,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       content = HabitDetailsHost(
         key: _detailsHostKey,
         habitId: widget.habitId,
+        showOverview: widget.location.startsWith('/habits'),
         child: TaskDetailsHost(taskId: widget.taskId, child: content),
       );
     }
