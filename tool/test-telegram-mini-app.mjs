@@ -25,7 +25,7 @@ await context.addInitScript(telegramStubSource);
 await page.route('**/*', async route => {
   const url = new URL(route.request().url());
   if (url.hostname === 'telegram.org') return route.fulfill({ body: '', contentType: 'text/javascript' });
-  if (url.pathname === '/config.js') return route.fulfill({ contentType: 'text/javascript', body: 'window.pomodoistRuntimeConfig = {supabaseUrl: "https://mini.example", supabaseAnonKey:"fixture"};' });
+  if (url.pathname === '/config.js') return route.fulfill({ contentType: 'text/javascript', body: 'window.pomodoistRuntimeConfig = {environment: "staging", supabaseUrl: "https://mini.example", supabaseAnonKey:"fixture"};' });
   if (url.pathname.startsWith('/telegram/')) {
     const file = url.pathname.split('/').at(-1) || 'index.html';
     return route.fulfill({ body: await readFile(new URL(`../apps/telegram-mini-app/${file}`, import.meta.url)), contentType: file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html' });
@@ -64,6 +64,8 @@ const output = process.env.TELEGRAM_SCREENSHOT_DIR;
 try {
   await page.goto('https://mini.example/telegram/');
   await page.locator('#app:not([hidden])').waitFor();
+  assert.equal(await page.title(), 'Pomodoist-Stg');
+  assert.equal(await page.locator('.eyebrow').textContent(), 'Pomodoist-Stg');
   assert.deepEqual(await page.locator('.navigation [data-view]').evaluateAll(items => items.map(item => item.dataset.view)), ['inbox', 'today', 'upcoming', 'focus']);
   assert.equal(await page.locator('#sign-out').getAttribute('hidden'), '');
   assert.equal(await page.locator('.task').count(), 6);

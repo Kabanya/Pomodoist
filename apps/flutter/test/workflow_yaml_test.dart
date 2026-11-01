@@ -589,7 +589,7 @@ void main() {
     // The workflow calls linux-appimage-<environment>, which pins the flavor,
     // entry point and config as one identity, and passes every profile so a
     // matrix flavor always builds from the config the workflow validated.
-    expect(command, contains(r'make "linux-appimage-${{ matrix.flavor }}"'));
+    expect(command, contains(r'make "linux-${{ matrix.flavor }}-appimage"'));
     for (final environment in ['development', 'staging', 'production']) {
       expect(
         command,

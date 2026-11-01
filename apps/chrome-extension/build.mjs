@@ -34,10 +34,11 @@ export function configuration(env) {
 }
 export function manifestFor(config) {
   const socket = new URL(config.apiUrl); socket.protocol = socket.protocol === 'https:' ? 'wss:' : 'ws:';
-  return { manifest_version: 3, name: 'Pomodoist', version: `${releaseVersion}.${buildNumber}`,
+  const name = { development: 'Pomodoist-Dev', staging: 'Pomodoist-Stg', production: 'Pomodoist' }[config.flavor];
+  return { manifest_version: 3, name, version: `${releaseVersion}.${buildNumber}`,
     version_name: `${releaseVersion} (${buildNumber})`, minimum_chrome_version: '120',
     default_locale: 'en', description: '__MSG_extension_description__',
-    action: { default_popup: 'popup.html', default_title: 'Pomodoist', default_icon: 'icon.png' },
+    action: { default_popup: 'popup.html', default_title: name, default_icon: 'icon.png' },
     icons: { 16: 'icon.png', 32: 'icon.png', 48: 'icon.png', 128: 'icon.png' },
     background: { service_worker: 'src/background.js', type: 'module' },
     permissions: ['storage', 'identity', 'activeTab', 'tabs', 'scripting', 'webNavigation', 'alarms', 'declarativeNetRequest'],

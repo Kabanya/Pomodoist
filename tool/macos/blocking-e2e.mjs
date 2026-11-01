@@ -15,7 +15,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const flavor = process.env.BLOCKING_E2E_FLAVOR ?? 'development';
 assert.ok(['development', 'staging'].includes(flavor), 'BLOCKING_E2E_FLAVOR must be development or staging');
 const scheme = flavor === 'staging' ? 'Staging' : 'Development';
-const applicationName = flavor === 'staging' ? 'Pomodoist Stg.app' : 'Pomodoist Dev.app';
+const applicationName = flavor === 'staging' ? 'Pomodoist-Stg.app' : 'Pomodoist-Dev.app';
 const artifacts = path.join(root, 'build/blocking-e2e', new Date().toISOString().replaceAll(':', '-'));
 const fixtureApp = path.join(root, 'build/blocking-e2e/BlockingFixture.app');
 const binary = path.join(fixtureApp, 'Contents/MacOS/blocking-fixture');

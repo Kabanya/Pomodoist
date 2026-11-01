@@ -48,9 +48,9 @@ expect 'staging application id' 'com.finchforge.pomodoist.stg' \
 expect 'production application id' 'com.finchforge.pomodoist' \
   "$(pomodoist_flavor_application_id production)"
 
-expect 'development display name' 'Pomodoist Dev' \
+expect 'development display name' 'Pomodoist-Dev' \
   "$(pomodoist_flavor_display_name development)"
-expect 'staging display name' 'Pomodoist Stg' \
+expect 'staging display name' 'Pomodoist-Stg' \
   "$(pomodoist_flavor_display_name staging)"
 expect 'production display name' 'Pomodoist' \
   "$(pomodoist_flavor_display_name production)"

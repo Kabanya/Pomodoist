@@ -15,8 +15,8 @@ Run root `make check` for architecture boundaries, Flutter analysis and unit tes
 Direct Flutter commands run from `apps/flutter`. Keep dependencies directed as
 described in the [repository architecture](docs/architecture/repository.md).
 
-Local macOS staging targets (`macos-debug-staging`, `macos-profile-staging`,
-and `macos-release-staging`) opt into the in-process test StoreKit catalog,
+Local macOS staging targets (`macos-staging-debug`, `macos-staging-profile`,
+and `macos-staging-release`) opt into the in-process test StoreKit catalog,
 matching staging TestFlight. Purchases in this mode are simulated and do not
 validate Apple networking, real payments, or server entitlement verification.
 Pro is not automatically unlocked. To intentionally query the staging app's
@@ -34,3 +34,33 @@ The DMG script saves Dart and native symbols under its output directory's
 `symbols/<flavor>/` folder. CI retains these separately from public downloads in
 the `pomodoist-macos-symbols` artifact for 90 days; keep a durable copy for every
 supported release. Dart symbols can be used with `flutter symbolize`.
+
+## Build names and explicit environments
+
+Application names use `Pomodoist-Dev` for development, `Pomodoist-Stg` for
+staging, and `Pomodoist` for production, independently of the build mode.
+Application IDs, callback schemes and user-data locations remain unchanged.
+
+Explicit Make commands use `<platform>-<environment>-<mode-or-action>`:
+
+```sh
+make macos-development-debug
+make windows-staging-profile
+make android-production-debug
+make web-staging-release
+make ios-staging-debug
+make watch-development-profile
+make linux-staging-appimage
+make macos-production-dmg
+make ios-staging-testflight
+make all-production-testflight
+```
+
+The old `<platform>-<mode>-<environment>` spellings have been removed.
+Short commands keep their existing defaults; `make help` lists both forms.
+iPhone/iPad Simulator profile commands still run debug. Watch commands retain
+Debug/Profile configurations. Explicit Chrome commands are
+`chrome-staging-debug`, `chrome-staging-run`, and `chrome-production-release`.
+Telegram uses `telegram-staging-debug`, `telegram-staging-local`,
+`telegram-production-release`, and `telegram-<staging|production>-deploy`.
+Debug uses only the staging test bot; local preview uses in-memory fixtures.

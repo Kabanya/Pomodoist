@@ -68,8 +68,8 @@ pomodoist_flavor_application_id() {
 # Prints the name shown under the icon and in window titles.
 pomodoist_flavor_display_name() {
   case "$1" in
-    development) printf '%s' 'Pomodoist Dev' ;;
-    staging) printf '%s' 'Pomodoist Stg' ;;
+    development) printf '%s' 'Pomodoist-Dev' ;;
+    staging) printf '%s' 'Pomodoist-Stg' ;;
     production) printf '%s' 'Pomodoist' ;;
     *)
       printf 'Unknown Pomodoist flavor: %s\n' "$1" >&2

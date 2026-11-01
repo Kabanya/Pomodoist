@@ -130,7 +130,7 @@ exit /b 0
     Assert-Contains $arguments '/DSetupBaseFilename=Pomodoist-Staging-Setup' 'Staging setup name was not passed to Inno Setup.'
     Assert-ContainsEither `
         $arguments `
-        @('/DAppDisplayName=Pomodoist Stg', '/DAppDisplayName="Pomodoist Stg"') `
+        @('/DAppDisplayName=Pomodoist-Stg', '/DAppDisplayName="Pomodoist-Stg"') `
         'Staging display name was not passed to Inno Setup.'
     $stagingChecksum = "$stagingInstaller.sha256"
     Assert-True `

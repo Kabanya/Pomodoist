@@ -1,6 +1,6 @@
 {
-    "name": "Pomodoist Stg",
-    "short_name": "Pomodoist Stg",
+    "name": "Pomodoist-Stg",
+    "short_name": "Pomodoist-Stg",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFDFB",

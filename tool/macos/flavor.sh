@@ -43,8 +43,8 @@ pomodoist_macos_flavor_field() {
     display_name)
       case "$flavor" in
         production) printf 'Pomodoist' ;;
-        staging) printf 'Pomodoist Stg' ;;
-        development) printf 'Pomodoist Dev' ;;
+        staging) printf 'Pomodoist-Stg' ;;
+        development) printf 'Pomodoist-Dev' ;;
       esac
       ;;
     bundle_id)

@@ -59,28 +59,28 @@ void main() {
       'web-release': '--dart-define-from-file="$_repoRoot/local.env"',
       'linux-debug': '--dart-define-from-file="$_repoRoot/linux-dev.env"',
       'linux-release': '--dart-define-from-file="$_repoRoot/linux.env"',
-      'linux-debug-staging':
+      'linux-staging-debug':
           '--dart-define-from-file="$_repoRoot/linux-stg.env"',
-      'linux-profile-staging':
+      'linux-staging-profile':
           '--dart-define-from-file="$_repoRoot/linux-stg.env"',
-      'linux-release-staging':
+      'linux-staging-release':
           '--dart-define-from-file="$_repoRoot/linux-stg.env"',
-      'linux-debug-production':
+      'linux-production-debug':
           '--dart-define-from-file="$_repoRoot/linux.env"',
-      'linux-profile-production':
+      'linux-production-profile':
           '--dart-define-from-file="$_repoRoot/linux.env"',
-      'linux-release-production':
+      'linux-production-release':
           '--dart-define-from-file="$_repoRoot/linux.env"',
       'windows-debug': '-ConfigFile "staging.env"',
       'windows-release': '-ConfigFile "C:/windows.env"',
       'macos-debug': '--dart-define-from-file="$_repoRoot/local.env"',
       'macos-release': '--dart-define-from-file="$_repoRoot/testflight.env"',
-      'macos-debug-staging': '--dart-define-from-file="$_repoRoot/staging.env"',
-      'macos-debug-production':
+      'macos-staging-debug': '--dart-define-from-file="$_repoRoot/staging.env"',
+      'macos-production-debug':
           '--dart-define-from-file="$_repoRoot/testflight.env"',
-      'macos-profile-staging':
+      'macos-staging-profile':
           '--dart-define-from-file="$_repoRoot/staging.env"',
-      'macos-release-production':
+      'macos-production-release':
           '--dart-define-from-file="$_repoRoot/testflight.env"',
     };
 
@@ -163,7 +163,7 @@ void main() {
     ], workingDirectory: _repoRoot);
     final explicit = Process.runSync(_makeExecutable(), [
       ...arguments,
-      'macos-debug-development',
+      'macos-development-debug',
     ], workingDirectory: _repoRoot);
 
     expect(bare.exitCode, 0, reason: bare.stderr.toString());
@@ -171,7 +171,7 @@ void main() {
     expect(
       bare.stdout.toString(),
       explicit.stdout.toString(),
-      reason: 'macos-debug must stay an alias of macos-debug-development',
+      reason: 'macos-debug must stay an alias of macos-development-debug',
     );
     expect(bare.stdout.toString(), contains('--flavor "development"'));
     expect(
@@ -199,7 +199,7 @@ void main() {
     expect(result.stdout.toString(), contains('build macos --profile'));
   });
 
-  test('macos-provision-staging is separate from normal profile builds', () {
+  test('macos-staging-provision is separate from normal profile builds', () {
     final arguments = [
       '--no-print-directory',
       '--dry-run',
@@ -209,11 +209,11 @@ void main() {
     ];
     final provision = Process.runSync(_makeExecutable(), [
       ...arguments,
-      'macos-provision-staging',
+      'macos-staging-provision',
     ], workingDirectory: _repoRoot);
     final profile = Process.runSync(_makeExecutable(), [
       ...arguments,
-      'macos-profile-staging',
+      'macos-staging-profile',
     ], workingDirectory: _repoRoot);
 
     expect(provision.exitCode, 0, reason: provision.stderr.toString());

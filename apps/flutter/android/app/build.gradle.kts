@@ -104,14 +104,14 @@ android {
             dimension = "app"
             applicationId = "com.finchforge.pomodoist.dev"
             versionNameSuffix = "-dev"
-            manifestPlaceholders["appLabel"] = "Pomodoist Dev"
+            manifestPlaceholders["appLabel"] = "Pomodoist-Dev"
             manifestPlaceholders["urlScheme"] = "pomodoist-dev"
         }
         create("staging") {
             dimension = "app"
             applicationId = "com.finchforge.pomodoist.stg"
             versionNameSuffix = "-stg"
-            manifestPlaceholders["appLabel"] = "Pomodoist Stg"
+            manifestPlaceholders["appLabel"] = "Pomodoist-Stg"
             manifestPlaceholders["urlScheme"] = "pomodoist-stg"
         }
         create("production") {

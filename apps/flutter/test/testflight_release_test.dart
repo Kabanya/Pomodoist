@@ -9,7 +9,7 @@ void main() {
       if (Platform.isWindows) return;
       final result = await Process.run('make', [
         '-n',
-        'macos-$mode-staging',
+        'macos-staging-$mode',
         'MACOS_STAGING_CONFIG=apps/flutter/pubspec.yaml',
       ], workingDirectory: _repoRoot);
       expect(result.exitCode, 0, reason: result.stderr.toString());
@@ -30,7 +30,7 @@ void main() {
     if (Platform.isWindows) return;
     final result = await Process.run('make', [
       '-n',
-      'macos-release-staging',
+      'macos-staging-release',
       'MACOS_STAGING_CONFIG=apps/flutter/pubspec.yaml',
       'MACOS_STAGING_STOREKIT_DEFINES=',
     ], workingDirectory: _repoRoot);
@@ -45,7 +45,7 @@ void main() {
     if (Platform.isWindows) return;
     final result = await Process.run('make', [
       '-n',
-      'macos-release-production',
+      'macos-production-release',
       'MACOS_PRODUCTION_CONFIG=apps/flutter/pubspec.yaml',
     ], workingDirectory: _repoRoot);
     expect(result.exitCode, 0, reason: result.stderr.toString());

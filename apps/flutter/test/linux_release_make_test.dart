@@ -64,39 +64,39 @@ void main() {
     // change that moves all three together still fails here until it is
     // reviewed.
     const expected = <String, (String, String, String)>{
-      'linux-debug-development': (
+      'linux-development-debug': (
         'development',
         'lib/main_development.dart',
         'linux-dev.env',
       ),
-      'linux-debug-staging': (
+      'linux-staging-debug': (
         'staging',
         'lib/main_staging.dart',
         'linux-stg.env',
       ),
-      'linux-debug-production': ('production', 'lib/main.dart', 'linux.env'),
-      'linux-profile-development': (
+      'linux-production-debug': ('production', 'lib/main.dart', 'linux.env'),
+      'linux-development-profile': (
         'development',
         'lib/main_development.dart',
         'linux-dev.env',
       ),
-      'linux-profile-staging': (
+      'linux-staging-profile': (
         'staging',
         'lib/main_staging.dart',
         'linux-stg.env',
       ),
-      'linux-profile-production': ('production', 'lib/main.dart', 'linux.env'),
-      'linux-release-development': (
+      'linux-production-profile': ('production', 'lib/main.dart', 'linux.env'),
+      'linux-development-release': (
         'development',
         'lib/main_development.dart',
         'linux-dev.env',
       ),
-      'linux-release-staging': (
+      'linux-staging-release': (
         'staging',
         'lib/main_staging.dart',
         'linux-stg.env',
       ),
-      'linux-release-production': ('production', 'lib/main.dart', 'linux.env'),
+      'linux-production-release': ('production', 'lib/main.dart', 'linux.env'),
     };
 
     for (final entry in expected.entries) {
@@ -129,12 +129,12 @@ void main() {
     // The bundle path carries the flavor segment, so packaging the production
     // path for a staging build would name one identity and ship another.
     const expected = <String, String>{
-      'linux-appimage-development': 'development',
-      'linux-appimage-staging': 'staging',
-      'linux-appimage-production': 'production',
-      'linux-install-development': 'development',
-      'linux-install-staging': 'staging',
-      'linux-install-production': 'production',
+      'linux-development-appimage': 'development',
+      'linux-staging-appimage': 'staging',
+      'linux-production-appimage': 'production',
+      'linux-development-install': 'development',
+      'linux-staging-install': 'staging',
+      'linux-production-install': 'production',
     };
 
     for (final entry in expected.entries) {
@@ -183,7 +183,7 @@ void main() {
     ], workingDirectory: _repoRoot);
     final explicit = Process.runSync(_makeExecutable(), [
       ...arguments,
-      'linux-debug-development',
+      'linux-development-debug',
     ], workingDirectory: _repoRoot);
 
     expect(bare.exitCode, 0, reason: bare.stderr.toString());
@@ -191,7 +191,7 @@ void main() {
     expect(
       bare.stdout.toString(),
       explicit.stdout.toString(),
-      reason: 'linux-debug must stay an alias of linux-debug-development',
+      reason: 'linux-debug must stay an alias of linux-development-debug',
     );
     expect(bare.stdout.toString(), contains('--flavor "development"'));
     expect(

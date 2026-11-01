@@ -975,7 +975,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1090,7 +1090,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1174,7 +1174,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1240,7 +1240,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1409,7 +1409,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1462,7 +1462,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -1519,7 +1519,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -1547,10 +1547,10 @@
 					"@executable_path/Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
-				PRODUCT_NAME = "Pomodoist Dev";
+				PRODUCT_NAME = "Pomodoist-Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1578,10 +1578,10 @@
 					"@executable_path/Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
-				PRODUCT_NAME = "Pomodoist Dev";
+				PRODUCT_NAME = "Pomodoist-Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -1608,10 +1608,10 @@
 					"@executable_path/Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev;
-				PRODUCT_NAME = "Pomodoist Dev";
+				PRODUCT_NAME = "Pomodoist-Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -1633,7 +1633,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist-Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist-Dev";
 			};
 			name = "Debug-Development";
 		};
@@ -1649,7 +1649,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist-Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist-Dev";
 			};
 			name = "Release-Development";
 		};
@@ -1665,7 +1665,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Dev";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist-Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist-Dev";
 			};
 			name = "Profile-Development";
 		};
@@ -1693,7 +1693,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1730,7 +1730,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1766,7 +1766,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
 				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1865,7 +1865,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
@@ -1901,7 +1901,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
@@ -1936,7 +1936,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
@@ -2003,7 +2003,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2056,7 +2056,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -2113,7 +2113,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -2141,10 +2141,10 @@
 					"@executable_path/Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
-				PRODUCT_NAME = "Pomodoist Stg";
+				PRODUCT_NAME = "Pomodoist-Stg";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -2172,10 +2172,10 @@
 					"@executable_path/Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
-				PRODUCT_NAME = "Pomodoist Stg";
+				PRODUCT_NAME = "Pomodoist-Stg";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -2202,10 +2202,10 @@
 					"@executable_path/Frameworks",
 				);
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg;
-				PRODUCT_NAME = "Pomodoist Stg";
+				PRODUCT_NAME = "Pomodoist-Stg";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -2227,7 +2227,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist-Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist-Stg";
 			};
 			name = "Debug-Staging";
 		};
@@ -2243,7 +2243,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist-Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist-Stg";
 			};
 			name = "Release-Staging";
 		};
@@ -2259,7 +2259,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist Stg";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pomodoist-Stg.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pomodoist-Stg";
 			};
 			name = "Profile-Staging";
 		};
@@ -2287,7 +2287,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2324,7 +2324,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2360,7 +2360,7 @@
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
 				POMODOIST_COMPANION_BUNDLE_ID = com.finchforge.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp;
 				PRODUCT_MODULE_NAME = PomodoistWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2459,7 +2459,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
@@ -2495,7 +2495,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
@@ -2530,7 +2530,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.focuswidget;
 				PRODUCT_NAME = PomodoistFocusWidgetExtension;
@@ -2564,7 +2564,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.stg;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Stg";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Stg";
 				POMODOIST_URL_SCHEME = "pomodoist-stg";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.stg.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2597,7 +2597,7 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				POMODOIST_APP_GROUP = group.com.pomodoist.dev;
-				POMODOIST_DISPLAY_NAME = "Pomodoist Dev";
+				POMODOIST_DISPLAY_NAME = "Pomodoist-Dev";
 				POMODOIST_URL_SCHEME = "pomodoist-dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.finchforge.pomodoist.dev.watchkitapp.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";

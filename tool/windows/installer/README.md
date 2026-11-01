@@ -40,8 +40,8 @@ and passes them to the compiler as `/D` defines.
 
 | | production | staging | development |
 | --- | --- | --- | --- |
-| Display name | `Pomodoist` | `Pomodoist Stg` | `Pomodoist Dev` |
-| Install directory | `Programs\Pomodoist` | `Programs\Pomodoist Stg` | `Programs\Pomodoist Dev` |
+| Display name | `Pomodoist` | `Pomodoist-Stg` | `Pomodoist-Dev` |
+| Install directory | `Programs\Pomodoist` | `Programs\Pomodoist-Stg` | `Programs\Pomodoist-Dev` |
 | URL scheme | `pomodoist` | `pomodoist-stg` | `pomodoist-dev` |
 | Output name | `Pomodoist-Setup.exe` | `Pomodoist-Staging-Setup.exe` | `Pomodoist-Development-Setup.exe` |
 

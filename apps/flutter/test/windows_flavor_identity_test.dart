@@ -87,6 +87,23 @@ void main() {
   final flavors = _powerShellFlavorTable();
   final cmake = _cmakeFlavorTable();
 
+  test(
+    'Windows storage product names retain existing user-data directories',
+    () {
+      final cmake = _cmakeFlavorTable();
+      for (final entry in const {
+        'development': 'Pomodoist Dev',
+        'staging': 'Pomodoist Stg',
+        'production': 'Pomodoist',
+      }.entries) {
+        expect(
+          cmake.valueFor(entry.key, 'POMODOIST_FLAVOR_STORAGE_NAME'),
+          entry.value,
+        );
+      }
+    },
+  );
+
   group('tool/windows/flavors.ps1', () {
     test('declares exactly the AppFlavor rows', () {
       expect(
@@ -328,7 +345,7 @@ void main() {
   group('windows/runner/Runner.rc', () {
     final source = _read('apps/flutter/windows/runner/Runner.rc');
 
-    test('renders the flavor display name into the version resource', () {
+    test('renders the display name and preserves the storage product name', () {
       expect(source, contains('#include "flavor_config.h"'));
       expect(
         source,
@@ -336,7 +353,7 @@ void main() {
       );
       expect(
         source,
-        contains('VALUE "ProductName", POMODOIST_FLAVOR_DISPLAY_NAME'),
+        contains('VALUE "ProductName", POMODOIST_FLAVOR_STORAGE_NAME'),
       );
     });
 

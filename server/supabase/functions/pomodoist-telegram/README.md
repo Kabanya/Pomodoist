@@ -86,8 +86,8 @@ After deploying the matching function, web host and secrets, register the bot wi
 belongs to `POMODOIST_TELEGRAM_BOT_USERNAME` before changing any Telegram settings.
 Setup alone neither deploys nor registers a webhook.
 
-For the normal hosted release path, `make deploy-telegram-staging` deploys staging
-and then configures `@pomodoist_test_bot`; `make deploy-telegram-production` does
+For the normal hosted release path, `make telegram-staging-deploy` deploys staging
+and then configures `@pomodoist_test_bot`; `make telegram-production-deploy` does
 the same for production and `@pomodoist_bot`. `make deploy-all` deploys both
 environments and then configures both Telegram bots.
 

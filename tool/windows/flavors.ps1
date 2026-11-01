@@ -24,7 +24,7 @@ $PomodoistFlavors = [ordered]@{
         BuildDirectory = 'build\flutter\windows\x64\production\runner\Release'
     }
     staging = [ordered]@{
-        DisplayName    = 'Pomodoist Stg'
+        DisplayName    = 'Pomodoist-Stg'
         ApplicationId  = 'com.finchforge.pomodoist.stg'
         UrlScheme      = 'pomodoist-stg'
         ToastGuid      = 'b3c1d7a2-5e64-4f18-9a0b-2d7c6e1f8a34'
@@ -35,7 +35,7 @@ $PomodoistFlavors = [ordered]@{
         BuildDirectory = 'build\flutter\windows\x64\staging\runner\Release'
     }
     development = [ordered]@{
-        DisplayName    = 'Pomodoist Dev'
+        DisplayName    = 'Pomodoist-Dev'
         ApplicationId  = 'com.finchforge.pomodoist.dev'
         UrlScheme      = 'pomodoist-dev'
         ToastGuid      = 'c4d2e8b3-6f75-4029-ab1c-3e8d7f209b45'

@@ -90,3 +90,11 @@ test('official web origins require their own backend while custom hosts stay con
   }
   assert.equal(configuration(env).apiUrl, 'https://api.example.test');
 });
+
+test('extension name and toolbar title identify the environment', () => {
+  for (const [APP_ENV, name] of [['development', 'Pomodoist-Dev'], ['staging', 'Pomodoist-Stg'], ['production', 'Pomodoist']]) {
+    const manifest = manifestFor(configuration({ ...env, APP_ENV }));
+    assert.equal(manifest.name, name);
+    assert.equal(manifest.action.default_title, name);
+  }
+});

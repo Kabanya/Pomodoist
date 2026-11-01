@@ -122,7 +122,7 @@ WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/$(WINDOWS_RELEASE_FLAVOR)/ru
 
 # Desktop builds use <PLATFORM>_<MODE>_CONFIG. macOS debug targets reuse
 # MACOS_DEVELOPMENT_CONFIG/_TARGET, so `make macos-debug` and
-# `make macos-debug-development` are the same build. Override any of them to
+# `make macos-development-debug` are the same build. Override any of them to
 # point one build at another environment, including production. Each
 # configuration is paired with its entry point, so an override must move the
 # matching _TARGET as well: a mismatch stops the app at startup with
@@ -144,8 +144,8 @@ LINUX_DEBUG_TARGET   ?= $(LOCAL_TARGET)
 LINUX_PROFILE_TARGET ?= $(PRODUCTION_TARGET)
 LINUX_RELEASE_TARGET ?= $(PRODUCTION_TARGET)
 # The billing channel of a generic build is the one its environment ships, so
-# linux-debug matches linux-debug-development and linux-release matches
-# linux-release-production.
+# linux-debug matches linux-development-debug and linux-release matches
+# linux-production-release.
 LINUX_DEBUG_BILLING_CHANNEL   ?= $(LINUX_DEVELOPMENT_BILLING_CHANNEL)
 LINUX_PROFILE_BILLING_CHANNEL ?= $(LINUX_PRODUCTION_BILLING_CHANNEL)
 LINUX_RELEASE_BILLING_CHANNEL ?= $(LINUX_PRODUCTION_BILLING_CHANNEL)
@@ -156,7 +156,7 @@ WINDOWS_DEBUG_TARGET   ?= $(STAGING_TARGET)
 WINDOWS_PROFILE_TARGET ?= $(PRODUCTION_TARGET)
 WINDOWS_RELEASE_TARGET ?= $(PRODUCTION_TARGET)
 
-# Per-environment macOS builds behind the macos-<mode>-<environment> targets.
+# Per-environment macOS builds behind the macos-<environment>-<mode> targets.
 # development reuses the local dotenv profile, which talks to the production
 # Supabase project with CAPTCHA disabled; staging uses .env.staging; production
 # uses .env.testflight, the profile the release build already ships. Each
@@ -174,8 +174,8 @@ macos_storekit_defines = $(if $(filter $(FLAVOR_STAGING),$1),$(MACOS_STAGING_STO
 MACOS_PRODUCTION_CONFIG  ?= $(TESTFLIGHT_CONFIG)
 MACOS_PRODUCTION_TARGET  ?= $(PRODUCTION_TARGET)
 
-# Per-environment Linux builds behind the linux-<mode>-<environment> targets.
-# The naming mirrors the macos-<mode>-<environment> targets, but the supported
+# Per-environment Linux builds behind the linux-<environment>-<mode> targets.
+# The naming mirrors the macos-<environment>-<mode> targets, but the supported
 # modes differ: the macOS table is driven by Xcode configurations, while the
 # Linux table is the build, the AppImage packaging and the user installer
 # repeated per environment. Every environment reads its own dotenv profile —
@@ -221,11 +221,11 @@ LINUX_DEVELOPMENT_FLAVOR ?= $(call flavor_of,$(LINUX_DEVELOPMENT_TARGET))
 LINUX_STAGING_FLAVOR     ?= $(call flavor_of,$(LINUX_STAGING_TARGET))
 LINUX_PRODUCTION_FLAVOR  ?= $(call flavor_of,$(LINUX_PRODUCTION_TARGET))
 # The bundle a packaging target consumes is derived from the release flavor it
-# packaged, so linux-appimage-staging picks the staging segment instead of
+# packaged, so linux-staging-appimage picks the staging segment instead of
 # reusing a production path. Override LINUX_BUNDLE_DIR to point at a bundle
 # Flutter wrote somewhere else.
 LINUX_BUNDLE_DIR ?= $(FLUTTER_BUILD)/linux/x64/$(LINUX_RELEASE_FLAVOR)/release/bundle
-TESTFLIGHT_PRODUCT_NAME ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Pomodoist Stg,Pomodoist)
+TESTFLIGHT_PRODUCT_NAME ?= $(if $(filter $(FLAVOR_STAGING),$(TESTFLIGHT_FLAVOR)),Pomodoist-Stg,Pomodoist)
 
 # TestFlight credentials stay in the private env and are never Dart defines.
 PRIVATE_CONFIG ?= .env.private
@@ -243,21 +243,21 @@ COMPANION_RELEASE_CONFIG ?= $(TESTFLIGHT_CONFIG)
 .PHONY: setup-telegram telegram-configure
 .PHONY: telegram-debug telegram-local telegram-release chrome-debug chrome-run chrome-release
 .PHONY: architecture analyze test test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity test-linux-packaging check format app-icons app-icons-check
-.PHONY: android web-debug web-profile web-release
+.PHONY: android web-debug web-profile web-release test-make-environments
 .PHONY: linux-pub-get linux-debug linux-profile linux-release linux-appimage linux-install
 .PHONY: linux-run
-.PHONY: linux-debug-development linux-debug-staging linux-debug-production
-.PHONY: linux-profile-development linux-profile-staging linux-profile-production
-.PHONY: linux-release-development linux-release-staging linux-release-production
+.PHONY: linux-development-debug linux-staging-debug linux-production-debug
+.PHONY: linux-development-profile linux-staging-profile linux-production-profile
+.PHONY: linux-development-release linux-staging-release linux-production-release
 .PHONY: windows-debug windows-profile windows-release windows-installer
 .PHONY: macos macos-debug macos-run macos-profile macos-release macos-reset
-.PHONY: macos-debug-development macos-debug-staging macos-debug-production
-.PHONY: macos-profile-development macos-profile-staging macos-profile-production
-.PHONY: macos-provision-staging
-.PHONY: macos-release-development macos-release-staging macos-release-production
-.PHONY: macos-dmg-production macos-dmg-staging macos-dmg-development
+.PHONY: macos-development-debug macos-staging-debug macos-production-debug
+.PHONY: macos-development-profile macos-staging-profile macos-production-profile
+.PHONY: macos-staging-provision
+.PHONY: macos-development-release macos-staging-release macos-production-release
+.PHONY: macos-production-dmg macos-staging-dmg macos-development-dmg
 .PHONY: ios-debug ios-profile ipad-debug ipad-profile watch-debug watch-profile ios-flavor-settings testflight-preflight testflight-auth testflight-ios testflight-macos testflight
-.PHONY: deploy-staging deploy-production deploy-all deploy-telegram-staging deploy-telegram-production
+.PHONY: deploy-staging deploy-production deploy-all telegram-staging-deploy telegram-production-deploy
 .PHONY: help devices clean
 
 help:
@@ -297,65 +297,72 @@ help:
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make format' "$${reset}" 'Format source files'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make app-icons' "$${reset}" 'Regenerate app icons from the master PNGs'; \
 	printf '\n%s%sRelease & distribution%s\n' "$${red}" "$${bold}" "$${reset}"; \
-	printf '  %s%-9s %-27s %s%s\n' "$${dim}" 'Platform' 'Command' 'Action' "$${reset}"; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Android' "$${reset}" "$${bold}" 'make android' "$${reset}" 'Debug APK'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Web' "$${reset}" "$${bold}" 'make web-release' "$${reset}" 'Release app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Telegram' "$${reset}" "$${bold}" 'make telegram-release' "$${reset}" 'Production Mini App files and ZIP'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-run' "$${reset}" 'Debug extension in a stable local profile'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Chrome' "$${reset}" "$${bold}" 'make chrome-release' "$${reset}" 'Production extension files and ZIP'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug' "$${reset}" 'Debug app (development)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release' "$${reset}" 'Raw developer bundle'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-appimage' "$${reset}" 'Distributable AppImage'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-install' "$${reset}" 'Install for current user'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-run' "$${reset}" 'Debug app with hot reload'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug-staging' "$${reset}" 'Debug app (staging)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-debug-production' "$${reset}" 'Debug app (production)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile-development' "$${reset}" 'Profile app (development)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile-staging' "$${reset}" 'Profile app (staging)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-profile-production' "$${reset}" 'Profile app (production)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release-development' "$${reset}" 'Release app (local, development)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release-staging' "$${reset}" 'Release app (local, staging)'; \
-	printf '  %s%-9s%s %s%-32s%s %s\n' "$${dim}" 'Linux' "$${reset}" "$${bold}" 'make linux-release-production' "$${reset}" 'Release app (local, production)'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-debug' "$${reset}" 'Debug app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-profile' "$${reset}" 'Profile app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-release' "$${reset}" 'Release app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Windows' "$${reset}" "$${bold}" 'make windows-installer' "$${reset}" 'EXE installer'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos' "$${reset}" '   Debug app (alias of macos-debug)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug' "$${reset}" '   Debug app (development)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-staging' "$${reset}" '   Debug app (staging)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-debug-production' "$${reset}" '   Debug app (production)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-run' "$${reset}" '   Debug app with hot reload'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-provision-staging' "$${reset}"  '  Get staging signing profiles'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-staging' "$${reset}" '   Profile app (staging)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile-production' "$${reset}" ' Profile app (production)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-staging' "$${reset}" '   Release app (local, staging)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release-production' "$${reset}" ' Release app (local, production)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-profile' "$${reset}" '   Profile app'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make macos-release' "$${reset}" '   Release app'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-debug' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPhone' "$${reset}" "$${bold}" 'make ios-profile' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-debug' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iPad' "$${reset}" "$${bold}" 'make ipad-profile' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-debug' "$${reset}" 'Run Simulator (debug)'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Watch' "$${reset}" "$${bold}" 'make watch-profile' "$${reset}" 'Run Simulator (profile)'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'iOS' "$${reset}" "$${bold}" 'make testflight-ios' "$${reset}" 'Upload iOS to TestFlight'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'macOS' "$${reset}" "$${bold}" 'make testflight-macos' "$${reset}" 'Upload macOS to TestFlight'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'All' "$${reset}" "$${bold}" 'make testflight' "$${reset}" 'Upload iOS + macOS to TestFlight'; \
-	printf '\n'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-staging' "$${reset}" '    Deploy backend + web staging'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-production' "$${reset}" '    Deploy backend + web production'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-staging' "$${reset}" '   Deploy staging and configure @pomodoist_test_bot'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-telegram-production' "$${reset}" 'Deploy production and configure @pomodoist_bot'; \
-	printf '  %s%-9s%s %s%-27s%s %s\n' "$${dim}" 'Deploy' "$${reset}" "$${bold}" 'make deploy-all' "$${reset}" '    Deploy everything, including both Telegram bots'; \
+	previous_platform=; \
+	show_command() { if [ -n "$$previous_platform" ] && [ "$$previous_platform" != "$$1" ]; then printf '  %s\n' '--------------------------------------------------------------------------------'; fi; previous_platform="$$1"; printf '  %s%-9s%s %s%-38s%s %s\n' "$${dim}" "$$1" "$${reset}" "$${bold}" "make $$2" "$${reset}" "$$3"; }; \
+	for platform in macos linux windows android web ios ipad watch; do \
+		case "$$platform" in android) modes='debug';; ios|ipad|watch) modes='debug profile';; *) modes='debug profile release';; esac; \
+		for environment in development staging production; do \
+			for mode in $$modes; do \
+				description="$$mode app ($$environment)"; \
+				case "$$platform" in ios|ipad) description="Simulator debug ($$environment; $$mode alias)";; esac; \
+				show_command "$$platform" "$$platform-$$environment-$$mode" "$$description"; \
+			done; \
+			case "$$platform" in \
+				macos) show_command macos "macos-$$environment-dmg" "Direct-download DMG ($$environment)";; \
+				linux) show_command linux "linux-$$environment-appimage" "AppImage ($$environment)"; show_command linux "linux-$$environment-install" "Install for current user ($$environment)";; \
+				windows) show_command windows "windows-$$environment-installer" "EXE installer ($$environment)";; \
+			esac; \
+			if [ "$$environment" != development ]; then \
+				case "$$platform" in macos|ios) show_command "$$platform" "$$platform-$$environment-testflight" "Upload to TestFlight ($$environment)";; esac; \
+			fi; \
+		done; \
+	done; \
+	show_command macos macos-staging-provision 'Get staging signing profiles'; \
+	show_command Chrome chrome-staging-debug 'Build staging extension'; \
+	show_command Chrome chrome-staging-run 'Run staging extension in stable local profile'; \
+	show_command Chrome chrome-production-release 'Production extension files and ZIP'; \
+	show_command Telegram telegram-staging-debug 'Debug with staging test bot'; \
+	show_command Telegram telegram-staging-local 'Local preview with staging fixtures'; \
+	show_command Telegram telegram-staging-deploy 'Deploy staging and configure test bot'; \
+	show_command Telegram telegram-production-release 'Production Mini App files and ZIP'; \
+	show_command Telegram telegram-production-deploy 'Deploy production and configure bot'; \
+	for environment in staging production; do show_command All "all-$$environment-testflight" "Upload iOS + macOS ($$environment)"; done; \
+	printf '\n%sShort aliases (existing defaults)%s\n' "$${bold}" "$${reset}"; \
+	previous_platform=; \
+	show_command 'Android' 'android' 'Debug APK'; \
+	show_command 'Web' 'web-debug' 'Debug app'; \
+	show_command 'Web' 'web-profile' 'Profile app'; \
+	show_command 'Web' 'web-release' 'Release app'; \
+	show_command 'Telegram' 'telegram-release' 'Production Mini App files and ZIP'; \
+	show_command 'Chrome' 'chrome-run' 'Debug extension in a stable local profile'; \
+	show_command 'Chrome' 'chrome-release' 'Production extension files and ZIP'; \
+	show_command 'Linux' 'linux-debug' 'Debug app (development)'; \
+	show_command 'Linux' 'linux-profile' 'Profile app'; \
+	show_command 'Linux' 'linux-release' 'Raw developer bundle'; \
+	show_command 'Linux' 'linux-appimage' 'Distributable AppImage'; \
+	show_command 'Linux' 'linux-install' 'Install for current user'; \
+	show_command 'Linux' 'linux-run' 'Debug app with hot reload'; \
+	show_command 'Windows' 'windows-debug' 'Debug app'; \
+	show_command 'Windows' 'windows-profile' 'Profile app'; \
+	show_command 'Windows' 'windows-release' 'Release app'; \
+	show_command 'Windows' 'windows-installer' 'EXE installer'; \
+	show_command 'macOS' 'macos' '   Debug app (alias of macos-debug)'; \
+	show_command 'macOS' 'macos-debug' '   Debug app (development)'; \
+	show_command 'macOS' 'macos-run' '   Debug app with hot reload'; \
+	show_command 'macOS' 'macos-profile' '   Profile app'; \
+	show_command 'macOS' 'macos-release' '   Release app'; \
+	show_command 'iPhone' 'ios-debug' 'Run Simulator (debug)'; \
+	show_command 'iPhone' 'ios-profile' 'Run Simulator (debug)'; \
+	show_command 'iPad' 'ipad-debug' 'Run Simulator (debug)'; \
+	show_command 'iPad' 'ipad-profile' 'Run Simulator (debug)'; \
+	show_command 'Watch' 'watch-debug' 'Run Simulator (debug)'; \
+	show_command 'Watch' 'watch-profile' 'Run Simulator (profile)'; \
+	show_command 'iOS' 'testflight-ios' 'Upload iOS to TestFlight'; \
+	show_command 'macOS' 'testflight-macos' 'Upload macOS to TestFlight'; \
+	show_command 'All' 'testflight' 'Upload iOS + macOS to TestFlight'; \
+	show_command 'Deploy' 'deploy-staging' '    Deploy backend + web staging'; \
+	show_command 'Deploy' 'deploy-production' '    Deploy backend + web production'; \
+	show_command 'Deploy' 'deploy-all' '    Deploy everything, including both Telegram bots'; \
 	printf '\n%s%sUtilities%s\n' "$${red}" "$${bold}" "$${reset}"; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make help' "$${reset}" 'Show this command reference'; \
 	printf '  %s%-27s%s %s\n' "$${bold}" 'make devices' "$${reset}" 'List available Flutter devices'; \
@@ -437,6 +444,9 @@ test-linux-flavor-identity:
 test-linux-packaging: test-linux-installer test-linux-appimage test-linux-build-network test-linux-flavor-identity
 	python3 -m unittest discover -s tool/linux -p 'test_*.py' -v
 
+test-make-environments:
+	python3 -m unittest tool.test_make_environments
+
 test-xcode-warnings:
 	sh tool/test_xcode_warnings.sh
 
@@ -473,7 +483,7 @@ web-release: flutter-build-link
 linux-pub-get: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) bash "$(REPO_ROOT)/tool/linux/pub_get_with_retry.sh" "$(FLUTTER)"
 
-# Linux build modes behind linux-<mode> and linux-<mode>-<environment>. Each
+# Linux build modes behind linux-<mode> and linux-<environment>-<mode>. Each
 # target is defined once through linux_flavor_target, which reads the
 # <PLATFORM>_<MODE>_CONFIG/_TARGET pair the target pins, so a per-environment
 # target and its generic counterpart cannot drift apart. --target always
@@ -529,68 +539,68 @@ linux-install: linux-release
 linux-run: flutter-build-link
 	cd "$(FLUTTER_ROOT)" && $(LINUX_BUILD_ENV) "$(FLUTTER)" run -d linux --debug --flavor "$(LINUX_DEBUG_FLAVOR)" --target "$(LINUX_DEBUG_TARGET)" --dart-define-from-file="$(call repo_path,$(LINUX_DEBUG_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL="$(LINUX_DEBUG_BILLING_CHANNEL)"
 
-# Per-environment builds: linux-<mode>-<environment>. A generic target and the
+# Per-environment builds: linux-<environment>-<mode>. A generic target and the
 # environment it defaults to are the same build, so linux-debug and
-# linux-debug-development produce identical commands; the environment targets
+# linux-development-debug produce identical commands; the environment targets
 # pin the pair through target-specific variables, which also set the flavor
 # through <PLATFORM>_<ENVIRONMENT>_FLAVOR. Every target resolves packages first,
 # exactly as its generic counterpart does.
-linux-debug-development linux-debug-staging linux-debug-production \
-linux-profile-development linux-profile-staging linux-profile-production \
-linux-release-development linux-release-staging linux-release-production: linux-pub-get
+linux-development-debug linux-staging-debug linux-production-debug \
+linux-development-profile linux-staging-profile linux-production-profile \
+linux-development-release linux-staging-release linux-production-release: linux-pub-get
 
-linux-debug-development: LINUX_DEBUG_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
-linux-debug-development: LINUX_DEBUG_TARGET = $(LINUX_DEVELOPMENT_TARGET)
-linux-debug-development: LINUX_DEBUG_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
-linux-debug-development:
+linux-development-debug: LINUX_DEBUG_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
+linux-development-debug: LINUX_DEBUG_TARGET = $(LINUX_DEVELOPMENT_TARGET)
+linux-development-debug: LINUX_DEBUG_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-development-debug:
 	$(call linux_flavor_target,debug,DEBUG)
 
-linux-debug-staging: LINUX_DEBUG_CONFIG = $(LINUX_STAGING_CONFIG)
-linux-debug-staging: LINUX_DEBUG_TARGET = $(LINUX_STAGING_TARGET)
-linux-debug-staging: LINUX_DEBUG_FLAVOR = $(LINUX_STAGING_FLAVOR)
-linux-debug-staging:
+linux-staging-debug: LINUX_DEBUG_CONFIG = $(LINUX_STAGING_CONFIG)
+linux-staging-debug: LINUX_DEBUG_TARGET = $(LINUX_STAGING_TARGET)
+linux-staging-debug: LINUX_DEBUG_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-staging-debug:
 	$(call linux_flavor_target,debug,DEBUG)
 
-linux-debug-production: LINUX_DEBUG_CONFIG = $(LINUX_PRODUCTION_CONFIG)
-linux-debug-production: LINUX_DEBUG_TARGET = $(LINUX_PRODUCTION_TARGET)
-linux-debug-production: LINUX_DEBUG_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
-linux-debug-production:
+linux-production-debug: LINUX_DEBUG_CONFIG = $(LINUX_PRODUCTION_CONFIG)
+linux-production-debug: LINUX_DEBUG_TARGET = $(LINUX_PRODUCTION_TARGET)
+linux-production-debug: LINUX_DEBUG_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-production-debug:
 	$(call linux_flavor_target,debug,DEBUG)
 
-linux-profile-development: LINUX_PROFILE_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
-linux-profile-development: LINUX_PROFILE_TARGET = $(LINUX_DEVELOPMENT_TARGET)
-linux-profile-development: LINUX_PROFILE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
-linux-profile-development:
+linux-development-profile: LINUX_PROFILE_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
+linux-development-profile: LINUX_PROFILE_TARGET = $(LINUX_DEVELOPMENT_TARGET)
+linux-development-profile: LINUX_PROFILE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-development-profile:
 	$(call linux_flavor_target,profile,PROFILE)
 
-linux-profile-staging: LINUX_PROFILE_CONFIG = $(LINUX_STAGING_CONFIG)
-linux-profile-staging: LINUX_PROFILE_TARGET = $(LINUX_STAGING_TARGET)
-linux-profile-staging: LINUX_PROFILE_FLAVOR = $(LINUX_STAGING_FLAVOR)
-linux-profile-staging:
+linux-staging-profile: LINUX_PROFILE_CONFIG = $(LINUX_STAGING_CONFIG)
+linux-staging-profile: LINUX_PROFILE_TARGET = $(LINUX_STAGING_TARGET)
+linux-staging-profile: LINUX_PROFILE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-staging-profile:
 	$(call linux_flavor_target,profile,PROFILE)
 
-linux-profile-production: LINUX_PROFILE_CONFIG = $(LINUX_PRODUCTION_CONFIG)
-linux-profile-production: LINUX_PROFILE_TARGET = $(LINUX_PRODUCTION_TARGET)
-linux-profile-production: LINUX_PROFILE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
-linux-profile-production:
+linux-production-profile: LINUX_PROFILE_CONFIG = $(LINUX_PRODUCTION_CONFIG)
+linux-production-profile: LINUX_PROFILE_TARGET = $(LINUX_PRODUCTION_TARGET)
+linux-production-profile: LINUX_PROFILE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-production-profile:
 	$(call linux_flavor_target,profile,PROFILE)
 
-linux-release-development: LINUX_RELEASE_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
-linux-release-development: LINUX_RELEASE_TARGET = $(LINUX_DEVELOPMENT_TARGET)
-linux-release-development: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
-linux-release-development:
+linux-development-release: LINUX_RELEASE_CONFIG = $(LINUX_DEVELOPMENT_CONFIG)
+linux-development-release: LINUX_RELEASE_TARGET = $(LINUX_DEVELOPMENT_TARGET)
+linux-development-release: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-development-release:
 	$(linux_release_target)
 
-linux-release-staging: LINUX_RELEASE_CONFIG = $(LINUX_STAGING_CONFIG)
-linux-release-staging: LINUX_RELEASE_TARGET = $(LINUX_STAGING_TARGET)
-linux-release-staging: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
-linux-release-staging:
+linux-staging-release: LINUX_RELEASE_CONFIG = $(LINUX_STAGING_CONFIG)
+linux-staging-release: LINUX_RELEASE_TARGET = $(LINUX_STAGING_TARGET)
+linux-staging-release: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-staging-release:
 	$(linux_release_target)
 
-linux-release-production: LINUX_RELEASE_CONFIG = $(LINUX_PRODUCTION_CONFIG)
-linux-release-production: LINUX_RELEASE_TARGET = $(LINUX_PRODUCTION_TARGET)
-linux-release-production: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
-linux-release-production:
+linux-production-release: LINUX_RELEASE_CONFIG = $(LINUX_PRODUCTION_CONFIG)
+linux-production-release: LINUX_RELEASE_TARGET = $(LINUX_PRODUCTION_TARGET)
+linux-production-release: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-production-release:
 	$(linux_release_target)
 
 # Package and install one environment's release. These stand to linux-appimage
@@ -599,28 +609,28 @@ linux-release-production:
 # environment build just produced. Each pins LINUX_RELEASE_FLAVOR so
 # LINUX_BUNDLE_DIR resolves to that environment's bundle instead of inheriting
 # the production default, which would package one flavor under another's name.
-linux-appimage-development: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
-linux-appimage-development: linux-release-development
+linux-development-appimage: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-development-appimage: linux-development-release
 	$(linux_appimage_target)
 
-linux-appimage-staging: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
-linux-appimage-staging: linux-release-staging
+linux-staging-appimage: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-staging-appimage: linux-staging-release
 	$(linux_appimage_target)
 
-linux-appimage-production: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
-linux-appimage-production: linux-release-production
+linux-production-appimage: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-production-appimage: linux-production-release
 	$(linux_appimage_target)
 
-linux-install-development: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
-linux-install-development: linux-release-development
+linux-development-install: LINUX_RELEASE_FLAVOR = $(LINUX_DEVELOPMENT_FLAVOR)
+linux-development-install: linux-development-release
 	$(linux_install_target)
 
-linux-install-staging: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
-linux-install-staging: linux-release-staging
+linux-staging-install: LINUX_RELEASE_FLAVOR = $(LINUX_STAGING_FLAVOR)
+linux-staging-install: linux-staging-release
 	$(linux_install_target)
 
-linux-install-production: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
-linux-install-production: linux-release-production
+linux-production-install: LINUX_RELEASE_FLAVOR = $(LINUX_PRODUCTION_FLAVOR)
+linux-production-install: linux-production-release
 	$(linux_install_target)
 
 # build.ps1 forwards -Flavor to `flutter build windows`; without it Flutter
@@ -641,17 +651,17 @@ windows-installer: windows-release
 # sidecar, billed through Stripe and not sandboxed. These are the counterpart of
 # windows-installer and are unrelated to the macos-* targets below, which build
 # App Store flavors with StoreKit billing.
-macos-dmg-production:
+macos-production-dmg:
 	./tool/macos/build.sh --flavor production
 
-macos-dmg-staging:
+macos-staging-dmg:
 	./tool/macos/build.sh --flavor staging
 
-macos-dmg-development:
+macos-development-dmg:
 	./tool/macos/build.sh --flavor development
 
-macos-debug macos-run macos-profile macos-debug-development macos-debug-staging macos-debug-production macos-profile-development macos-profile-staging macos-profile-production: POMODOIST_BILLING_CHANNEL = storekit
-macos-debug macos-run macos-profile macos-debug-development macos-debug-staging macos-debug-production macos-profile-development macos-profile-staging macos-profile-production macos-release-development macos-release-staging macos-release-production: flutter-build-link
+macos-debug macos-run macos-profile macos-development-debug macos-staging-debug macos-production-debug macos-development-profile macos-staging-profile macos-production-profile: POMODOIST_BILLING_CHANNEL = storekit
+macos-debug macos-run macos-profile macos-development-debug macos-staging-debug macos-production-debug macos-development-profile macos-staging-profile macos-production-profile macos-development-release macos-staging-release macos-production-release: flutter-build-link
 
 # `flutter build macos` drives xcodebuild without -allowProvisioningUpdates, so
 # Xcode can neither find nor create a profile for a flavor whose App IDs are not
@@ -662,12 +672,12 @@ macos-debug macos-run macos-profile macos-debug-development macos-debug-staging 
 MACOS_LOCAL_SIGNING_FLAGS ?=
 
 # `make macos` is the usual entry point; it builds the debug app, which is the
-# development environment. The same build is reachable as macos-debug-development.
+# development environment. The same build is reachable as macos-development-debug.
 macos: macos-debug
 
 # Swift Package Manager dependencies emit hundreds of deprecation warnings that
 # drown out the build result; the filter drops them while keeping real errors.
-macos-debug: macos-debug-development
+macos-debug: macos-development-debug
 
 macos-profile:
 	set -o pipefail; cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" build macos --profile \
@@ -702,7 +712,7 @@ macos-release: testflight-preflight flutter-build-link
 		--dart-define=POMODOIST_BILLING_CHANNEL=storekit \
 		$(call macos_storekit_defines,$(MACOS_RELEASE_FLAVOR))
 
-# Per-environment builds: macos-<mode>-<environment>. macos-debug is the
+# Per-environment builds: macos-<environment>-<mode>. macos-debug is the
 # development case, so the two spellings build the same app. The staging and
 # production targets pin the environment through target-specific variables, which
 # also set the flavor, and release-<environment> skips the TestFlight preflight
@@ -720,36 +730,36 @@ define macos_flavor_target
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
 endef
 
-macos-debug-development: MACOS_DEBUG_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
-macos-debug-development: MACOS_DEBUG_TARGET = $(MACOS_DEVELOPMENT_TARGET)
-macos-debug-development:
+macos-development-debug: MACOS_DEBUG_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
+macos-development-debug: MACOS_DEBUG_TARGET = $(MACOS_DEVELOPMENT_TARGET)
+macos-development-debug:
 	$(call macos_flavor_target,debug,DEBUG)
 
-macos-debug-staging: MACOS_DEBUG_CONFIG = $(MACOS_STAGING_CONFIG)
-macos-debug-staging: MACOS_DEBUG_TARGET = $(MACOS_STAGING_TARGET)
-macos-debug-staging:
+macos-staging-debug: MACOS_DEBUG_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-staging-debug: MACOS_DEBUG_TARGET = $(MACOS_STAGING_TARGET)
+macos-staging-debug:
 	$(call macos_flavor_target,debug,DEBUG)
 
-macos-debug-production: MACOS_DEBUG_CONFIG = $(MACOS_PRODUCTION_CONFIG)
-macos-debug-production: MACOS_DEBUG_TARGET = $(MACOS_PRODUCTION_TARGET)
-macos-debug-production:
+macos-production-debug: MACOS_DEBUG_CONFIG = $(MACOS_PRODUCTION_CONFIG)
+macos-production-debug: MACOS_DEBUG_TARGET = $(MACOS_PRODUCTION_TARGET)
+macos-production-debug:
 	$(call macos_flavor_target,debug,DEBUG)
 
-macos-profile-development: MACOS_PROFILE_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
-macos-profile-development: MACOS_PROFILE_TARGET = $(MACOS_DEVELOPMENT_TARGET)
-macos-profile-development:
+macos-development-profile: MACOS_PROFILE_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
+macos-development-profile: MACOS_PROFILE_TARGET = $(MACOS_DEVELOPMENT_TARGET)
+macos-development-profile:
 	$(call macos_flavor_target,profile,PROFILE)
 
-macos-profile-staging: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
-macos-profile-staging: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
-macos-profile-staging:
+macos-staging-profile: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-staging-profile: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
+macos-staging-profile:
 	$(call macos_flavor_target,profile,PROFILE)
 
 # One signed build lets Xcode create/cache missing app and widget profiles.
-macos-provision-staging: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
-macos-provision-staging: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
-macos-provision-staging: flutter-build-link
-macos-provision-staging:
+macos-staging-provision: MACOS_PROFILE_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-staging-provision: MACOS_PROFILE_TARGET = $(MACOS_STAGING_TARGET)
+macos-staging-provision: flutter-build-link
+macos-staging-provision:
 	$(call macos_flavor_target,profile,PROFILE,--config-only)
 	xcodebuild -workspace "$(FLUTTER_ROOT)/macos/Runner.xcworkspace" \
 		-scheme "Staging" -configuration "Profile-Staging" \
@@ -761,24 +771,24 @@ macos-provision-staging:
 		SYMROOT="$(FLUTTER_ROOT)/build/macos/Build/Products" \
 		COMPILER_INDEX_STORE_ENABLE=NO build
 
-macos-profile-production: MACOS_PROFILE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
-macos-profile-production: MACOS_PROFILE_TARGET = $(MACOS_PRODUCTION_TARGET)
-macos-profile-production:
+macos-production-profile: MACOS_PROFILE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
+macos-production-profile: MACOS_PROFILE_TARGET = $(MACOS_PRODUCTION_TARGET)
+macos-production-profile:
 	$(call macos_flavor_target,profile,PROFILE)
 
-macos-release-development: MACOS_RELEASE_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
-macos-release-development: MACOS_RELEASE_TARGET = $(MACOS_DEVELOPMENT_TARGET)
-macos-release-development:
+macos-development-release: MACOS_RELEASE_CONFIG = $(MACOS_DEVELOPMENT_CONFIG)
+macos-development-release: MACOS_RELEASE_TARGET = $(MACOS_DEVELOPMENT_TARGET)
+macos-development-release:
 	$(call macos_flavor_target,release,RELEASE)
 
-macos-release-staging: MACOS_RELEASE_CONFIG = $(MACOS_STAGING_CONFIG)
-macos-release-staging: MACOS_RELEASE_TARGET = $(MACOS_STAGING_TARGET)
-macos-release-staging:
+macos-staging-release: MACOS_RELEASE_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-staging-release: MACOS_RELEASE_TARGET = $(MACOS_STAGING_TARGET)
+macos-staging-release:
 	$(call macos_flavor_target,release,RELEASE)
 
-macos-release-production: MACOS_RELEASE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
-macos-release-production: MACOS_RELEASE_TARGET = $(MACOS_PRODUCTION_TARGET)
-macos-release-production:
+macos-production-release: MACOS_RELEASE_CONFIG = $(MACOS_PRODUCTION_CONFIG)
+macos-production-release: MACOS_RELEASE_TARGET = $(MACOS_PRODUCTION_TARGET)
+macos-production-release:
 	$(call macos_flavor_target,release,RELEASE)
 
 # Destructive local reset; cloud accounts and purchases are unchanged.
@@ -786,7 +796,7 @@ macos-release-production:
 macos-reset:
 	@test "$$(uname -s)" = Darwin || { echo 'macos-reset requires macOS.' >&2; exit 1; }
 	@test -n "$${HOME:-}" && test "$$HOME" != / && test -d "$$HOME" || { echo 'A valid HOME directory is required.' >&2; exit 1; }
-	@if pgrep -ix 'Pomodoist|Pomodoist Dev|Pomodoist Stg|PomodoistFocus.*' >/dev/null; then echo 'Quit all Pomodoist variants and focus widgets, then run make macos-reset again.' >&2; exit 1; fi
+	@if pgrep -ix 'Pomodoist( Dev| Stg|-Dev|-Stg)?|PomodoistFocus.*' >/dev/null; then echo 'Quit all Pomodoist variants and focus widgets, then run make macos-reset again.' >&2; exit 1; fi
 	@echo 'Deleting local Pomodoist development, staging and production data, including unsynced tasks, settings and saved sessions.'
 	@for suffix in .dev .stg ''; do \
 		app="com.finchforge.pomodoist$$suffix"; widget="$$app.focuswidget"; group="group.com.pomodoist$$suffix"; \
@@ -811,12 +821,15 @@ macos-reset:
 	@echo 'Local reset complete. Start Pomodoist in guest mode for a clean slate.'
 
 # Flutter profile mode is unavailable on iOS Simulator, so local runs use debug.
+SIMULATOR_CONFIG ?= $(LOCAL_CONFIG)
+SIMULATOR_TARGET ?= $(LOCAL_TARGET)
+SIMULATOR_FLAVOR = $(call flavor_of,$(SIMULATOR_TARGET))
 ios-debug ios-profile: RUN_SIMULATOR = $(IOS_SIMULATOR)
 ipad-debug ipad-profile: RUN_SIMULATOR = $(IPAD_SIMULATOR)
 ios-debug ios-profile ipad-debug ipad-profile: flutter-build-link
 	xcrun simctl bootstatus "$(RUN_SIMULATOR)" -b
 	$(OPEN_SIMULATOR)
-	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --flavor "$(LOCAL_FLAVOR)" --target "$(LOCAL_TARGET)" --dart-define-from-file="$(call repo_path,$(LOCAL_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
+	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d "$(RUN_SIMULATOR)" --debug --flavor "$(SIMULATOR_FLAVOR)" --target "$(SIMULATOR_TARGET)" --dart-define-from-file="$(call repo_path,$(SIMULATOR_CONFIG))" --dart-define=POMODOIST_RELEASE="$(POMODOIST_RELEASE)" --dart-define=POMODOIST_BILLING_CHANNEL=storekit
 
 # The flavor identity of the Xcode project, as a scheme name and as target
 # settings. The Xcode project is the only place the iOS flavor identity is
@@ -839,17 +852,17 @@ ios-flavor-settings:
 	xcodebuild -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target PomodoistWatch -configuration "$(call flavor_configuration,$(LOCAL_FLAVOR))" -sdk watchsimulator -showBuildSettings | grep -E '^ +(PRODUCT_BUNDLE_IDENTIFIER|PRODUCT_NAME|TARGET_NAME|ASSETCATALOG_COMPILER_APPICON_NAME|CODE_SIGN_ENTITLEMENTS) ='
 	xcodebuild -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target RunnerTests -configuration "$(call flavor_configuration,$(LOCAL_FLAVOR))" -sdk iphonesimulator -showBuildSettings | grep -E '^ +(PRODUCT_BUNDLE_IDENTIFIER|TEST_HOST|BUNDLE_LOADER) ='
 
-# The watch app is built straight from the Xcode project, which takes no
-# flavor, so it keeps the base Debug/Profile configurations and the production
-# watch bundle identifier.
-watch-debug: WATCH_CONFIGURATION = Debug
-watch-profile: WATCH_CONFIGURATION = Profile
+# Watch builds select the matching Xcode configuration and companion identity.
+# Short commands retain their production default.
+WATCH_ENV ?= production
+watch-debug: WATCH_CONFIGURATION = Debug$(if $(filter production,$(WATCH_ENV)),,-$(call flavor_scheme,$(WATCH_ENV)))
+watch-profile: WATCH_CONFIGURATION = Profile$(if $(filter production,$(WATCH_ENV)),,-$(call flavor_scheme,$(WATCH_ENV)))
 watch-debug watch-profile:
 	xcrun simctl bootstatus "$(WATCH_SIMULATOR)" -b
 	$(OPEN_SIMULATOR)
 	xcodebuild -quiet -project "$(FLUTTER_ROOT)/ios/Runner.xcodeproj" -target PomodoistWatch -configuration "$(WATCH_CONFIGURATION)" -sdk watchsimulator SYMROOT="$(WATCH_BUILD_PATH)" OBJROOT="$(WATCH_BUILD_PATH)/obj" build
 	xcrun simctl install "$(WATCH_SIMULATOR)" "$(WATCH_BUILD_PATH)/$(WATCH_CONFIGURATION)-watchsimulator/PomodoistWatch.app"
-	xcrun simctl launch "$(WATCH_SIMULATOR)" com.finchforge.pomodoist.watchkitapp
+	xcrun simctl launch "$(WATCH_SIMULATOR)" com.finchforge.pomodoist$(if $(filter development,$(WATCH_ENV)),.dev,$(if $(filter staging,$(WATCH_ENV)),.stg,)).watchkitapp
 
 testflight: testflight-ios testflight-macos
 
@@ -864,10 +877,10 @@ deploy-staging deploy-production deploy-all:
 
 deploy-all: setup-telegram
 
-deploy-telegram-staging: setup-telegram deploy-staging
+telegram-staging-deploy: setup-telegram deploy-staging
 	$(MAKE) telegram-configure TELEGRAM_ENV=staging
 
-deploy-telegram-production: setup-telegram deploy-production
+telegram-production-deploy: setup-telegram deploy-production
 	$(MAKE) telegram-configure TELEGRAM_ENV=production
 
 testflight-preflight:
@@ -961,3 +974,51 @@ clean:
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" clean
 	rm -rf "$(FLUTTER_BUILD)" "$(FLUTTER_DART_TOOL)"
 	@$(LINK_FLUTTER_BUILD)
+
+# Explicit commands always name platform, environment, then mode/action.
+BUILD_ENVIRONMENTS := development staging production
+client_config = $(if $(filter development,$1),$(LOCAL_CONFIG),$(if $(filter staging,$1),$(STAGING_CONFIG),$(TESTFLIGHT_CONFIG)))
+client_target = $(if $(filter development,$1),$(LOCAL_TARGET),$(if $(filter staging,$1),$(STAGING_TARGET),$(PRODUCTION_TARGET)))
+
+define windows_environment_target
+.PHONY: windows-$1-$2
+windows-$1-$2:
+	@$$(MAKE) windows-$2 WINDOWS_$(if $(filter debug,$2),DEBUG,$(if $(filter profile,$2),PROFILE,RELEASE))_CONFIG="$$(if $$(filter production,$1),$$(WINDOWS_CONFIG),$$(call client_config,$1))" WINDOWS_$(if $(filter debug,$2),DEBUG,$(if $(filter profile,$2),PROFILE,RELEASE))_TARGET="$$(call client_target,$1)"
+endef
+$(foreach environment,$(BUILD_ENVIRONMENTS),$(foreach mode,debug profile release,$(eval $(call windows_environment_target,$(environment),$(mode)))))
+
+define environment_target
+.PHONY: android-$1-debug web-$1-debug web-$1-profile web-$1-release ios-$1-debug ios-$1-profile ipad-$1-debug ipad-$1-profile watch-$1-debug watch-$1-profile windows-$1-installer
+android-$1-debug:
+	@$$(MAKE) android ANDROID_CONFIG="$$(if $$(filter production,$1),$$(ANDROID_CONFIG),$$(call client_config,$1))" ANDROID_TARGET="$$(call client_target,$1)"
+web-$1-debug web-$1-profile web-$1-release:
+	@$$(MAKE) web-$$(lastword $$(subst -, ,$$@)) LOCAL_CONFIG="$$(call client_config,$1)" LOCAL_TARGET="$$(call client_target,$1)"
+ios-$1-debug ios-$1-profile ipad-$1-debug ipad-$1-profile:
+	@$$(MAKE) $$(firstword $$(subst -, ,$$@))-$$(lastword $$(subst -, ,$$@)) SIMULATOR_CONFIG="$$(call client_config,$1)" SIMULATOR_TARGET="$$(call client_target,$1)"
+watch-$1-debug watch-$1-profile:
+	@$$(MAKE) watch-$$(lastword $$(subst -, ,$$@)) WATCH_ENV=$1
+windows-$1-installer:
+	@$$(MAKE) windows-installer WINDOWS_RELEASE_CONFIG="$$(if $$(filter production,$1),$$(WINDOWS_CONFIG),$$(call client_config,$1))" WINDOWS_RELEASE_TARGET="$$(call client_target,$1)"
+endef
+$(foreach environment,$(BUILD_ENVIRONMENTS),$(eval $(call environment_target,$(environment))))
+
+.PHONY: chrome-staging-debug chrome-staging-run chrome-production-release telegram-staging-debug telegram-staging-local telegram-production-release
+chrome-staging-debug chrome-staging-run telegram-staging-debug telegram-staging-local: COMPANION_DEBUG_CONFIG = $(STAGING_CONFIG)
+chrome-production-release telegram-production-release: COMPANION_RELEASE_CONFIG = $(TESTFLIGHT_CONFIG)
+chrome-staging-debug: chrome-debug
+chrome-staging-run: chrome-run
+chrome-production-release: chrome-release
+telegram-staging-debug: telegram-debug
+telegram-staging-local: telegram-local
+telegram-production-release: telegram-release
+
+define testflight_environment_target
+.PHONY: ios-$1-testflight macos-$1-testflight all-$1-testflight
+ios-$1-testflight:
+	@$$(MAKE) testflight-ios TESTFLIGHT_ENV=$1
+macos-$1-testflight:
+	@$$(MAKE) testflight-macos TESTFLIGHT_ENV=$1
+all-$1-testflight:
+	@$$(MAKE) testflight TESTFLIGHT_ENV=$1
+endef
+$(foreach environment,staging production,$(eval $(call testflight_environment_target,$(environment))))

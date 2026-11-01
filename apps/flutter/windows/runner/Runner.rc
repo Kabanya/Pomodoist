@@ -108,7 +108,8 @@ BEGIN
             VALUE "InternalName", "pomodoist" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 FinchForge LLC. Licensed under AGPL-3.0-only." "\0"
             VALUE "OriginalFilename", "pomodoist.exe" "\0"
-            VALUE "ProductName", POMODOIST_FLAVOR_DISPLAY_NAME "\0"
+            // path_provider uses ProductName for existing preferences and database paths.
+            VALUE "ProductName", POMODOIST_FLAVOR_STORAGE_NAME "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

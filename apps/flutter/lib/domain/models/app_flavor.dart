@@ -20,8 +20,8 @@ enum AppFlavor {
 
   /// Name shown under the app icon and in window titles.
   String get displayName => switch (this) {
-    AppFlavor.development => 'Pomodoist Dev',
-    AppFlavor.staging => 'Pomodoist Stg',
+    AppFlavor.development => 'Pomodoist-Dev',
+    AppFlavor.staging => 'Pomodoist-Stg',
     AppFlavor.production => 'Pomodoist',
   };
 

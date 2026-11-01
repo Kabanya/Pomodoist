@@ -6,8 +6,8 @@ label and deep-link scheme:
 
 | Flavor | Application ID | Launcher label | URL scheme |
 | --- | --- | --- | --- |
-| `development` | `com.finchforge.pomodoist.dev` | Pomodoist Dev | `pomodoist-dev` |
-| `staging` | `com.finchforge.pomodoist.stg` | Pomodoist Stg | `pomodoist-stg` |
+| `development` | `com.finchforge.pomodoist.dev` | Pomodoist-Dev | `pomodoist-dev` |
+| `staging` | `com.finchforge.pomodoist.stg` | Pomodoist-Stg | `pomodoist-stg` |
 | `production` | `com.finchforge.pomodoist` | Pomodoist | `pomodoist` |
 
 `apps/flutter/lib/domain/models/app_flavor.dart` declares that table. The Gradle

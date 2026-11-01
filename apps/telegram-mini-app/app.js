@@ -9,6 +9,10 @@ import {
 } from "./core.js";
 
 const config = window.pomodoistRuntimeConfig ?? {};
+const appName = { local: "Pomodoist-Dev", development: "Pomodoist-Dev", staging: "Pomodoist-Stg" }[config.environment] ?? "Pomodoist";
+document.title = appName;
+document.querySelector(".eyebrow").textContent = appName;
+document.querySelector(".navigation").setAttribute("aria-label", appName);
 const WebApp = window.Telegram?.WebApp;
 const telegramContext = typeof WebApp?.initData === "string" &&
   WebApp.initData.length > 0;

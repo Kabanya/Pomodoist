@@ -11,7 +11,7 @@ void main() {
   group('AppFlavor identity table', () {
     test('development matches the frozen row', () {
       const flavor = AppFlavor.development;
-      expect(flavor.displayName, 'Pomodoist Dev');
+      expect(flavor.displayName, 'Pomodoist-Dev');
       expect(flavor.applicationId, 'com.finchforge.pomodoist.dev');
       expect(flavor.urlScheme, 'pomodoist-dev');
       expect(flavor.appGroup, 'group.com.pomodoist.dev');
@@ -20,7 +20,7 @@ void main() {
 
     test('staging matches the frozen row', () {
       const flavor = AppFlavor.staging;
-      expect(flavor.displayName, 'Pomodoist Stg');
+      expect(flavor.displayName, 'Pomodoist-Stg');
       expect(flavor.applicationId, 'com.finchforge.pomodoist.stg');
       expect(flavor.urlScheme, 'pomodoist-stg');
       expect(flavor.appGroup, 'group.com.pomodoist.stg');

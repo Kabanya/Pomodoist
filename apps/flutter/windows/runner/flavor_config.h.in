@@ -22,10 +22,12 @@
 #define POMODOIST_FLAVOR_IS_STAGING @POMODOIST_FLAVOR_IS_STAGING@
 #define POMODOIST_FLAVOR_IS_PRODUCTION @POMODOIST_FLAVOR_IS_PRODUCTION@
 
-// Frozen display name, e.g. "Pomodoist Dev". Used for the window title, the
+// Frozen display name, e.g. "Pomodoist-Dev". Used for the window title, the
 // executable's version resource and the installer's shortcut name.
 #define POMODOIST_FLAVOR_DISPLAY_NAME "@POMODOIST_FLAVOR_DISPLAY_NAME@"
 #define POMODOIST_FLAVOR_DISPLAY_NAME_WIDE L"@POMODOIST_FLAVOR_DISPLAY_NAME@"
+
+#define POMODOIST_FLAVOR_STORAGE_NAME "@POMODOIST_FLAVOR_STORAGE_NAME@"
 
 // Application id, e.g. "com.finchforge.pomodoist.dev". This is the explicit
 // AppUserModelID the process sets, so that the three flavors get three distinct

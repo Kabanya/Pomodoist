@@ -239,7 +239,7 @@ jobs:
         # just wrote — the flavor, its entry point and its configuration — so
         # the workflow no longer has to restate the entry point it expects.
         run: |
-          make "linux-appimage-${{ matrix.flavor }}" \
+          make "linux-${{ matrix.flavor }}-appimage" \
             LINUX_DEVELOPMENT_CONFIG="$RUNNER_TEMP/linux-development.json" \
             LINUX_STAGING_CONFIG="$RUNNER_TEMP/linux-staging.json" \
             LINUX_PRODUCTION_CONFIG="$RUNNER_TEMP/linux-production.json" \
