@@ -1,4 +1,16 @@
 {
+  "csvExportTitle": "Exportar todas as tarefas para CSV",
+  "csvExportSubtitle": "Tarefas pessoais e compartilhadas disponíveis localmente, incluindo as concluídas. Este formato é para consulta, não para reimportação.",
+  "csvExportButton": "Exportar CSV",
+  "csvExportSuccess": "O arquivo CSV está pronto.",
+  "csvExportError": "Não foi possível exportar o CSV. Tente novamente.",
+  "settingsDateFormatTitle": "Formato de data",
+  "settingsDateFormatSubtitle": "O formato automático segue o idioma do aplicativo.",
+  "settingsDateFormatAutomatic": "Automático",
+  "settingsDateFormatDayMonthYear": "Dia.mês.ano",
+  "settingsDateFormatMonthDayYear": "Mês/dia/ano",
+  "settingsDateFormatYearMonthDay": "Ano-mês-dia",
+  "settingsDateFormatLong": "Mês por extenso",
   "settingsSectionPomo": "Pomo",
   "settingsShortcutsFocusAlternate": "Foco (segundo atalho)",
   "@@locale": "pt_BR",
@@ -488,5 +500,12 @@
   "habitsCompletedToday": "Concluído hoje",
   "habitsRemainingOn": "Restante em {date}",
   "habitsCompletedOn": "Concluído em {date}",
-  "habitsProgressCaption": "hábitos concluídos"
+  "habitsProgressCaption": "hábitos concluídos",
+  "pickerDateAndTime": "Data e hora",
+  "pickerInOneWeek": "Daqui a uma semana",
+  "pickerEnterTime": "Digitar horário",
+  "pickerTimeWheels": "Seletores de horário",
+  "pickerMinuteOffset": "{offset} min",
+  "pickerIncrease": "Aumentar",
+  "pickerDecrease": "Diminuir"
 }

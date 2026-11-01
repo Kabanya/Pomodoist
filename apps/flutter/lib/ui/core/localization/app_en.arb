@@ -1,4 +1,11 @@
 {
+  "settingsDateFormatTitle": "Date format",
+  "settingsDateFormatSubtitle": "Automatic follows the app language.",
+  "settingsDateFormatAutomatic": "Automatic",
+  "settingsDateFormatDayMonthYear": "Day.month.year",
+  "settingsDateFormatMonthDayYear": "Month/day/year",
+  "settingsDateFormatYearMonthDay": "Year-month-day",
+  "settingsDateFormatLong": "Month in words",
   "settingsSectionGeneral": "General",
   "settingsSectionAppearance": "Appearance",
   "settingsSectionTasksFocus": "Tasks and Focus",
@@ -437,6 +444,11 @@
   "settingsShortcutsGlobalError": "That global shortcut is unavailable. The previous shortcut is still active.",
   "settingsShortcutsResetAll": "Reset all",
   "settingsShortcutsResetDone": "Keyboard shortcuts reset.",
+  "csvExportTitle": "Export all tasks to CSV",
+  "csvExportSubtitle": "Local personal and shared tasks, including completed tasks. This format is for viewing, not re-importing.",
+  "csvExportButton": "Export CSV",
+  "csvExportSuccess": "CSV file is ready.",
+  "csvExportError": "Could not export CSV. Please try again.",
   "csvImportTitle": "Import tasks from CSV",
   "csvImportSubtitle": "Review a CSV file before creating tasks, projects, labels, and workflow statuses.",
   "csvImportSelectFile": "Choose CSV file",
@@ -2550,6 +2562,24 @@
     "description": "Habit dashboard section heading for the selected calendar date.",
     "placeholders": {
       "date": {
+        "type": "String"
+      }
+    }
+  },
+  "priorityUrgent": "Urgent",
+  "priorityHigh": "High",
+  "priorityNormal": "Normal",
+  "priorityLow": "Low",
+  "pickerDateAndTime": "Date and time",
+  "pickerInOneWeek": "In one week",
+  "pickerEnterTime": "Enter time",
+  "pickerTimeWheels": "Time wheels",
+  "pickerMinuteOffset": "{offset} min",
+  "pickerIncrease": "Increase",
+  "pickerDecrease": "Decrease",
+  "@pickerMinuteOffset": {
+    "placeholders": {
+      "offset": {
         "type": "String"
       }
     }

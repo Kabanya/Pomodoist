@@ -9,6 +9,28 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => 'Date format';
+
+  @override
+  String get settingsDateFormatSubtitle =>
+      'Automatic follows the app language.';
+
+  @override
+  String get settingsDateFormatAutomatic => 'Automatic';
+
+  @override
+  String get settingsDateFormatDayMonthYear => 'Day.month.year';
+
+  @override
+  String get settingsDateFormatMonthDayYear => 'Month/day/year';
+
+  @override
+  String get settingsDateFormatYearMonthDay => 'Year-month-day';
+
+  @override
+  String get settingsDateFormatLong => 'Month in words';
+
+  @override
   String get settingsSectionGeneral => 'General';
 
   @override
@@ -982,6 +1004,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShortcutsResetDone => 'Keyboard shortcuts reset.';
+
+  @override
+  String get csvExportTitle => 'Export all tasks to CSV';
+
+  @override
+  String get csvExportSubtitle =>
+      'Local personal and shared tasks, including completed tasks. This format is for viewing, not re-importing.';
+
+  @override
+  String get csvExportButton => 'Export CSV';
+
+  @override
+  String get csvExportSuccess => 'CSV file is ready.';
+
+  @override
+  String get csvExportError => 'Could not export CSV. Please try again.';
 
   @override
   String get csvImportTitle => 'Import tasks from CSV';
@@ -5040,4 +5078,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => 'habits completed';
+
+  @override
+  String get priorityUrgent => 'Urgent';
+
+  @override
+  String get priorityHigh => 'High';
+
+  @override
+  String get priorityNormal => 'Normal';
+
+  @override
+  String get priorityLow => 'Low';
+
+  @override
+  String get pickerDateAndTime => 'Date and time';
+
+  @override
+  String get pickerInOneWeek => 'In one week';
+
+  @override
+  String get pickerEnterTime => 'Enter time';
+
+  @override
+  String get pickerTimeWheels => 'Time wheels';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset min';
+  }
+
+  @override
+  String get pickerIncrease => 'Increase';
+
+  @override
+  String get pickerDecrease => 'Decrease';
 }

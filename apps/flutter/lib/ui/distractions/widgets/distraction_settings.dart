@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/distractions/view_models/blocking_view_model.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -463,7 +464,7 @@ class DistractionDeviceCoverage extends StatelessWidget {
         : const {};
     final date = seen == null
         ? '—'
-        : '${MaterialLocalizations.of(context).formatMediumDate(seen.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(seen.toLocal()))}';
+        : '${formatLocalDate(context, seen.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(seen.toLocal()))}';
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(

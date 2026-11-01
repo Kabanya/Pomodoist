@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_overview.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_presentation.dart';
 import 'package:pomodoist/ui/habits/view_models/habit_presentation_view_model.dart';
@@ -212,8 +213,10 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
     super.dispose();
   }
 
-  String _date(DateTime day) =>
-      DateFormat.yMMMd(context.l10n.localeName).format(day);
+  String _date(DateTime day) => AppDateFormatter.of(context).format(
+    day,
+    automatic: () => DateFormat.yMMMd(context.l10n.localeName).format(day),
+  );
   Future<void> _pickDate(bool start, AppDateTimePickerState picker) async {
     final selected = await picker.pickDate(
       initialDate: start ? _start : (_end ?? _start),

@@ -9,6 +9,27 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => '日期格式';
+
+  @override
+  String get settingsDateFormatSubtitle => '自动格式遵循应用语言。';
+
+  @override
+  String get settingsDateFormatAutomatic => '自动';
+
+  @override
+  String get settingsDateFormatDayMonthYear => '日.月.年';
+
+  @override
+  String get settingsDateFormatMonthDayYear => '月/日/年';
+
+  @override
+  String get settingsDateFormatYearMonthDay => '年-月-日';
+
+  @override
+  String get settingsDateFormatLong => '文字月份';
+
+  @override
   String get settingsSectionGeneral => '通用';
 
   @override
@@ -917,6 +938,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsShortcutsResetDone => '键盘快捷键已重置。';
+
+  @override
+  String get csvExportTitle => '将所有任务导出为 CSV';
+
+  @override
+  String get csvExportSubtitle => '导出本地保存的个人和共享任务，包括已完成的任务。此格式用于查看，不支持重新导入。';
+
+  @override
+  String get csvExportButton => '导出 CSV';
+
+  @override
+  String get csvExportSuccess => 'CSV 文件已准备就绪。';
+
+  @override
+  String get csvExportError => '无法导出 CSV，请重试。';
 
   @override
   String get csvImportTitle => '从 CSV 导入任务';
@@ -4787,4 +4823,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => '个习惯已完成';
+
+  @override
+  String get priorityUrgent => '紧急';
+
+  @override
+  String get priorityHigh => '高';
+
+  @override
+  String get priorityNormal => '普通';
+
+  @override
+  String get priorityLow => '低';
+
+  @override
+  String get pickerDateAndTime => '日期和时间';
+
+  @override
+  String get pickerInOneWeek => '一周后';
+
+  @override
+  String get pickerEnterTime => '输入时间';
+
+  @override
+  String get pickerTimeWheels => '时间滚轮';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset分钟';
+  }
+
+  @override
+  String get pickerIncrease => '增加';
+
+  @override
+  String get pickerDecrease => '减少';
 }

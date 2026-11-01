@@ -211,6 +211,11 @@ void main() {
         start: DateTime(2026, 9, 25, 10),
         end: DateTime(2026, 9, 25, 11, 30),
         timeZone: 'Europe/Moscow',
+        recurrence: const TaskRecurrence(
+          interval: 2,
+          unit: TaskRecurrenceUnit.day,
+          seriesId: 'series',
+        ),
         recurrenceSeriesId: 'series',
       );
       final tasks = FakeTasks()..current = task('a', schedule: source);
@@ -224,11 +229,12 @@ void main() {
       expect(moved.start!.toLocal(), DateTime(2026, 9, 26, 23, 30));
       expect(moved.end!.toLocal(), DateTime(2026, 9, 27, 1));
       expect(moved.timeZone, source.timeZone);
-      expect(moved.recurrenceSeriesId, 'series');
+      expect(moved.recurrence, source.recurrence);
+      expect(moved.recurrenceSeriesKey, 'series');
       tasks.current = task('a', schedule: moved);
       await vm.resizeTask('a', DateTime(2026, 9, 27, 2));
       expect(tasks.patch!.schedule!.duration, const Duration(minutes: 150));
-      expect(tasks.patch!.schedule!.recurrenceSeriesId, 'series');
+      expect(tasks.patch!.schedule!.recurrenceSeriesKey, 'series');
       expect(tasks.patch!.schedule!.timeZone, source.timeZone);
       await expectLater(vm.resizeTask('a', moved.start!), throwsArgumentError);
       expect(tasks.updates, 2);

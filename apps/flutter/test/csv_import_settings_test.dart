@@ -34,7 +34,7 @@ void main() {
     );
   });
 
-  test('macOS configurations can read user-selected files', () {
+  test('macOS configurations can read and write user-selected files', () {
     for (final name in [
       'DebugProfile.entitlements',
       'LocalDebug.entitlements',
@@ -42,7 +42,7 @@ void main() {
     ]) {
       expect(
         File('macos/Runner/$name').readAsStringSync(),
-        contains('com.apple.security.files.user-selected.read-only'),
+        contains('com.apple.security.files.user-selected.read-write'),
       );
     }
   });

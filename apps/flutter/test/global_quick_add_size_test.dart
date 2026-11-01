@@ -150,7 +150,7 @@ void main() {
       });
       final window = manager();
       await window.restoreSize();
-      expect(window.baseSize, const Size(900, 200));
+      expect(window.baseSize, const Size(900, 100));
     },
   );
 
@@ -217,6 +217,98 @@ void main() {
       await window.restoreSize();
       await window.setPreferredWidth(842.2, frameWidthInset: 16);
       expect(window.baseSize, const Size(859, 200));
+    },
+  );
+
+  test(
+    'automatic height includes native chrome without changing width or saving',
+    () async {
+      final window = manager();
+      await window.restoreSize();
+      await window.setPreferredWidth(842.2);
+      await window.setHeightRequirements(400.2, 260.2, frameHeightInset: 32);
+      expect(window.baseSize, const Size(843, 433));
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          quickAddWindowSizeKey,
+        ),
+        isNull,
+      );
+      await window.setHeightRequirements(300, 220, frameHeightInset: 32);
+      expect(window.baseSize, const Size(843, 332));
+      await window.setHeightRequirements(double.nan, 220);
+      expect(window.baseSize, const Size(843, 332));
+    },
+  );
+
+  test(
+    'height requirements retain manual sizes and protect later resizes',
+    () async {
+      final window = manager();
+      await window.rememberSize(const Size(540, 400));
+      await window.setHeightRequirements(650, 250, frameHeightInset: 32);
+      expect(window.baseSize, const Size(540, 400));
+      await window.rememberSize(const Size(540, 200));
+      expect(window.baseSize, const Size(540, 282));
+      final restored = manager();
+      await restored.restoreSize();
+      expect(restored.baseSize, const Size(540, 282));
+    },
+  );
+
+  test(
+    'a scaled minimum clamps old sizes within native and display limits',
+    () {
+      expect(
+        globalQuickAddWindowSize(
+          baseSize: const Size(540, 200),
+          voiceExpanded: false,
+          commentExpanded: false,
+          minimumHeight: 340,
+        ),
+        const Size(540, 340),
+      );
+      expect(
+        globalQuickAddWindowSize(
+          baseSize: const Size(540, 200),
+          voiceExpanded: false,
+          commentExpanded: false,
+          minimumHeight: 340,
+          workArea: const Size(800, 300),
+        ),
+        const Size(540, 300),
+      );
+    },
+  );
+
+  test('temporary modes do not replace fitted base height', () async {
+    final window = manager();
+    await window.setHeightRequirements(300, 220);
+    for (final mode in [
+      window.setCommentExpanded,
+      window.setVoiceMode,
+      window.setEditorExpanded,
+    ]) {
+      await mode(true);
+      await window.setHeightRequirements(600, 300);
+      expect(window.baseSize, const Size(680, 300));
+      await mode(false);
+    }
+  });
+  test(
+    'measured compact heights avoid the old 200 px floor and survive restart',
+    () async {
+      final window = manager();
+      await window.setHeightRequirements(152, 142, frameHeightInset: 32);
+      expect(window.baseSize, const Size(680, 184));
+      await window.setPreferredWidth(843);
+      expect(window.baseSize, const Size(843, 184));
+      await window.rememberSize(const Size(540, 175));
+      final restored = manager();
+      await restored.restoreSize();
+      expect(restored.baseSize, const Size(540, 175));
+      await restored.setHeightRequirements(300, 142, frameHeightInset: 32);
+      expect(restored.baseSize, const Size(540, 175));
     },
   );
 }

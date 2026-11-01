@@ -631,10 +631,17 @@ closes as before; retain a localized accessible name for the panel. Keep the
 input scrollable and size its region to its content, with 12 px vertical padding;
 extra window height must not create a gap between the text and the footer. Keep
 the footer outside the input scroll area, resizing available, and voice-window
-expansion intact. Start the dialog at 680 × 180 px and the native window at
-680 × 200 px, widening the native window on its first opening to fit the full
-labeled toolbar within native and display limits. The native title bar supplies
-window controls. A saved manual size takes priority over this initial width.
+expansion intact. Start the dialog at 680 × 180 px. The native window starts
+from 680 × 200 px and fits its initial height to the measured input and footer,
+including interface zoom, safe insets, visible shortcut hints and the native
+title bar. The native window does not reserve space for hidden shortcut hints.
+Widen it on its first opening to fit the full labeled toolbar within native and
+display limits.
+The native title bar supplies window controls. A saved manual size takes priority
+over initial fitting. Recompute the native minimum height when zoom or text
+scaling changes: one complete input line, its padding and the pinned action row
+must fit. Clamp smaller saved heights to this minimum without changing width.
+Automatic height fitting must not be persisted as a manual resize.
 The separate window
 remembers the user's width and height locally across openings and app restarts.
 Constrain restored and expanded sizes to native limits and the display's working
@@ -817,6 +824,20 @@ clearing a token reveals the existing context defaults. Preview and creation use
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
+The project menu is a searchable popover with Inbox first, existing project icons
+and colors, primary-text names, and a softly blue-tinted selected row with a
+trailing checkmark. Search matches both stored and localized names. Keep search
+above the scrolling results, constrain the popover to the viewport and keyboard,
+and preserve keyboard navigation, focus, and unsupported-name validation.
+Use at least 44 px rows (48 px for touch) and allow for scaled text. Do not show a
+keyboard-hint footer or a separate Use default action. Share this picker across
+all Quick Add surfaces and resolve both themes through the existing palette.
+The priority menu uses semantic-colored flag tiles, localized urgency subtitles,
+and monospaced P1–P4 badges. Keep row titles in primary text, with a tinted fill,
+outline, checkmark and selected semantics for the effective priority. Offer only
+the four flag choices, without a Use default action. Rows grow for scaled text
+inside the existing scroll-constrained popover; reuse the shared palette contrast
+adjustment, Lucide icons and keyboard-accessible buttons in both themes.
 The composer renders entered text at a regular weight in opaque primary text.
 Recognized tokens use semantic foregrounds and soft fills shared with the metadata
 controls: green for dates, times and durations; blue for projects and sections;
@@ -920,6 +941,26 @@ gesture (one wheel burst ends after 200 ms without events). Reuse the retained
 voice editor and its 240 ms transition, including Reduce Motion; collapsing never
 stops recording, transcription or analysis and never discards drafts.
 
+### Date format preference
+
+General Settings places Date format immediately after Language, using the shared
+Settings row and select. Options are Automatic, Day.month.year, Month/day/year,
+Year-month-day and Month in words, each previewing November 2, 2026. Automatic is
+the default and preserves each caller's existing localized display and input.
+Explicit numeric formats use `dd.MM.yyyy`, `MM/dd/yyyy` and `yyyy-MM-dd`;
+Month in words uses the app locale's full month-and-year date pattern.
+
+Persist `app.dateFormat` locally through `PreferencesRepository`; missing or
+unknown values mean Automatic. Share reactive state across the main interface
+and the separate Quick Add window. Apply explicit formats to absolute dates in
+task metadata, Quick Add, habit date fields, file and billing metadata, and dated
+information. Keep Today / Tomorrow / Yesterday, period headings and ranges,
+weekday/month labels, time formatting, stored dates and natural-language parsing
+unchanged. The shared calendar's field, hint, validation and calendar selection
+use the same format; explicit input never falls back to another date order.
+Preserve date bounds and cancellation. No account sync, native-widget change,
+new dependency or database migration is introduced.
+
 ### Date and time selection
 
 Use `AppDateTimePicker` for date/time selection in Quick Add, task details,
@@ -927,9 +968,39 @@ Timeline and the habit editor. Keep its anchor mounted on the invoking chip or
 button. Its `ShadPopover` belongs above that surface, including manually inserted
 Quick Add and voice overlays; do not push a Navigator picker route underneath them.
 
-Use the shared palette and typography for a compact calendar and editable clock
-fields. Preserve locale-specific date input, first weekday, and 12/24-hour time
-with the system override. ShadCalendar uses DateTime weekday numbering (1–7),
+Use the shared palette, Geist labels and GeistMono clock values in all themes,
+including custom themes. The Quick Add schedule menu has a title and current
+schedule summary, then neutral icon rows with trailing date/time values, an
+all-day check, and a separated reset-to-default action. Only selection and primary
+confirmation use the accent; ordinary menu actions use the neutral hover state.
+
+`pickSchedule` edits a single draft and returns a local date with an optional
+`TimeOfDay`: a null result means cancellation, and a null time means all-day.
+Prefer a 680 logical px panel. Put Today, Tomorrow and In one week shortcuts above
+the all-day switch and two five-row `ListWheelScrollView` clock columns on the
+left; put date input and ShadCalendar month/year navigation on the right.
+Shortcuts change only the date. Use one-minute wheel steps and preserve time when
+switching between wheels and numeric input or disabling time with all-day. Below
+the two-column breakpoint, order shortcuts, calendar, then clock in one scroll
+area. Keep the summary and Cancel/Save footer outside that scroll area and above
+the keyboard whenever the viewport can hold the footer. `pickDate` uses the same
+calendar and shortcuts without time controls.
+
+`pickTime` uses hour/minute fields, separate 44 px increment/decrement targets and
+−5, +5, +15 minute buttons. Offsets wrap within the day without changing the task
+date; minute arrows carry between hours. Empty or invalid numeric drafts disable
+Save and offsets. Wheels support pointer scrolling, touch/trackpad dragging,
+keyboard arrows and accessible increment/decrement actions. Keep interactive
+targets at least 44 logical px.
+
+Quick Add, the task-detail date action and calendar-card scheduling use the combined
+picker. Preserve existing timed duration, recurrence and timezone when moving its
+start; new intervals use the caller's existing duration preference. The separate
+bulk due panel retains natural-language parsing.
+
+Preserve the date format preference (localized input in Automatic),
+first weekday, and 12/24-hour time with the system override. ShadCalendar uses
+DateTime weekday numbering (1–7),
 whereas Material uses 0 for Sunday. Use the exported ShadTimePicker fields so an
 empty field invalidates the draft instead of retaining the previous time.
 
@@ -2277,6 +2348,8 @@ placement near window edges instead of squeezing it into the button. Do not
 show a floating shell help panel when the modifier is held; retain the in-place
 badges and compact local hints. Compact dialog hints sit beside their actions,
 with reserved space and wrapping for scaled text.
+The native Quick Add window collapses its local hint bar while hidden so it has no
+empty footer band; other dialogs keep their reserved hint space.
 Hints ignore pointer events and cannot receive focus. Use the current palette,
 Geist/GeistMono and Lucide icons in both themes. Fade in with `AppMotion.popup`
 (180 ms), respecting Reduce Motion; removal is immediate. No preference or

@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/domain/models/collaboration/collaboration_models.dart';
 
 String collaborationRoleLabel(AppLocalizations l10n, CollaborationRole role) =>
@@ -53,6 +54,13 @@ String collaborationInitials(String name) {
 }
 
 /// Localized full date and time also disambiguate older comments.
-String collaborationCommentTime(DateTime? date, String locale) => date == null
-    ? ''
-    : DateFormat.yMMMd(locale).add_jm().format(date.toLocal());
+String collaborationCommentTime(
+  DateTime? date,
+  String locale, {
+  AppDateFormatter? formatter,
+}) {
+  if (date == null) return '';
+  final local = date.toLocal();
+  String automatic() => DateFormat.yMMMd(locale).add_jm().format(local);
+  return formatter?.formatWithTime(local, automatic: automatic) ?? automatic();
+}

@@ -13,6 +13,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     this.onCommentExpandedChanged,
     this.onVoiceSessionChanged,
     this.onPreferredWidthChanged,
+    this.onHeightRequirementsChanged,
     this.compact = false,
     this.expanded = false,
     this.onExpand,
@@ -31,6 +32,8 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final ValueChanged<bool>? onCommentExpandedChanged;
   final ValueChanged<bool>? onVoiceSessionChanged;
   final ValueChanged<double>? onPreferredWidthChanged;
+  final void Function(double preferredHeight, double minimumHeight)?
+  onHeightRequirementsChanged;
   final bool compact;
   final bool expanded;
   final VoidCallback? onExpand;
@@ -49,6 +52,9 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   double _metadataWidth = 0;
   final _identity = Object();
   final _inputKey = GlobalKey();
+  final _inputRowKey = GlobalKey();
+  final _detailsKey = GlobalKey();
+  final _hintsKey = GlobalKey();
   final _ownedInputFocus = FocusNode();
   FocusNode get _inputFocus => widget.focusNode ?? _ownedInputFocus;
   bool _editorOpen = false;
@@ -164,7 +170,44 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       onChanged: (_) => _syncDraft(),
       onSubmitted: (_) => _submit(),
     );
+    if (!widget.compact && widget.onHeightRequirementsChanged != null) {
+      final painter = TextPainter(
+        text: TextSpan(text: ' ', style: input.style),
+        textDirection: direction,
+        textScaler: textScaler,
+      )..layout();
+      final minimumInputHeight = math.max(48.0, painter.height + 24) + 24;
+      painter.dispose();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _editorOpen) return;
+        final rowHeight = _inputRowKey.currentContext?.size?.height;
+        final detailsHeight = _detailsKey.currentContext?.size?.height;
+        final hintsHeight = _hintsKey.currentContext?.size?.height;
+        if (rowHeight == null || detailsHeight == null || hintsHeight == null) {
+          return;
+        }
+        final footerHeight = math.min(
+          160.0,
+          math.max(40.0, detailsHeight) + 24,
+        );
+        // The footer takes at most 45%; comments share the remaining flex space.
+        final minimumHeight =
+            math.max(
+              minimumInputHeight * (_commentExpanded ? 2 : 1) +
+                  1 +
+                  footerHeight,
+              footerHeight / .45,
+            ) +
+            hintsHeight;
+        widget.onHeightRequirementsChanged?.call(
+          math.max(rowHeight + 24 + 1 + footerHeight, footerHeight / .45) +
+              hintsHeight,
+          minimumHeight,
+        );
+      });
+    }
     final details = QuickAddDetails(
+      key: _detailsKey,
       controller: _controller,
       defaultDate: widget.defaultDate,
       projectId: widget.projectId,
@@ -310,97 +353,129 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
                         namesRoute: true,
                         explicitChildNodes: true,
                         label: l10n.addTask,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Flexible(
-                              flex: 2,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      key: const Key('quick-add-open-editor'),
-                                      tooltip: l10n.taskExpandEditor,
-                                      onPressed: _busy ? null : _openEditor,
-                                      icon: Icon(
-                                        LucideIcons.listPlus,
-                                        color: context.appColors.secondaryText,
-                                      ),
+                        child: LayoutBuilder(
+                          builder: (context, available) {
+                            final footerHeight = math.min(
+                              footerMaxHeight,
+                              math.max(0.0, available.maxHeight - 1),
+                            );
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Flexible(
+                                  flex: 2,
+                                  child: SingleChildScrollView(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
                                     ),
-                                    const SizedBox(width: 16),
-                                    Expanded(child: input),
-                                    const SizedBox(width: 16),
-                                    Tooltip(
-                                      message: l10n.voiceQuickAdd,
-                                      child: ShadButton.outline(
-                                        key: const Key(
-                                          'sidebar-quick-add-voice',
+                                    child: Row(
+                                      key: _inputRowKey,
+                                      children: [
+                                        IconButton(
+                                          key: const Key(
+                                            'quick-add-open-editor',
+                                          ),
+                                          tooltip: l10n.taskExpandEditor,
+                                          onPressed: _busy ? null : _openEditor,
+                                          icon: Icon(
+                                            LucideIcons.listPlus,
+                                            color:
+                                                context.appColors.secondaryText,
+                                          ),
                                         ),
-                                        width: 40,
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        enabled: !_busy,
-                                        onPressed: _busy
-                                            ? null
-                                            : _openVoiceSheet,
-                                        child: Icon(
-                                          LucideIcons.mic,
-                                          semanticLabel: l10n.voiceQuickAdd,
+                                        const SizedBox(width: 16),
+                                        Expanded(child: input),
+                                        const SizedBox(width: 16),
+                                        Tooltip(
+                                          message: l10n.voiceQuickAdd,
+                                          child: ShadButton.outline(
+                                            key: const Key(
+                                              'sidebar-quick-add-voice',
+                                            ),
+                                            width: 40,
+                                            height: 40,
+                                            padding: EdgeInsets.zero,
+                                            enabled: !_busy,
+                                            onPressed: _busy
+                                                ? null
+                                                : _openVoiceSheet,
+                                            child: Icon(
+                                              LucideIcons.mic,
+                                              semanticLabel: l10n.voiceQuickAdd,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Divider(height: 1, color: context.appColors.border),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxHeight: footerMaxHeight,
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: math.min(
-                                    12,
-                                    (footerMaxHeight - 40) / 2,
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        child: details,
+                                Divider(
+                                  height: 1,
+                                  color: context.appColors.border,
+                                ),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: footerHeight,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: math.min(
+                                        12,
+                                        math.max(0.0, (footerHeight - 40) / 2),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    submit,
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (_commentExpanded)
-                              Flexible(
-                                flex: 2,
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: details,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        submit,
+                                      ],
+                                    ),
                                   ),
-                                  child: comment,
                                 ),
-                              ),
-                          ],
+                                if (_commentExpanded)
+                                  Flexible(
+                                    flex: 2,
+                                    child: SingleChildScrollView(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                      ),
+                                      child: comment,
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                       ),
               ),
             ),
           ),
-          const ShortcutHintsBar(),
+          NotificationListener<SizeChangedLayoutNotification>(
+            onNotification: (_) {
+              if (widget.onHeightRequirementsChanged != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() {});
+                });
+              }
+              return false;
+            },
+            child: SizeChangedLayoutNotifier(
+              child: ShortcutHintsBar(
+                key: _hintsKey,
+                reserveSpace:
+                    widget.compact ||
+                    widget.onHeightRequirementsChanged == null,
+              ),
+            ),
+          ),
         ],
       ),
     );

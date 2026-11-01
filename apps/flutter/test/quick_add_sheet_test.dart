@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
+import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
@@ -24,6 +27,8 @@ Future<void> _open(
   bool reduceMotion = false,
   bool saving = false,
   Brightness brightness = Brightness.dark,
+  Locale locale = const Locale('en'),
+  DateTime? defaultDate,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -41,6 +46,7 @@ Future<void> _open(
           quickAddViewModelProvider.overrideWith2(_SavingQuickAdd.new),
       ],
       child: MaterialApp(
+        locale: locale,
         theme: brightness == Brightness.dark
             ? AppTheme.dark()
             : AppTheme.light(),
@@ -56,7 +62,8 @@ Future<void> _open(
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
-              onPressed: () => showQuickAddDialog(context),
+              onPressed: () =>
+                  showQuickAddDialog(context, defaultDate: defaultDate),
               child: const Text('Open'),
             ),
           ),
@@ -83,6 +90,172 @@ Future<void> _swipe(WidgetTester tester, Offset offset) async {
 
 void main() {
   setUpAll(loadTestAppResources);
+
+  testWidgets(
+    'schedule menu saves one draft and time offsets keep the task date',
+    (tester) async {
+      await _open(tester, size: const Size(1000, 900));
+      const original = 'Report 2026-11-02 23:55 90m p2';
+      await tester.enterText(find.byKey(_input), original);
+      await tester.pumpAndSettle();
+      final controller = tester
+          .widget<TextField>(find.byKey(_input))
+          .controller!;
+      Future<void> menu() async {
+        await tester.tap(
+          find
+              .descendant(
+                of: find.byType(AppDateTimePicker),
+                matching: find.byType(ShadButton),
+              )
+              .first,
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await menu();
+      expect(find.text('Date and time'), findsOneWidget);
+      await tester.tap(find.text('Pick date'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('picker-date-input')),
+        '11/04/2026',
+      );
+      expect(controller.text, original);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(controller.text, original);
+      await menu();
+      await tester.tap(find.text('Pick date'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('picker-date-input')),
+        '11/04/2026',
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      TaskSchedule parsed() => const QuickAddParser()
+          .parse(controller.text, now: DateTime(2026, 11, 2))
+          .schedule!;
+      expect(parsed().displayDate, DateTime(2026, 11, 4));
+      expect(parsed().duration, const Duration(minutes: 90));
+      expect(parsed().start!.toLocal().hour, 23);
+      expect(controller.text, contains('p2'));
+      await menu();
+      await tester.tap(find.text('Change time'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('picker-offset-15')));
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(parsed().displayDate, DateTime(2026, 11, 4));
+      expect(parsed().start!.toLocal(), DateTime(2026, 11, 4, 0, 10));
+      expect(parsed().duration, const Duration(minutes: 90));
+      await menu();
+      await tester.tap(
+        find.text(
+          AppLocalizations.of(tester.element(find.byKey(_input))).allDay,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(parsed().isAllDay, isTrue);
+      expect(parsed().displayDate, DateTime(2026, 11, 4));
+      await menu();
+      await tester.tap(find.text('Use default'));
+      await tester.pumpAndSettle();
+      expect(controller.text.trim().split(RegExp(r'\s+')), ['Report', 'p2']);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('reset returns Quick Add to its inherited date', (tester) async {
+    await _open(
+      tester,
+      size: const Size(1000, 900),
+      defaultDate: DateTime(2026, 11, 2),
+    );
+    await tester.enterText(find.byKey(_input), 'Report 2026-11-04');
+    await tester.pumpAndSettle();
+    final controller = tester.widget<TextField>(find.byKey(_input)).controller!;
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppDateTimePicker),
+            matching: find.byType(ShadButton),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use default'));
+    await tester.pumpAndSettle();
+    final parsed = const QuickAddParser().parse(
+      controller.text,
+      now: DateTime(2026, 11, 1),
+      defaultDate: DateTime(2026, 11, 2),
+    );
+    expect(parsed.schedule!.displayDate, DateTime(2026, 11, 2));
+    expect(controller.text.trim(), 'Report');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'priority menu labels levels and preserves other draft metadata',
+    (tester) async {
+      await _open(tester);
+      await tester.enterText(find.byKey(_input), 'Prepare report #Work p3 2p');
+      await tester.pumpAndSettle();
+      final controller = tester
+          .widget<TextField>(find.byKey(_input))
+          .controller!;
+      await tester.tap(find.text('P3'));
+      await tester.pumpAndSettle();
+      for (final label in ['Urgent', 'High', 'Normal', 'Low']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('Use default'), findsNothing);
+      for (var priority = 1; priority <= 4; priority++) {
+        expect(find.text('Priority $priority'), findsOneWidget);
+      }
+      await tester.tap(find.text('Priority 1'));
+      await tester.pumpAndSettle();
+      expect(controller.text, 'Prepare report #Work p1 2p');
+      await tester.tap(find.text('P1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Priority 4'));
+      await tester.pumpAndSettle();
+      expect(controller.text, 'Prepare report #Work p4 2p');
+      expect(find.text('P4'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final brightness in Brightness.values) {
+    testWidgets('priority menu supports scaled Russian text in $brightness', (
+      tester,
+    ) async {
+      await _open(
+        tester,
+        size: const Size(320, 844),
+        textScale: 2,
+        brightness: brightness,
+        locale: const Locale('ru'),
+      );
+      await tester.enterText(find.byKey(_input), 'Отчёт p3');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('P3'));
+      await tester.tap(find.text('P3'));
+      await tester.pumpAndSettle();
+      expect(find.text('Обычный'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Приоритет 4'));
+      await tester.tap(find.text('Приоритет 4'));
+      await tester.pumpAndSettle();
+      final controller = tester
+          .widget<TextField>(find.byKey(_input))
+          .controller!;
+      expect(controller.text, 'Отчёт p4');
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('empty sheet is compact and metadata still follows the input', (
     tester,

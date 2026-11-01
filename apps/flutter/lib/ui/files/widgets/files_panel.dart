@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:pomodoist/domain/models/files/file_attachment.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 import 'package:pomodoist/ui/files/view_models/files_view_model.dart';
@@ -519,9 +520,12 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
       file.bytes < 1000000
           ? '${(file.bytes / 1000).toStringAsFixed(0)} KB'
           : '${(file.bytes / 1000000).toStringAsFixed(1)} MB',
-      DateFormat.yMd(
-        Localizations.localeOf(context).toLanguageTag(),
-      ).add_jm().format(file.createdAt.toLocal()),
+      AppDateFormatter.of(context).formatWithTime(
+        file.createdAt.toLocal(),
+        automatic: () => DateFormat.yMd(
+          Localizations.localeOf(context).toLanguageTag(),
+        ).add_jm().format(file.createdAt.toLocal()),
+      ),
     ].where((value) => value.isNotEmpty).join(' · '),
     maxLines: 2,
     overflow: TextOverflow.ellipsis,

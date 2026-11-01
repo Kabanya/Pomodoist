@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
+import 'package:pomodoist/ui/core/view_models/app_date_format_view_model.dart';
 import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
@@ -27,6 +29,7 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
     this.onCommentExpandedChanged,
     this.onEditorModeChanged,
     this.onPreferredWidthChanged,
+    this.onHeightRequirementsChanged,
     super.key,
   });
 
@@ -36,11 +39,18 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
   final Future<void> Function(bool)? onEditorModeChanged;
   final void Function(double width, double viewportWidth)?
   onPreferredWidthChanged;
+  final void Function(
+    double preferredHeight,
+    double minimumHeight,
+    double viewportHeight,
+  )?
+  onHeightRequirementsChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(quickAddWindowLanguageProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final dateFormat = ref.watch(appDateFormatProvider);
     final rootBackground = ref.watch(
       macosGlassRootBackgroundProvider(View.of(context).viewId),
     );
@@ -72,18 +82,21 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
           GlobalWidgetsLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => ShadTheme(
-          data: AppTheme.shadFromMaterial(
-            Theme.of(context),
-            reduceMotion: MediaQuery.disableAnimationsOf(context),
-          ),
-          child: MacosGlassHost(
-            child: AppZoom(
-              child: ShadAppBuilder(
-                backgroundColor: rootBackground,
-                child: ShortcutHintsHost(
-                  child: KeyboardDismissRegion(
-                    child: child ?? const SizedBox.shrink(),
+        builder: (context, child) => AppDateFormatScope(
+          format: dateFormat,
+          child: ShadTheme(
+            data: AppTheme.shadFromMaterial(
+              Theme.of(context),
+              reduceMotion: MediaQuery.disableAnimationsOf(context),
+            ),
+            child: MacosGlassHost(
+              child: AppZoom(
+                child: ShadAppBuilder(
+                  backgroundColor: rootBackground,
+                  child: ShortcutHintsHost(
+                    child: KeyboardDismissRegion(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
@@ -109,6 +122,18 @@ class GlobalQuickAddWindowApp extends ConsumerWidget {
                     onPreferredWidthChanged?.call(
                       width * ref.read(appZoomProvider) / 100,
                       view.physicalSize.width / view.devicePixelRatio,
+                    );
+                  },
+                  onHeightRequirementsChanged: (preferred, minimum) {
+                    final view = View.of(context);
+                    final scale = ref.read(appZoomProvider) / 100;
+                    final safeInsets =
+                        (view.padding.top + view.padding.bottom) /
+                        view.devicePixelRatio;
+                    onHeightRequirementsChanged?.call(
+                      preferred * scale + safeInsets,
+                      minimum * scale + safeInsets,
+                      view.physicalSize.height / view.devicePixelRatio,
                     );
                   },
                 ),

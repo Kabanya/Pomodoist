@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
@@ -197,26 +198,18 @@ String? _formatRecurrence(BuildContext context, TaskRecurrence? recurrence) {
 }
 
 String _formatDate(BuildContext context, DateTime date) =>
-    MaterialLocalizations.of(context).formatMediumDate(date);
+    AppDateFormatter.of(context).format(
+      date,
+      automatic: () => MaterialLocalizations.of(context).formatMediumDate(date),
+    );
 
 String _formatTaskListDate(
   BuildContext context,
   DateTime date, {
   DateTime? now,
-}) {
-  final l10n = context.l10n;
-  final today = _dateOnly((now ?? DateTime.now()).toLocal());
-  final day = _dateOnly(date.toLocal());
-  final offset = day.difference(today).inDays;
-  return switch (offset) {
-    -1 => l10n.yesterday,
-    0 => l10n.today,
-    1 => l10n.tomorrow,
-    _ => intl.DateFormat.MMMMd(l10n.localeName).format(day),
-  };
-}
-
-DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+}) => AppDateFormatter.of(
+  context,
+).formatTaskListDate(date, context.l10n, now: now ?? DateTime.now());
 
 bool _isSameDay(DateTime first, DateTime second) =>
     first.year == second.year &&

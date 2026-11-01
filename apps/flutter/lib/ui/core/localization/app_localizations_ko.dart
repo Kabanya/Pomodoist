@@ -9,6 +9,27 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => '날짜 형식';
+
+  @override
+  String get settingsDateFormatSubtitle => '자동 형식은 앱 언어를 따릅니다.';
+
+  @override
+  String get settingsDateFormatAutomatic => '자동';
+
+  @override
+  String get settingsDateFormatDayMonthYear => '일.월.년';
+
+  @override
+  String get settingsDateFormatMonthDayYear => '월/일/년';
+
+  @override
+  String get settingsDateFormatYearMonthDay => '년-월-일';
+
+  @override
+  String get settingsDateFormatLong => '월 이름 사용';
+
+  @override
   String get settingsSectionGeneral => '일반';
 
   @override
@@ -947,6 +968,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsShortcutsResetDone => '키보드 단축키를 재설정했습니다.';
+
+  @override
+  String get csvExportTitle => '모든 작업을 CSV로 내보내기';
+
+  @override
+  String get csvExportSubtitle =>
+      '완료된 작업을 포함하여 로컬에 저장된 개인 및 공유 작업을 내보냅니다. 이 형식은 조회용이며 다시 가져올 수 없습니다.';
+
+  @override
+  String get csvExportButton => 'CSV 내보내기';
+
+  @override
+  String get csvExportSuccess => 'CSV 파일이 준비되었습니다.';
+
+  @override
+  String get csvExportError => 'CSV를 내보내지 못했습니다. 다시 시도해 주세요.';
 
   @override
   String get csvImportTitle => 'CSV에서 작업 가져오기';
@@ -4896,4 +4933,39 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => '습관 완료';
+
+  @override
+  String get priorityUrgent => '긴급';
+
+  @override
+  String get priorityHigh => '높음';
+
+  @override
+  String get priorityNormal => '보통';
+
+  @override
+  String get priorityLow => '낮음';
+
+  @override
+  String get pickerDateAndTime => '날짜 및 시간';
+
+  @override
+  String get pickerInOneWeek => '일주일 후';
+
+  @override
+  String get pickerEnterTime => '시간 입력';
+
+  @override
+  String get pickerTimeWheels => '시간 휠';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset분';
+  }
+
+  @override
+  String get pickerIncrease => '늘리기';
+
+  @override
+  String get pickerDecrease => '줄이기';
 }

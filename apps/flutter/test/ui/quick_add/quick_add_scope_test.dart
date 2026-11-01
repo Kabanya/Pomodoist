@@ -10,6 +10,34 @@ import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
 import 'package:pomodoist/utils/clock.dart';
 
 void main() {
+  test(
+    'project picker searches stored and localized names with Inbox first',
+    () {
+      final projects = [
+        _project('work', name: 'Работа'),
+        _project(inboxProjectId, name: 'Inbox'),
+        _project('study', name: 'Учёба'),
+      ];
+      List<String> options(String query) => quickAddProjectOptions(
+        projects,
+        query,
+        displayName: (project) =>
+            project.id == inboxProjectId ? 'Входящие' : project.name,
+      ).map((project) => project.id).toList();
+
+      expect(options(''), [inboxProjectId, 'work', 'study']);
+      expect(options('  РАБО  '), ['work']);
+      expect(options('вход'), [inboxProjectId]);
+      expect(options('INBOX'), [inboxProjectId]);
+      expect(options('missing'), isEmpty);
+      expect(projects.map((project) => project.id), [
+        'work',
+        inboxProjectId,
+        'study',
+      ]);
+    },
+  );
+
   test('retained instances keep independent drafts', () async {
     final container = _container();
     addTearDown(container.dispose);
@@ -119,12 +147,13 @@ ProviderContainer _container({Stream<List<ProjectItem>>? projects}) {
   );
 }
 
-ProjectItem _project(String id, {bool archived = false}) => ProjectItem(
-  id: id,
-  userId: 'user',
-  name: id,
-  isArchived: archived,
-  orderKey: id,
-  createdAt: DateTime.utc(2026),
-  updatedAt: DateTime.utc(2026),
-);
+ProjectItem _project(String id, {String? name, bool archived = false}) =>
+    ProjectItem(
+      id: id,
+      userId: 'user',
+      name: name ?? id,
+      isArchived: archived,
+      orderKey: id,
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    );

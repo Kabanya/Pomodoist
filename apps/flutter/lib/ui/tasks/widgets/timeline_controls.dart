@@ -29,7 +29,9 @@ class _TimelineHeader extends StatelessWidget {
             focusNode: picker.focusNode,
             onPressed: () => _pickDate(context, day, picker),
             leading: const Icon(LucideIcons.calendar),
-            child: Text(formatLocalDate(context, day)),
+            child: Text(
+              MaterialLocalizations.of(context).formatMediumDate(day),
+            ),
           ),
         ),
         Tooltip(

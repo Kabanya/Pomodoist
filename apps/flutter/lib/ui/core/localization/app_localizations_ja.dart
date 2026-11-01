@@ -9,6 +9,27 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => '日付の形式';
+
+  @override
+  String get settingsDateFormatSubtitle => '自動の場合はアプリの言語に従います。';
+
+  @override
+  String get settingsDateFormatAutomatic => '自動';
+
+  @override
+  String get settingsDateFormatDayMonthYear => '日.月.年';
+
+  @override
+  String get settingsDateFormatMonthDayYear => '月/日/年';
+
+  @override
+  String get settingsDateFormatYearMonthDay => '年-月-日';
+
+  @override
+  String get settingsDateFormatLong => '月名を使用';
+
+  @override
   String get settingsSectionGeneral => '一般';
 
   @override
@@ -942,6 +963,22 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsShortcutsResetDone => 'キーボードショートカットをリセットしました。';
+
+  @override
+  String get csvExportTitle => 'すべてのタスクをCSVにエクスポート';
+
+  @override
+  String get csvExportSubtitle =>
+      'ローカルに保存された個人用・共有タスク（完了済みを含む）を書き出します。この形式は閲覧用で、再インポートには対応していません。';
+
+  @override
+  String get csvExportButton => 'CSVをエクスポート';
+
+  @override
+  String get csvExportSuccess => 'CSVファイルの準備ができました。';
+
+  @override
+  String get csvExportError => 'CSVをエクスポートできませんでした。もう一度お試しください。';
 
   @override
   String get csvImportTitle => 'CSVからタスクをインポート';
@@ -4883,4 +4920,39 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => '習慣を完了';
+
+  @override
+  String get priorityUrgent => '緊急';
+
+  @override
+  String get priorityHigh => '高';
+
+  @override
+  String get priorityNormal => '標準';
+
+  @override
+  String get priorityLow => '低';
+
+  @override
+  String get pickerDateAndTime => '日付と時刻';
+
+  @override
+  String get pickerInOneWeek => '1週間後';
+
+  @override
+  String get pickerEnterTime => '時刻を入力';
+
+  @override
+  String get pickerTimeWheels => '時刻ホイール';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset分';
+  }
+
+  @override
+  String get pickerIncrease => '増やす';
+
+  @override
+  String get pickerDecrease => '減らす';
 }

@@ -9,6 +9,28 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => 'Формат даты';
+
+  @override
+  String get settingsDateFormatSubtitle =>
+      'Автоматический формат зависит от языка приложения.';
+
+  @override
+  String get settingsDateFormatAutomatic => 'Автоматически';
+
+  @override
+  String get settingsDateFormatDayMonthYear => 'День.месяц.год';
+
+  @override
+  String get settingsDateFormatMonthDayYear => 'Месяц/день/год';
+
+  @override
+  String get settingsDateFormatYearMonthDay => 'Год-месяц-день';
+
+  @override
+  String get settingsDateFormatLong => 'Месяц словами';
+
+  @override
   String get settingsSectionGeneral => 'Общие';
 
   @override
@@ -986,6 +1008,23 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsShortcutsResetDone => 'Быстрые команды сброшены.';
+
+  @override
+  String get csvExportTitle => 'Экспорт всех задач в CSV';
+
+  @override
+  String get csvExportSubtitle =>
+      'Локальные личные и общие задачи, включая завершённые. Формат для просмотра, не для обратного импорта.';
+
+  @override
+  String get csvExportButton => 'Экспортировать CSV';
+
+  @override
+  String get csvExportSuccess => 'CSV-файл готов.';
+
+  @override
+  String get csvExportError =>
+      'Не удалось экспортировать CSV. Попробуйте ещё раз.';
 
   @override
   String get csvImportTitle => 'Импорт задач из CSV';
@@ -5050,4 +5089,39 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => 'привычек выполнено';
+
+  @override
+  String get priorityUrgent => 'Срочный';
+
+  @override
+  String get priorityHigh => 'Высокий';
+
+  @override
+  String get priorityNormal => 'Обычный';
+
+  @override
+  String get priorityLow => 'Низкий';
+
+  @override
+  String get pickerDateAndTime => 'Дата и время';
+
+  @override
+  String get pickerInOneWeek => 'Через неделю';
+
+  @override
+  String get pickerEnterTime => 'Ввести';
+
+  @override
+  String get pickerTimeWheels => 'Колёсики времени';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset мин';
+  }
+
+  @override
+  String get pickerIncrease => 'Увеличить';
+
+  @override
+  String get pickerDecrease => 'Уменьшить';
 }

@@ -21,6 +21,7 @@ Size globalQuickAddWindowSize({
   required bool commentExpanded,
   bool editorExpanded = false,
   Size workArea = globalQuickAddMaximumSize,
+  double minimumHeight = 200,
 }) {
   final width = editorExpanded
       ? globalQuickAddMaximumSize.width
@@ -46,10 +47,7 @@ Size globalQuickAddWindowSize({
       math.min(globalQuickAddMinimumSize.width, maximum.width),
       maximum.width,
     ),
-    height.clamp(
-      math.min(globalQuickAddMinimumSize.height, maximum.height),
-      maximum.height,
-    ),
+    height.clamp(math.min(minimumHeight, maximum.height), maximum.height),
   );
 }
 
@@ -68,6 +66,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
   bool _loadedSize = false;
   bool _hasManualSize = false;
   bool _preferredWidthApplied = false;
+  double _minimumHeight = globalQuickAddMinimumSize.height;
   Future<void>? _loadingSize;
   Future<void> _savingSize = Future.value();
   Future<void> _resizing = Future.value();
@@ -94,6 +93,8 @@ class GlobalQuickAddWindowManager extends WindowObserver {
           baseSize: Size(width.toDouble(), height.toDouble()),
           voiceExpanded: false,
           commentExpanded: false,
+          // The measured line height is applied once the window is laid out.
+          minimumHeight: 1,
         );
         _hasManualSize = true;
       }
@@ -114,6 +115,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
       baseSize: size,
       voiceExpanded: false,
       commentExpanded: false,
+      minimumHeight: _minimumHeight,
     );
     final saved = jsonEncode({
       'width': _baseSize.width,
@@ -172,6 +174,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
       ),
       voiceExpanded: false,
       commentExpanded: false,
+      minimumHeight: _minimumHeight,
     );
     await _resize();
   }
@@ -194,6 +197,64 @@ class GlobalQuickAddWindowManager extends WindowObserver {
     }
   }
 
+  Future<void> setHeightRequirements(
+    double preferredHeight,
+    double minimumHeight, {
+    double frameHeightInset = 0,
+  }) async {
+    if (!preferredHeight.isFinite ||
+        preferredHeight <= 0 ||
+        !minimumHeight.isFinite ||
+        minimumHeight <= 0 ||
+        !frameHeightInset.isFinite ||
+        frameHeightInset < 0) {
+      return;
+    }
+    final minimum = math.min(
+      (minimumHeight + frameHeightInset).ceilToDouble(),
+      globalQuickAddMaximumSize.height,
+    );
+    final base =
+        !_hasManualSize &&
+            !_commentExpanded &&
+            !_voiceExpanded &&
+            !_editorExpanded
+        ? globalQuickAddWindowSize(
+            baseSize: Size(
+              _baseSize.width,
+              (preferredHeight + frameHeightInset).ceilToDouble(),
+            ),
+            voiceExpanded: false,
+            commentExpanded: false,
+            minimumHeight: minimum,
+          )
+        : _baseSize;
+    if (_minimumHeight == minimum && _baseSize == base) return;
+    _minimumHeight = minimum;
+    _baseSize = base;
+    await _resize();
+  }
+
+  Future<void> _setContentHeightRequirements(
+    double preferred,
+    double minimum,
+    double viewportHeight,
+  ) async {
+    final id = _viewId;
+    if (id == null) return;
+    try {
+      final frame = await MultiViewDesktop.fromId(id).getSize();
+      if (_viewId != id) return;
+      await setHeightRequirements(
+        preferred,
+        minimum,
+        frameHeightInset: math.max(0, frame.height - viewportHeight),
+      );
+    } catch (error) {
+      debugPrint('Could not fit Quick Add window height: $error');
+    }
+  }
+
   Future<int> _open() async {
     await restoreSize();
     final area = await _workArea();
@@ -202,6 +263,7 @@ class GlobalQuickAddWindowManager extends WindowObserver {
       voiceExpanded: false,
       commentExpanded: false,
       workArea: area?.size ?? globalQuickAddMaximumSize,
+      minimumHeight: _minimumHeight,
     );
     _voiceExpanded = false;
     _commentExpanded = false;
@@ -215,13 +277,17 @@ class GlobalQuickAddWindowManager extends WindowObserver {
             unawaited(setCommentExpanded(active)),
         onPreferredWidthChanged: (width, viewportWidth) =>
             unawaited(_setPreferredContentWidth(width, viewportWidth)),
+        onHeightRequirementsChanged: (preferred, minimum, viewportHeight) =>
+            unawaited(
+              _setContentHeightRequirements(preferred, minimum, viewportHeight),
+            ),
       ),
       options: WindowOptions(
         size: size,
         isUtility: true,
         minimumSize: Size(
           math.min(420, size.width),
-          math.min(200, size.height),
+          math.min(_minimumHeight, size.height),
         ),
         maximumSize: globalQuickAddMaximumSize,
         title: appFlavor.displayName,
@@ -294,11 +360,12 @@ class GlobalQuickAddWindowManager extends WindowObserver {
         commentExpanded: _commentExpanded,
         editorExpanded: _editorExpanded,
         workArea: area?.size ?? globalQuickAddMaximumSize,
-      );
-      await window.setMinimumSize(
-        Size(math.min(420, size.width), math.min(200, size.height)),
+        minimumHeight: _minimumHeight,
       );
       _lastRequestedSize = size;
+      await window.setMinimumSize(
+        Size(math.min(420, size.width), math.min(_minimumHeight, size.height)),
+      );
       await window.setSize(size);
       if (area != null) {
         final bounds = await window.getBounds();

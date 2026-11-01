@@ -16,7 +16,6 @@ import 'package:go_router/go_router.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
-import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/tasks/view_models/timeline_view_model.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';

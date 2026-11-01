@@ -6,6 +6,23 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'quick_add_metadata_edit.dart';
 
+List<ProjectItem> quickAddProjectOptions(
+  Iterable<ProjectItem> projects,
+  String query, {
+  required String Function(ProjectItem) displayName,
+}) {
+  final search = query.trim().toLowerCase();
+  final matches = projects.where(
+    (project) =>
+        project.name.toLowerCase().contains(search) ||
+        displayName(project).toLowerCase().contains(search),
+  );
+  return [
+    ...matches.where((project) => project.id == inboxProjectId),
+    ...matches.where((project) => project.id != inboxProjectId),
+  ];
+}
+
 typedef QuickAddDetailsState = ({
   List<ProjectItem> projects,
   List<ProjectItem> allProjects,

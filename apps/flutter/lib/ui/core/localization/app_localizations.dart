@@ -115,6 +115,48 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @settingsDateFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get settingsDateFormatTitle;
+
+  /// No description provided for @settingsDateFormatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic follows the app language.'**
+  String get settingsDateFormatSubtitle;
+
+  /// No description provided for @settingsDateFormatAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get settingsDateFormatAutomatic;
+
+  /// No description provided for @settingsDateFormatDayMonthYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Day.month.year'**
+  String get settingsDateFormatDayMonthYear;
+
+  /// No description provided for @settingsDateFormatMonthDayYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Month/day/year'**
+  String get settingsDateFormatMonthDayYear;
+
+  /// No description provided for @settingsDateFormatYearMonthDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Year-month-day'**
+  String get settingsDateFormatYearMonthDay;
+
+  /// No description provided for @settingsDateFormatLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Month in words'**
+  String get settingsDateFormatLong;
+
   /// No description provided for @settingsSectionGeneral.
   ///
   /// In en, this message translates to:
@@ -1842,6 +1884,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keyboard shortcuts reset.'**
   String get settingsShortcutsResetDone;
+
+  /// No description provided for @csvExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export all tasks to CSV'**
+  String get csvExportTitle;
+
+  /// No description provided for @csvExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local personal and shared tasks, including completed tasks. This format is for viewing, not re-importing.'**
+  String get csvExportSubtitle;
+
+  /// No description provided for @csvExportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get csvExportButton;
+
+  /// No description provided for @csvExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV file is ready.'**
+  String get csvExportSuccess;
+
+  /// No description provided for @csvExportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export CSV. Please try again.'**
+  String get csvExportError;
 
   /// No description provided for @csvImportTitle.
   ///
@@ -8678,6 +8750,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'habits completed'**
   String get habitsProgressCaption;
+
+  /// No description provided for @priorityUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get priorityUrgent;
+
+  /// No description provided for @priorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get priorityHigh;
+
+  /// No description provided for @priorityNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get priorityNormal;
+
+  /// No description provided for @priorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get priorityLow;
+
+  /// No description provided for @pickerDateAndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Date and time'**
+  String get pickerDateAndTime;
+
+  /// No description provided for @pickerInOneWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'In one week'**
+  String get pickerInOneWeek;
+
+  /// No description provided for @pickerEnterTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter time'**
+  String get pickerEnterTime;
+
+  /// No description provided for @pickerTimeWheels.
+  ///
+  /// In en, this message translates to:
+  /// **'Time wheels'**
+  String get pickerTimeWheels;
+
+  /// No description provided for @pickerMinuteOffset.
+  ///
+  /// In en, this message translates to:
+  /// **'{offset} min'**
+  String pickerMinuteOffset(String offset);
+
+  /// No description provided for @pickerIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase'**
+  String get pickerIncrease;
+
+  /// No description provided for @pickerDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease'**
+  String get pickerDecrease;
 }
 
 class _AppLocalizationsDelegate

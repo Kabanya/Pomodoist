@@ -28,7 +28,6 @@ import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_detail_view_model.dart';
-import 'package:pomodoist/ui/tasks/view_models/task_item_view_model.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
@@ -42,7 +41,6 @@ import 'package:pomodoist/ui/tasks/widgets/task_completion_feedback.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_text_controller.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
-import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 
@@ -879,16 +877,18 @@ class _TaskProperties extends ConsumerWidget {
                 ShadContextMenuItem(
                   onPressed: () async {
                     try {
-                      final result = await showTaskDuePanel(context, ref);
-                      if (result == null || !context.mounted) return;
-                      await ref
-                          .read(taskItemViewModelProvider(task).notifier)
-                          .schedule(result);
+                      await _runScheduleQuickAction(
+                        context,
+                        ref,
+                        task,
+                        picker,
+                        _ScheduleQuickAction.date,
+                      );
                     } catch (_) {
                       if (context.mounted) _showEditFailure(context);
                     }
                   },
-                  child: Text(l10n.scheduleTitle),
+                  child: Text(l10n.timelinePickDate),
                 ),
                 const Divider(height: 8),
                 ShadContextMenuItem(
@@ -1063,7 +1063,7 @@ class _TaskProperties extends ConsumerWidget {
   }
 }
 
-enum _ScheduleQuickAction { today, tomorrow, allDay, timed, clear }
+enum _ScheduleQuickAction { date, today, tomorrow, allDay, timed, clear }
 
 Future<void> _runScheduleQuickAction(
   BuildContext context,
@@ -1073,6 +1073,8 @@ Future<void> _runScheduleQuickAction(
   _ScheduleQuickAction action,
 ) {
   switch (action) {
+    case _ScheduleQuickAction.date:
+      return _pickSchedule(context, ref, task, picker);
     case _ScheduleQuickAction.today:
       final today = _today(ref, task);
       return _setTaskSchedule(
@@ -1088,7 +1090,11 @@ Future<void> _runScheduleQuickAction(
         task.schedule?.moveToDate(tomorrow) ?? TaskSchedule.allDay(tomorrow),
       );
     case _ScheduleQuickAction.allDay:
-      return _pickAllDaySchedule(context, ref, task, picker);
+      return _setTaskSchedule(
+        ref,
+        task,
+        TaskSchedule.allDay(task.schedule?.displayDate ?? _today(ref, task)),
+      );
     case _ScheduleQuickAction.timed:
       return _pickTimedSchedule(context, ref, task, picker);
     case _ScheduleQuickAction.clear:
@@ -1743,22 +1749,46 @@ class _RecurrenceActionsState extends ConsumerState<_RecurrenceActions> {
   }
 }
 
-Future<void> _pickAllDaySchedule(
+Future<void> _pickSchedule(
   BuildContext context,
   WidgetRef ref,
   TaskItem task,
   AppDateTimePickerState picker,
 ) async {
-  final now = ref.read(taskScheduleViewModelProvider(task)).now;
-  final picked = await picker.pickDate(
-    initialDate: task.schedule?.displayDate ?? now,
-    firstDate: DateTime(now.year - 5),
-    lastDate: DateTime(now.year + 10),
+  final state = ref.read(taskScheduleViewModelProvider(task));
+  final existing = task.schedule;
+  final picked = await picker.pickSchedule(
+    initialDate: existing?.displayDate ?? state.now,
+    initialTime: TimeOfDay.fromDateTime(
+      existing?.start?.toLocal() ??
+          DateTime(state.now.year, state.now.month, state.now.day, 9),
+    ),
+    initialAllDay: existing?.isAllDay ?? true,
+    firstDate: DateTime(state.now.year - 5),
+    lastDate: DateTime(state.now.year + 10),
   );
-  if (picked == null || !context.mounted) {
-    return;
-  }
-  await _setTaskSchedule(ref, task, TaskSchedule.allDay(picked));
+  if (picked == null || !context.mounted) return;
+  final time = picked.time;
+  final start = DateTime(
+    picked.date.year,
+    picked.date.month,
+    picked.date.day,
+    time?.hour ?? 0,
+    time?.minute ?? 0,
+  );
+  await _setTaskSchedule(
+    ref,
+    task,
+    time == null
+        ? TaskSchedule.allDay(picked.date)
+        : TaskSchedule.timed(
+            start: start,
+            end: start.add(
+              existing?.duration ?? Duration(minutes: state.timedMinutes),
+            ),
+            timeZone: existing?.timeZone,
+          ),
+  );
 }
 
 Future<void> _pickTimedSchedule(
@@ -1804,7 +1834,15 @@ Future<void> _pickTimedSchedule(
   if (!end.isAfter(start)) {
     end = end.add(const Duration(days: 1));
   }
-  await _setTaskSchedule(ref, task, TaskSchedule.timed(start: start, end: end));
+  await _setTaskSchedule(
+    ref,
+    task,
+    TaskSchedule.timed(
+      start: start,
+      end: end,
+      timeZone: task.schedule?.timeZone,
+    ),
+  );
 }
 
 Future<void> _setTaskSchedule(

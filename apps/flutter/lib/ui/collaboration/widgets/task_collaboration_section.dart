@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
@@ -200,6 +201,7 @@ class _TaskCollaborationSectionState
     final time = collaborationCommentTime(
       comment.createdAt,
       Localizations.localeOf(context).toLanguageTag(),
+      formatter: AppDateFormatter.of(context),
     );
     return Padding(
       padding: const EdgeInsets.only(top: 20),

@@ -9,6 +9,28 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => 'Format de date';
+
+  @override
+  String get settingsDateFormatSubtitle =>
+      'Le format automatique suit la langue de l’application.';
+
+  @override
+  String get settingsDateFormatAutomatic => 'Automatique';
+
+  @override
+  String get settingsDateFormatDayMonthYear => 'Jour.mois.année';
+
+  @override
+  String get settingsDateFormatMonthDayYear => 'Mois/jour/année';
+
+  @override
+  String get settingsDateFormatYearMonthDay => 'Année-mois-jour';
+
+  @override
+  String get settingsDateFormatLong => 'Mois en toutes lettres';
+
+  @override
   String get settingsSectionGeneral => 'Général';
 
   @override
@@ -994,6 +1016,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsShortcutsResetDone => 'Raccourcis clavier réinitialisés.';
+
+  @override
+  String get csvExportTitle => 'Exporter toutes les tâches en CSV';
+
+  @override
+  String get csvExportSubtitle =>
+      'Tâches personnelles et partagées disponibles localement, y compris les tâches terminées. Ce format sert à la consultation, pas à la réimportation.';
+
+  @override
+  String get csvExportButton => 'Exporter en CSV';
+
+  @override
+  String get csvExportSuccess => 'Le fichier CSV est prêt.';
+
+  @override
+  String get csvExportError =>
+      'Impossible d’exporter le CSV. Veuillez réessayer.';
 
   @override
   String get csvImportTitle => 'Importer des tâches depuis un CSV';
@@ -5067,4 +5106,39 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => 'habitudes terminées';
+
+  @override
+  String get priorityUrgent => 'Urgente';
+
+  @override
+  String get priorityHigh => 'Élevée';
+
+  @override
+  String get priorityNormal => 'Normale';
+
+  @override
+  String get priorityLow => 'Faible';
+
+  @override
+  String get pickerDateAndTime => 'Date et heure';
+
+  @override
+  String get pickerInOneWeek => 'Dans une semaine';
+
+  @override
+  String get pickerEnterTime => 'Saisir l’heure';
+
+  @override
+  String get pickerTimeWheels => 'Sélecteurs d’heure';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset min';
+  }
+
+  @override
+  String get pickerIncrease => 'Augmenter';
+
+  @override
+  String get pickerDecrease => 'Diminuer';
 }

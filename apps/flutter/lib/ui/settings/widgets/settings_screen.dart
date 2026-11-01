@@ -26,6 +26,7 @@ import 'package:pomodoist/ui/settings/widgets/account_nickname_dialog.dart';
 import 'package:pomodoist/ui/settings/widgets/account_avatar_dialog.dart';
 import 'package:pomodoist/ui/settings/widgets/app_info_card.dart';
 import 'package:pomodoist/ui/settings/widgets/csv_task_import_card.dart';
+import 'package:pomodoist/ui/settings/widgets/csv_task_export_row.dart';
 import 'package:pomodoist/ui/settings/widgets/theme_settings_card.dart';
 import 'package:pomodoist/ui/settings/widgets/app_icon_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/status_item_style_settings.dart';
@@ -39,6 +40,7 @@ import 'package:pomodoist/ui/settings/view_models/connected_agents_view_model.da
 import 'package:pomodoist/ui/settings/view_models/settings_view_model.dart';
 import 'package:pomodoist/ui/settings/view_models/auth_view_model.dart';
 import 'package:pomodoist/ui/settings/widgets/task_list_settings.dart';
+import 'package:pomodoist/ui/settings/widgets/date_format_settings.dart';
 import 'package:pomodoist/ui/settings/widgets/focus_sound_settings.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
 export 'package:pomodoist/ui/settings/widgets/login_screen.dart';
@@ -315,6 +317,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 },
               ),
             ),
+            const DateFormatSettings(),
             if (settings.voiceModeSupported)
               const VoiceTranscriptionSettingsCard(),
             SettingsRow(
@@ -449,7 +452,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ),
               const SizedBox(height: 24),
             ],
-            if (isCsvTaskImportSupported()) const CsvTaskImportCard(),
+            if (isCsvTaskImportSupported()) ...[
+              const CsvTaskImportCard(),
+              const SizedBox(height: 24),
+              const CsvTaskExportRow(),
+            ],
           ],
         );
       case SettingsSection.account:

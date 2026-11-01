@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
+import 'package:pomodoist/ui/core/view_models/app_date_format_view_model.dart';
 import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/distractions/widgets/focus_exit_host.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +28,7 @@ class PomodoistApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final app = ref.watch(appViewModelProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final dateFormat = ref.watch(appDateFormatProvider);
     final router = ref.watch(routerProvider);
     final rootBackground = ref.watch(
       macosGlassRootBackgroundProvider(View.of(context).viewId),
@@ -50,20 +53,23 @@ class PomodoistApp extends ConsumerWidget {
         themeAnimationDuration: AppMotion.duration(context, AppMotion.state),
         themeAnimationCurve: AppMotion.curve,
         routerConfig: router,
-        builder: (context, child) => ShadTheme(
-          data: AppTheme.shadFromMaterial(
-            Theme.of(context),
-            reduceMotion: MediaQuery.disableAnimationsOf(context),
-          ),
-          child: MacosGlassHost(
-            child: AppZoom(
-              child: ShadAppBuilder(
-                backgroundColor: rootBackground,
-                child: ShortcutHintsHost(
-                  child: KeyboardDismissRegion(
-                    child: DesktopUpdateHost(
-                      child: FocusExitHost(
-                        child: child ?? const SizedBox.shrink(),
+        builder: (context, child) => AppDateFormatScope(
+          format: dateFormat,
+          child: ShadTheme(
+            data: AppTheme.shadFromMaterial(
+              Theme.of(context),
+              reduceMotion: MediaQuery.disableAnimationsOf(context),
+            ),
+            child: MacosGlassHost(
+              child: AppZoom(
+                child: ShadAppBuilder(
+                  backgroundColor: rootBackground,
+                  child: ShortcutHintsHost(
+                    child: KeyboardDismissRegion(
+                      child: DesktopUpdateHost(
+                        child: FocusExitHost(
+                          child: child ?? const SizedBox.shrink(),
+                        ),
                       ),
                     ),
                   ),

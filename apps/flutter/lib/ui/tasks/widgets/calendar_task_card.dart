@@ -416,12 +416,24 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
         ShadContextMenuItem(
           leading: const Icon(LucideIcons.calendar, size: 16),
           onPressed: () async {
-            final date = await picker.pickDate(
+            final picked = await picker.pickSchedule(
               initialDate: task.schedule?.displayDate ?? DateTime.now(),
+              initialTime: TimeOfDay.fromDateTime(
+                task.schedule?.start?.toLocal() ?? DateTime.now(),
+              ),
+              initialAllDay: task.schedule?.isAllDay ?? true,
               firstDate: DateTime(1900),
               lastDate: DateTime(2200),
             );
-            if (date != null && mounted) await actions.onMove(task.id, date);
+            if (picked != null && mounted) {
+              final time = picked.time;
+              await actions.onMove(
+                task.id,
+                picked.date,
+                minutes: time == null ? null : time.hour * 60 + time.minute,
+                allDay: time == null,
+              );
+            }
           },
           child: Text(l10n.taskSchedule),
         ),

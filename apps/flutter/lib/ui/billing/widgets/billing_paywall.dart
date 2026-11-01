@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/ui/core/platform/legal_urls.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
@@ -163,9 +164,12 @@ class BillingPaywall extends ConsumerWidget {
           if (returnPending != null)
             Text(
               l10n.billingReturnPending(
-                intl.DateFormat.yMd(
-                  l10n.localeName,
-                ).add_jm().format(returnPending.toLocal()),
+                AppDateFormatter.of(context).formatWithTime(
+                  returnPending.toLocal(),
+                  automatic: () => intl.DateFormat.yMd(
+                    l10n.localeName,
+                  ).add_jm().format(returnPending.toLocal()),
+                ),
               ),
               style: textTheme.bodySmall?.copyWith(color: colors.secondaryText),
             ),

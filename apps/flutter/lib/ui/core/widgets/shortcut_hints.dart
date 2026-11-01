@@ -427,9 +427,11 @@ class _ShortcutHintBadgeState extends ConsumerState<ShortcutHintBadge> {
 String get _primaryLabel =>
     defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl';
 
-/// Compact local hints next to dialog actions; its reserved height prevents jumps.
+/// Compact local hints next to dialog actions, optionally reserving their height.
 class ShortcutHintsBar extends StatelessWidget {
-  const ShortcutHintsBar({super.key});
+  const ShortcutHintsBar({this.reserveSpace = true, super.key});
+
+  final bool reserveSpace;
   @override
   Widget build(BuildContext context) {
     final host = context.dependOnInheritedWidgetOfExactType<_HostData>()?.host;
@@ -448,7 +450,7 @@ class ShortcutHintsBar extends StatelessWidget {
       visible: visible,
       maintainState: true,
       maintainAnimation: true,
-      maintainSize: true,
+      maintainSize: reserveSpace,
       child: KeyedSubtree(
         key: ValueKey(visible),
         child: _reveal(

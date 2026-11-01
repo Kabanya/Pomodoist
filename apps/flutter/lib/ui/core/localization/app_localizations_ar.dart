@@ -9,6 +9,27 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => 'تنسيق التاريخ';
+
+  @override
+  String get settingsDateFormatSubtitle => 'يتبع التنسيق التلقائي لغة التطبيق.';
+
+  @override
+  String get settingsDateFormatAutomatic => 'تلقائي';
+
+  @override
+  String get settingsDateFormatDayMonthYear => 'يوم.شهر.سنة';
+
+  @override
+  String get settingsDateFormatMonthDayYear => 'شهر/يوم/سنة';
+
+  @override
+  String get settingsDateFormatYearMonthDay => 'سنة-شهر-يوم';
+
+  @override
+  String get settingsDateFormatLong => 'اسم الشهر بالكلمات';
+
+  @override
   String get settingsSectionGeneral => 'عام';
 
   @override
@@ -974,6 +995,22 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsShortcutsResetDone =>
       'تمت إعادة ضبط اختصارات لوحة المفاتيح.';
+
+  @override
+  String get csvExportTitle => 'تصدير جميع المهام إلى CSV';
+
+  @override
+  String get csvExportSubtitle =>
+      'المهام الشخصية والمشتركة المخزّنة محليًا، بما فيها المكتملة. هذا التنسيق للعرض وليس لإعادة الاستيراد.';
+
+  @override
+  String get csvExportButton => 'تصدير CSV';
+
+  @override
+  String get csvExportSuccess => 'ملف CSV جاهز.';
+
+  @override
+  String get csvExportError => 'تعذّر تصدير CSV. يُرجى المحاولة مرة أخرى.';
 
   @override
   String get csvImportTitle => 'استيراد المهام من CSV';
@@ -4963,4 +5000,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => 'عادات مكتملة';
+
+  @override
+  String get priorityUrgent => 'عاجلة';
+
+  @override
+  String get priorityHigh => 'عالية';
+
+  @override
+  String get priorityNormal => 'عادية';
+
+  @override
+  String get priorityLow => 'منخفضة';
+
+  @override
+  String get pickerDateAndTime => 'التاريخ والوقت';
+
+  @override
+  String get pickerInOneWeek => 'بعد أسبوع';
+
+  @override
+  String get pickerEnterTime => 'إدخال الوقت';
+
+  @override
+  String get pickerTimeWheels => 'عجلات الوقت';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset دقيقة';
+  }
+
+  @override
+  String get pickerIncrease => 'زيادة';
+
+  @override
+  String get pickerDecrease => 'تقليل';
 }

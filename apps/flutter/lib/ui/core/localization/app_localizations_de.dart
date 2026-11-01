@@ -9,6 +9,28 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get settingsDateFormatTitle => 'Datumsformat';
+
+  @override
+  String get settingsDateFormatSubtitle =>
+      'Automatisch richtet sich nach der App-Sprache.';
+
+  @override
+  String get settingsDateFormatAutomatic => 'Automatisch';
+
+  @override
+  String get settingsDateFormatDayMonthYear => 'Tag.Monat.Jahr';
+
+  @override
+  String get settingsDateFormatMonthDayYear => 'Monat/Tag/Jahr';
+
+  @override
+  String get settingsDateFormatYearMonthDay => 'Jahr-Monat-Tag';
+
+  @override
+  String get settingsDateFormatLong => 'Monat ausgeschrieben';
+
+  @override
   String get settingsSectionGeneral => 'Allgemein';
 
   @override
@@ -995,6 +1017,23 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsShortcutsResetDone =>
       'Tastaturkurzbefehle wurden zurückgesetzt.';
+
+  @override
+  String get csvExportTitle => 'Alle Aufgaben als CSV exportieren';
+
+  @override
+  String get csvExportSubtitle =>
+      'Lokale persönliche und geteilte Aufgaben, einschließlich abgeschlossener Aufgaben. Dieses Format dient zur Ansicht, nicht zum erneuten Import.';
+
+  @override
+  String get csvExportButton => 'CSV exportieren';
+
+  @override
+  String get csvExportSuccess => 'Die CSV-Datei ist bereit.';
+
+  @override
+  String get csvExportError =>
+      'CSV konnte nicht exportiert werden. Bitte erneut versuchen.';
 
   @override
   String get csvImportTitle => 'Aufgaben aus CSV importieren';
@@ -5062,4 +5101,39 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get habitsProgressCaption => 'Gewohnheiten erledigt';
+
+  @override
+  String get priorityUrgent => 'Dringend';
+
+  @override
+  String get priorityHigh => 'Hoch';
+
+  @override
+  String get priorityNormal => 'Normal';
+
+  @override
+  String get priorityLow => 'Niedrig';
+
+  @override
+  String get pickerDateAndTime => 'Datum und Uhrzeit';
+
+  @override
+  String get pickerInOneWeek => 'In einer Woche';
+
+  @override
+  String get pickerEnterTime => 'Zeit eingeben';
+
+  @override
+  String get pickerTimeWheels => 'Zeiträder';
+
+  @override
+  String pickerMinuteOffset(String offset) {
+    return '$offset Min.';
+  }
+
+  @override
+  String get pickerIncrease => 'Erhöhen';
+
+  @override
+  String get pickerDecrease => 'Verringern';
 }
