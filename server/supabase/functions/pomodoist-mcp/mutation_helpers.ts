@@ -379,6 +379,7 @@ export async function deleteTaskOperations(
           parentId: isRoot
             ? row.parentId
             : ids.get(string(row.parentId)) ?? row.parentId,
+          prerequisiteIdsJson: JSON.stringify((JSON.parse(String(row.prerequisiteIdsJson ?? "[]")) as string[]).map(id => ids.get(id) ?? id)),
           dueJson: shiftedDue ? JSON.stringify(shiftedDue) : null,
           status: "open",
           completedAt: null,

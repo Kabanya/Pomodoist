@@ -1,4 +1,5 @@
 import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
+import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'dart:async';
@@ -288,6 +289,10 @@ class DriftFocusRepository implements FocusRepository {
     final projectId = input.projectId ?? task?.projectId;
 
     await ownerBoundTransaction(_db, _syncQueue, () async {
+      (await DriftTaskBlockingRepository(
+        _db,
+        _syncQueue,
+      ).policy(now: timestamp)).availability(input.taskId).requireFocus();
       final activeRun = await _activeRunRow();
       if (activeRun != null) {
         await _stopRunInTransaction(
@@ -359,6 +364,12 @@ class DriftFocusRepository implements FocusRepository {
     }
     final now = DateTime.now().toUtc();
     await ownerBoundTransaction(_db, _syncQueue, () async {
+      if (interval.type == 'work') {
+        (await DriftTaskBlockingRepository(
+          _db,
+          _syncQueue,
+        ).policy(now: now)).availability(interval.taskId).requireFocus();
+      }
       await _focus.startInterval(interval.id, interval.runId, now);
       await _insertEvent(interval.runId, interval.id, 'intervalStarted', now, {
         'type': interval.type,
@@ -413,6 +424,11 @@ class DriftFocusRepository implements FocusRepository {
         final pausedTotal =
             interval.pausedTotalSeconds + (pausedDelta < 0 ? 0 : pausedDelta);
         await ownerBoundTransaction(_db, _syncQueue, () async {
+          if (interval.type == 'work') {
+            (await DriftTaskBlockingRepository(_db, _syncQueue).policy(
+              now: timestamp,
+            )).availability(interval.taskId).requireFocus();
+          }
           await _focus.resumeInterval(
             interval.id,
             interval.runId,
@@ -445,6 +461,11 @@ class DriftFocusRepository implements FocusRepository {
         }
         final timestamp = (now ?? DateTime.now()).toUtc();
         await ownerBoundTransaction(_db, _syncQueue, () async {
+          if (interval.type == 'work') {
+            (await DriftTaskBlockingRepository(_db, _syncQueue).policy(
+              now: timestamp,
+            )).availability(interval.taskId).requireFocus();
+          }
           await _focus.restartInterval(interval.id, interval.runId, timestamp);
           await _insertEvent(
             interval.runId,
@@ -809,6 +830,14 @@ class DriftFocusRepository implements FocusRepository {
     required int sequenceNumber,
   }) async {
     final intervalId = _uuid.v4();
+    if (type == 'work' &&
+        status == 'running' &&
+        !(await DriftTaskBlockingRepository(
+          _db,
+          _syncQueue,
+        ).policy(now: startedAt)).availability(run.taskId).canStartFocus) {
+      status = 'ready';
+    }
     await _focus.insertInterval(
       FocusIntervalsCompanion.insert(
         id: intervalId,

@@ -140,8 +140,17 @@ static void app_icon_method_call(FlMethodChannel *, FlMethodCall *call,
     const char *icon = value && fl_value_get_type(value) == FL_VALUE_TYPE_STRING
                            ? fl_value_get_string(value)
                            : "";
-    if (g_strcmp0(icon, "classic") != 0 &&
-        g_strcmp0(icon, "icon-light-pomo") != 0) {
+    FlValue *build_mode = args && fl_value_get_type(args) == FL_VALUE_TYPE_MAP
+                             ? fl_value_lookup_string(args, "mode")
+                             : nullptr;
+    const char *mode =
+        build_mode && fl_value_get_type(build_mode) == FL_VALUE_TYPE_STRING
+            ? fl_value_get_string(build_mode)
+            : "";
+    if ((g_strcmp0(icon, "classic") != 0 &&
+         g_strcmp0(icon, "icon-light-pomo") != 0) ||
+        (g_strcmp0(mode, "debug") != 0 && g_strcmp0(mode, "profile") != 0 &&
+         g_strcmp0(mode, "release") != 0)) {
       response = FL_METHOD_RESPONSE(fl_method_error_response_new(
           "invalid_icon", "Unsupported app icon.", nullptr));
     } else {
@@ -150,7 +159,10 @@ static void app_icon_method_call(FlMethodChannel *, FlMethodCall *call,
       g_autoptr(GdkPixbuf) image = nullptr;
       if (executable) {
         g_autofree gchar *directory = g_path_get_dirname(executable);
-        const std::string asset = app_icon_flavor() + "/" + icon + ".png";
+        const std::string asset =
+            app_icon_flavor() + "/" +
+            (g_strcmp0(mode, "release") == 0 ? "" : std::string(mode) + "/") +
+            icon + ".png";
         g_autofree gchar *path = g_build_filename(
             directory, "data", "flutter_assets", "assets", "branding",
             "app_icons", "generated", asset.c_str(), nullptr);

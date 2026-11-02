@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.7+130
+version: 1.1.8+131
 
 environment:
   sdk: ^3.11.5
@@ -172,6 +172,90 @@ flutter:
       flavors: [staging, Staging]
       platforms: [macos]
     - path: assets/branding/app_icons/generated/staging/classic.ico
+      flavors: [staging]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/production/debug/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/production/debug/icon-light-pomo-macos.png
+      flavors: [production, Production]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/production/debug/icon-light-pomo.ico
+      flavors: [production]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/production/debug/classic.png
+    - path: assets/branding/app_icons/generated/production/debug/classic-macos.png
+      flavors: [production, Production]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/production/debug/classic.ico
+      flavors: [production]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/production/profile/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/production/profile/icon-light-pomo-macos.png
+      flavors: [production, Production]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/production/profile/icon-light-pomo.ico
+      flavors: [production]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/production/profile/classic.png
+    - path: assets/branding/app_icons/generated/production/profile/classic-macos.png
+      flavors: [production, Production]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/production/profile/classic.ico
+      flavors: [production]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/development/debug/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/development/debug/icon-light-pomo-macos.png
+      flavors: [development, Development]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/development/debug/icon-light-pomo.ico
+      flavors: [development]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/development/debug/classic.png
+    - path: assets/branding/app_icons/generated/development/debug/classic-macos.png
+      flavors: [development, Development]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/development/debug/classic.ico
+      flavors: [development]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/development/profile/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/development/profile/icon-light-pomo-macos.png
+      flavors: [development, Development]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/development/profile/icon-light-pomo.ico
+      flavors: [development]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/development/profile/classic.png
+    - path: assets/branding/app_icons/generated/development/profile/classic-macos.png
+      flavors: [development, Development]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/development/profile/classic.ico
+      flavors: [development]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/staging/debug/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/staging/debug/icon-light-pomo-macos.png
+      flavors: [staging, Staging]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/staging/debug/icon-light-pomo.ico
+      flavors: [staging]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/staging/debug/classic.png
+    - path: assets/branding/app_icons/generated/staging/debug/classic-macos.png
+      flavors: [staging, Staging]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/staging/debug/classic.ico
+      flavors: [staging]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/staging/profile/icon-light-pomo.png
+    - path: assets/branding/app_icons/generated/staging/profile/icon-light-pomo-macos.png
+      flavors: [staging, Staging]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/staging/profile/icon-light-pomo.ico
+      flavors: [staging]
+      platforms: [windows]
+    - assets/branding/app_icons/generated/staging/profile/classic.png
+    - path: assets/branding/app_icons/generated/staging/profile/classic-macos.png
+      flavors: [staging, Staging]
+      platforms: [macos]
+    - path: assets/branding/app_icons/generated/staging/profile/classic.ico
       flavors: [staging]
       platforms: [windows]
     - assets/pomo/manifest.json

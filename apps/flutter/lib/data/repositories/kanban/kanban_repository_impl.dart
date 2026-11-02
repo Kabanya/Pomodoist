@@ -699,6 +699,9 @@ class DriftKanbanRepository implements KanbanRepository {
     sectionId: row.sectionId,
     parentId: row.parentId,
     priority: row.priority,
+    prerequisiteIds: List<String>.from(
+      jsonDecode(row.prerequisiteIdsJson) as List,
+    ),
     dueJson: row.dueJson,
     deadlineJson: row.deadlineJson,
     durationSeconds: row.durationSeconds,

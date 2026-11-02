@@ -1,3 +1,5 @@
+import 'package:pomodoist/config/task_blocking_dependencies.dart';
+import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'support/test_app.dart';
@@ -45,6 +47,14 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          taskBlockingConflictsProvider.overrideWith(
+            (ref) => Stream.value(<String>{}),
+          ),
+          taskBlockingPolicyProvider.overrideWith(
+            (ref) => Stream.value(
+              TaskBlockingPolicy(tasks: const [], actorId: 'me'),
+            ),
+          ),
           projectsProvider.overrideWith((ref) => Stream.value([])),
           taskProvider(task.id).overrideWith((ref) => Stream.value(task)),
           calendarLinksProvider.overrideWith((ref, id) => Stream.value([])),

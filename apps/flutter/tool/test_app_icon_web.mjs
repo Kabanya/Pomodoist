@@ -45,6 +45,30 @@ production.window.pomodoistSetAppIcon('icon-light-pomo', 'production');
 assert.equal(production.links.icon.href, 'favicon.png');
 assert.throws(() => production.window.pomodoistSetAppIcon('unknown', 'production'));
 assert.throws(() => production.window.pomodoistSetAppIcon('classic', 'toString'));
+assert.throws(() => production.window.pomodoistSetAppIcon('classic', 'production', '../debug'));
+
+for (const flavor of ['development', 'staging', 'production']) {
+  for (const mode of ['debug', 'profile', 'release']) {
+    const current = page(flavor === 'development' ? 'local' : flavor);
+    const directory = `icons/${flavor}${mode === 'release' ? '' : '/' + mode}`;
+    current.window.pomodoistSetAppIcon('icon-light-pomo', flavor, mode);
+    const favicon = mode === 'release' && flavor === 'production'
+      ? 'favicon.png' : `${directory}/favicon.png`;
+    assert.equal(current.links.icon.href, favicon);
+    const manifest = mode === 'release'
+      ? flavor === 'production' ? 'manifest.json' : `manifest-${flavor}.json`
+      : `manifest-${flavor}-${mode}.json`;
+    assert.equal(current.links.manifest.href, manifest);
+    assert.equal(current.links['apple-touch-icon'].href, `${directory}/Icon-192.png`);
+    current.window.pomodoistSetAppIcon('classic', flavor, mode);
+    assert.equal(current.links.icon.href, `${directory}/classic.png`);
+    current.completeManifest(true);
+    await new Promise(setImmediate);
+    assert.equal(current.links.manifest.href, manifest);
+    assert.equal(current.links['apple-touch-icon'].href, `${directory}/Icon-192.png`);
+    assert.equal(current.links.icon.href, `${directory}/classic.png`);
+  }
+}
 
 for (const environment of ['local', 'staging']) {
   const flavor = environment === 'local' ? 'development' : environment;

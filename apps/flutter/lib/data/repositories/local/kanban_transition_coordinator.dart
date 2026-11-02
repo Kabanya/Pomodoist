@@ -1,4 +1,5 @@
 import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
+import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -48,6 +49,12 @@ class KanbanTransitionCoordinator {
   }) async {
     await SharedAccess(_db).task(rootId);
     final rows = await _activeTaskRows();
+    if (rows.any((r) => r.id == rootId && r.status != 'completed')) {
+      (await DriftTaskBlockingRepository(
+        _db,
+        _syncQueue,
+      ).policy(now: timestamp)).availability(rootId).requireCompletion();
+    }
     final commands = <SyncQueueCommand>[];
     for (final row in _subtreeRows(rootId, rows)) {
       if (row.status == 'completed') {
@@ -98,7 +105,28 @@ class KanbanTransitionCoordinator {
         _statusCommand(row.id, doneId, timestamp),
       ]);
     }
-    await _syncQueue.enqueueBatch(commands, occurredAt: timestamp);
+    await _syncQueue.enqueueBatch(
+      commands.length <= 2
+          ? commands
+          : [
+              SyncQueueCommand(
+                type: 'task.completeBranch',
+                clientId: rootId,
+                payload: {
+                  'id': rootId,
+                  'commands': [
+                    for (final command in commands)
+                      {
+                        'type': command.type,
+                        'clientId': command.clientId,
+                        'payload': command.payload,
+                      },
+                  ],
+                },
+              ),
+            ],
+      occurredAt: timestamp,
+    );
   }
 
   Future<void> restoreSubtreeInTransaction(

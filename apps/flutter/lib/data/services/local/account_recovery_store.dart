@@ -16,6 +16,7 @@ class AccountRecoveryStore {
     'projects',
     'sections',
     'tasks',
+    'task_blocking_records',
     'task_completions',
     'labels',
     'task_labels',

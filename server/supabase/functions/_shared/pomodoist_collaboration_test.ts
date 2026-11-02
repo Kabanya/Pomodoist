@@ -193,3 +193,13 @@ Deno.test("private preference requests preserve caller identity at the RPC bound
   const response = await handleCollaboration(f.request(request), f.deps);
   equal(response.status, 200); equal(f.calls, ["auth", "rpc:preferences"]);
 });
+
+Deno.test("atomic branch accepts transport-sized batches with one identity and validates scope revisions", () => {
+  const op = {opId:"x", entityType:"task", entityId:"root", operation:"upsert", payload:{status:"completed"}, clientUpdatedAt:"2026-11-02T00:00:00Z"};
+  const operations = Array.from({length:201},(_,i)=>({...op,opId:String(i)}));
+  const request={action:"completeBranch",rootTaskId:"root",deviceId:"test",operations};
+  equal(validateCollaborationRequest(request),request);
+  rejects(()=>validateCollaborationRequest({...request,rootTaskId:null}));
+  rejects(()=>validateCollaborationRequest({...request,scopeId:"shared"}));
+  rejects(()=>validateCollaborationRequest({action:"push",scopeId:"shared",operations}));
+});

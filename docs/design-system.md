@@ -207,10 +207,30 @@ succeeded. Restore the saved choice when the application starts.
 `assets/branding/app_icons/icon-light-pomo.png` is the Pomo master. The existing
 `pomodoist_icon_<flavor>.png` masters remain unchanged as Classic. Run
 `tool/generate_app_icons.dart` to generate both choices, previews, native resources
-and the install-time defaults. Development and staging Pomo icons carry DEV/STG
-badges: a rounded cobalt rectangle for DEV and an amber capsule for STG, each
-with a thin contrasting rim and visually centered text. `--check` validates the
-generated output without writing it.
+and the install-time defaults. Both Pomo and Classic carry build identity badges in every
+flavor/mode combination except production release, whose existing artwork and
+resources stay byte-for-byte unchanged. Generate annotated Classic icons from
+its clean production master so legacy flavor badges are not duplicated.
+
+Use a compact top-left environment badge: cobalt rounded rectangle with white
+DEV, amber capsule with dark STG, charcoal rounded rectangle with white PROD.
+For Pomo, place a tall capsule along the right edge, inside the artwork and clear
+of the face. Rotate the full mode word 90 degrees clockwise; do not stack letters.
+For Classic, center the mode capsule horizontally at the bottom, with upright
+horizontal text. Keep the environment badge at the top for both choices.
+DEBUG uses lilac with dark purple text, PROFILE aqua with dark teal text, and
+RELEASE lime with dark green text. Each badge has a thin contrasting rim and
+visually centered text. Production release has neither badge.
+
+Build mode comes from Flutter's actual debug/profile/product compilation flags,
+independently of the flavor. Release assets keep their existing paths;
+debug/profile assets live in mode subdirectories and Apple catalogs use
+`-Debug`/`-Profile` suffixes. Xcode and Android select install-time resources by
+configuration/variant; Windows embeds the matching ICO. Runtime choices and
+Settings previews use the same mode. Web sets the mode-specific favicon,
+manifest and Apple touch icon once Flutter starts, guarding delayed manifest
+responses. Already installed PWA icons remain browser-managed. `--check`
+validates generated assets and manifests for all nine combinations.
 
 The Chrome extension uses the generated Pomo icon for its build flavor in both
 the toolbar and extension list.
@@ -2355,3 +2375,15 @@ Geist/GeistMono and Lucide icons in both themes. Fade in with `AppMotion.popup`
 (180 ms), respecting Reduce Motion; removal is immediate. No preference or
 persisted state is added. Validate hold logic and command projection with unit
 tests, plus static and architecture checks; visual acceptance remains manual.
+
+### Inline task blocking controls
+
+Task dependencies, personal urgency, recurrence carry-over and blocking reasons
+expand inside the existing task row or task detail content. Keep the collapsed
+row compact: use an accessible icon button with a localized tooltip. Blocked
+tasks remain visible and retain editing and planning controls. Show predecessor
+links and dependency deletion warnings in the expanded row. The priority cascade
+switch belongs in the existing Today panel. Do not add a graph editor, separate
+screen or modal for these controls. Use semantic theme colors and retain keyboard
+activation and focus indicators in both themes. Validation is automated; no
+manual visual or device checks are required for this feature.

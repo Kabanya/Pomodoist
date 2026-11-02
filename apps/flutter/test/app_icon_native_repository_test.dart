@@ -53,6 +53,7 @@ void main() {
       expect(calls.single.method, 'setIcon');
       final args = calls.single.arguments as Map;
       expect(args['icon'], 'classic');
+      expect(args['mode'], appIconBuildMode);
       if (Platform.isMacOS) {
         expect(args['image'], isA<Uint8List>());
         expect((args['image'] as Uint8List).take(8), [

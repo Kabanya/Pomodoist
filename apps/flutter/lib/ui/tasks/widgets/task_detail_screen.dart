@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/tasks/widgets/task_blocking_controls.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_description_field.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/ui/files/widgets/files_panel.dart';
@@ -586,6 +587,8 @@ class TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       if (!descriptionFirst) properties,
+                                      if (showDetails)
+                                        TaskBlockingControls(task: item),
                                       retained(
                                         'description',
                                         showDetails,

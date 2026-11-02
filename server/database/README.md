@@ -76,6 +76,34 @@ remain supported. Validation errors use SQLSTATE `22023` and do not echo task
 contents. Receipt replay, conflict handling and integration transactions remain
 unchanged.
 
+## Task blocking
+
+`20261102100145_pomodoist_core_task_blocking.sql` adds predecessor validation and
+actor-private `task_blocking` sync records. Missing task predecessors default to
+an empty list; omitted update fields preserve stored dependencies. Settings use
+`priorityCascadeEnabled` (initially false) and the actor's canonical IANA
+`timeZone`. Urgent selections use `personal` or `project:<projectId>` record IDs.
+Reverse dependencies are computed from task data.
+
+Deferred checks validate the final transaction graph. Advisory locks serialize
+dependency changes within personal accounts and shared scopes, preventing cycles
+from concurrent devices. Completion and Focus failures use SQLSTATE `22023`,
+message `task_blocked`, and structured availability details. Running work may
+finish; every new or resumed work interval is checked again. Existing integration
+writers pass through the same checks.
+
+The collaboration `completeBranch` action accepts one branch and its operations
+in one transaction; transport chunks never commit separately. Flutter retains
+rejected operations for diagnostics, restores authoritative completion state, and
+preserves accumulated Focus. Offline restrictions use cached data until sync.
+Apply the compatible server migration and Edge Function changes before releasing
+the client. Preparing these files does not deploy either release.
+
+Automated coverage includes pure policy, repository/Focus transitions, migration,
+offline rejection, inline widgets, database triggers, and concurrent cycle races.
+Visual, physical-device, and production checks are outside this change's
+validation scope.
+
 ## Account deletion
 
 `supabase/migrations/20260927125910_pomodoist_core_account_delete_calendar_guard.sql`

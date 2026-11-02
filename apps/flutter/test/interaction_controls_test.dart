@@ -1,3 +1,5 @@
+import 'package:pomodoist/config/task_blocking_dependencies.dart';
+import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'package:pomodoist/domain/models/settings/bottom_navigation_preferences.dart';
 import 'package:pomodoist/domain/models/account/account_overview.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
@@ -1218,27 +1220,26 @@ void main() {
     expect(_taskCheckboxValue(tester, 'Failed task'), isTrue);
   });
 
-  testWidgets(
-    'touch long press opens task actions without a drag handle',
-    (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      try {
-        await _pumpApp(tester);
+  testWidgets('touch long press opens task actions without a drag handle', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pumpApp(tester);
 
-        expect(
-          find.byKey(const ValueKey('task-drag-handle-task-1')),
-          findsNothing,
-        );
-        await tester.longPress(find.text('Today task'));
-        await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('task-drag-handle-task-1')),
+        findsNothing,
+      );
+      await tester.longPress(find.text('Today task'));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Select'), findsOneWidget);
-        expect(find.text('Schedule'), findsOneWidget);
-      } finally {
-        debugDefaultTargetPlatformOverride = null;
-      }
-    },
-  );
+      expect(find.text('Select'), findsOneWidget);
+      expect(find.text('Schedule'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
 
   testWidgets('Escape and route changes close task selection', (tester) async {
     late GoRouter router;
@@ -1335,6 +1336,13 @@ void main() {
   test('selection closes only when selected visible rows disappear', () async {
     final container = ProviderContainer(
       overrides: [
+        taskBlockingConflictsProvider.overrideWith(
+          (ref) => Stream.value(<String>{}),
+        ),
+        taskBlockingPolicyProvider.overrideWith(
+          (ref) =>
+              Stream.value(TaskBlockingPolicy(tasks: const [], actorId: 'me')),
+        ),
         taskRepositoryProvider.overrideWithValue(_FakeTaskRepository(const [])),
         projectsProvider.overrideWith(
           (ref) => Stream.value(const <ProjectItem>[]),
@@ -3623,6 +3631,13 @@ Future<_BrowseHarness> _pumpBrowseScreen(
     ProviderScope(
       retry: (_, _) => null,
       overrides: [
+        taskBlockingConflictsProvider.overrideWith(
+          (ref) => Stream.value(<String>{}),
+        ),
+        taskBlockingPolicyProvider.overrideWith(
+          (ref) =>
+              Stream.value(TaskBlockingPolicy(tasks: const [], actorId: 'me')),
+        ),
         applePurchasesSupportedProvider.overrideWithValue(false),
         taskRepositoryProvider.overrideWithValue(_FakeTaskRepository(tasks)),
         focusRepositoryProvider.overrideWithValue(_FakeFocusRepository()),
@@ -3686,6 +3701,13 @@ Future<_AppHarness> _pumpApp(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        taskBlockingConflictsProvider.overrideWith(
+          (ref) => Stream.value(<String>{}),
+        ),
+        taskBlockingPolicyProvider.overrideWith(
+          (ref) =>
+              Stream.value(TaskBlockingPolicy(tasks: const [], actorId: 'me')),
+        ),
         applePurchasesSupportedProvider.overrideWithValue(false),
         appStartupProvider.overrideWith(
           (ref) => startupCompleter?.future ?? Future<void>.value(),
@@ -3770,6 +3792,13 @@ Future<void> _pumpFocusScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        taskBlockingConflictsProvider.overrideWith(
+          (ref) => Stream.value(<String>{}),
+        ),
+        taskBlockingPolicyProvider.overrideWith(
+          (ref) =>
+              Stream.value(TaskBlockingPolicy(tasks: const [], actorId: 'me')),
+        ),
         applePurchasesSupportedProvider.overrideWithValue(false),
         focusRepositoryProvider.overrideWithValue(focusRepository),
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),

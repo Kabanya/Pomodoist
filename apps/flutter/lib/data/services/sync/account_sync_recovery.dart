@@ -2,6 +2,7 @@ part of 'account_sync_engine.dart';
 
 extension AccountSyncRecovery on AccountSyncEngine {
   static const _entityTypes = {
+    'task_blocking',
     'workspace',
     'project',
     'section',
@@ -37,6 +38,7 @@ extension AccountSyncRecovery on AccountSyncEngine {
     }
     return const {
       'task.complete',
+      'task.completeBranch',
       'task.uncomplete',
       'task.move',
       'task.assign',
@@ -235,6 +237,7 @@ extension AccountSyncRecovery on AccountSyncEngine {
           TaskRow.fromJson({
             ...payload,
             'isFocusEstimateManual': payload['isFocusEstimateManual'] ?? false,
+            'prerequisiteIdsJson': payload['prerequisiteIdsJson'] ?? '[]',
           });
         } else {
           ProjectRow.fromJson(payload);
@@ -409,6 +412,7 @@ extension AccountSyncRecovery on AccountSyncEngine {
             ))
             .get();
     for (final command in commands) {
+      if (command.lastError?.startsWith('task_blocked') == true) continue;
       try {
         final payload = Map<String, Object?>.from(
           jsonDecode(command.payloadJson) as Map,
@@ -551,6 +555,7 @@ extension AccountSyncRecovery on AccountSyncEngine {
                   ...data,
                   'isFocusEstimateManual':
                       data['isFocusEstimateManual'] ?? false,
+                  'prerequisiteIdsJson': data['prerequisiteIdsJson'] ?? '[]',
                 });
               } else {
                 ProjectRow.fromJson(data);
@@ -648,6 +653,7 @@ extension AccountSyncRecovery on AccountSyncEngine {
         TaskRow.fromJson({
           ...payload,
           'isFocusEstimateManual': payload['isFocusEstimateManual'] ?? false,
+          'prerequisiteIdsJson': payload['prerequisiteIdsJson'] ?? '[]',
         });
       } else {
         ProjectRow.fromJson(payload);

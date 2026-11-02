@@ -402,6 +402,7 @@ class TaskItem {
     this.createdBy,
     this.completedBy,
     List<String> assigneeIds = const [],
+    List<String> prerequisiteIds = const [],
     this.canEdit = true,
     required this.id,
     required this.userId,
@@ -426,12 +427,14 @@ class TaskItem {
     this.dayOrder,
     this.isCollapsed = false,
     this.completedAt,
-  }) : assigneeIds = List.unmodifiable(assigneeIds);
+  }) : assigneeIds = List.unmodifiable(assigneeIds),
+       prerequisiteIds = List.unmodifiable(prerequisiteIds);
 
   final String? scopeId;
   final String? createdBy;
   final String? completedBy;
   final List<String> assigneeIds;
+  final List<String> prerequisiteIds;
   final bool canEdit;
   final String id;
   final String userId;
@@ -746,6 +749,7 @@ class CreateTaskInput {
     this.priority,
     List<String> labelNames = const [],
     List<String> assigneeIds = const [],
+    List<String> prerequisiteIds = const [],
     this.dueDate,
     this.schedule,
     this.deadline,
@@ -754,7 +758,8 @@ class CreateTaskInput {
     this.isFocusEstimateManual = false,
     this.kanbanStatusId,
   }) : labelNames = List.unmodifiable(labelNames),
-       assigneeIds = List.unmodifiable(assigneeIds);
+       assigneeIds = List.unmodifiable(assigneeIds),
+       prerequisiteIds = List.unmodifiable(prerequisiteIds);
 
   final String content;
   final String? description;
@@ -765,6 +770,7 @@ class CreateTaskInput {
   final int? priority;
   final List<String> labelNames;
   final List<String> assigneeIds;
+  final List<String> prerequisiteIds;
   final DateTime? dueDate;
   final TaskSchedule? schedule;
   final DateTime? deadline;
@@ -787,7 +793,11 @@ class UpdateTaskPatch {
     this.isFocusEstimateManual,
     this.isCollapsed,
     List<String>? labelNames,
-  }) : labelNames = labelNames == null ? null : List.unmodifiable(labelNames);
+    List<String>? prerequisiteIds,
+  }) : prerequisiteIds = prerequisiteIds == null
+           ? null
+           : List.unmodifiable(prerequisiteIds),
+       labelNames = labelNames == null ? null : List.unmodifiable(labelNames);
 
   final String? content;
   final String? description;
@@ -800,6 +810,7 @@ class UpdateTaskPatch {
   final bool? isFocusEstimateManual;
   final bool? isCollapsed;
   final List<String>? labelNames;
+  final List<String>? prerequisiteIds;
 }
 
 class UpdateProjectPatch {

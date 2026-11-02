@@ -48,6 +48,7 @@ extension AccountSyncPush on AccountSyncEngine {
                           r.status.equals('conflict')),
                 ))
                 .get())
+            .where((r) => r.lastError?.startsWith('task_blocked') != true)
             .map((r) => r.clientId)
             .whereType<String>()
             .toSet();
@@ -78,6 +79,15 @@ extension AccountSyncPush on AccountSyncEngine {
       };
       if (references.any(blocked.contains)) {
         if (command.clientId != null) blocked.add(command.clientId!);
+        continue;
+      }
+      if (command.type == 'task.completeBranch') {
+        if (group.isNotEmpty) {
+          types.addAll(await _pushCommandGroup(deviceId, group, blocked));
+          group.clear();
+          size = 0;
+        }
+        types.addAll(await _pushCommandGroup(deviceId, [command], blocked));
         continue;
       }
       if (group.isNotEmpty && size + operations.length > 100) {
@@ -126,7 +136,26 @@ extension AccountSyncPush on AccountSyncEngine {
     if (retained.isEmpty) return {};
     await _markAttemptStarted(retained);
     try {
-      await _pushInBatches(deviceId, operations);
+      if (retained.singleOrNull?.type == 'task.completeBranch') {
+        if (_collaboration != null) {
+          await _pushAtomicBranch({
+            'rootTaskId': retained.single.clientId,
+            'deviceId': deviceId,
+            'operations': operations.map((op) => op.toJson()).toList(),
+          });
+        } else {
+          // Never split an atomic branch, including when the transport rejects its size.
+          await _account
+              .pushChanges(
+                appId: AccountAppId.pomodoist,
+                deviceId: deviceId,
+                operations: operations,
+              )
+              .timeout(_requestTimeout);
+        }
+      } else {
+        await _pushInBatches(deviceId, operations);
+      }
     } on PostgrestException catch (error) {
       if (!_permanentPayloadError(error)) rethrow;
       if (retained.length > 1) {
@@ -147,10 +176,19 @@ extension AccountSyncPush on AccountSyncEngine {
       )..where((r) => r.id.equals(command.id))).write(
         SyncCommandsCompanion(
           status: const Value('rejected'),
-          lastError: Value('validation:${error.message}'),
+          lastError: Value(
+            error.message == 'task_blocked'
+                ? 'task_blocked:${error.details}'
+                : 'validation:${error.message}',
+          ),
         ),
       );
-      if (command.clientId != null) blocked.add(command.clientId!);
+      if (error.message == 'task_blocked') {
+        await _reconcileBlockedCompletion(command);
+      }
+      if (error.message != 'task_blocked' && command.clientId != null) {
+        blocked.add(command.clientId!);
+      }
       return {};
     }
     _checkSession();
@@ -167,9 +205,76 @@ extension AccountSyncPush on AccountSyncEngine {
     return types;
   }
 
+  Future<Map<String, dynamic>> _pushAtomicBranch(
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      return await _callCollaboration('completeBranch', body);
+    } on CollaborationException catch (error) {
+      if (error.code == 'task_blocked' || error.message == 'task_blocked') {
+        throw PostgrestException(
+          message: 'task_blocked',
+          code: '22023',
+          details: error.message,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _reconcileBlockedCompletion(SyncCommandRow command) async {
+    final operations = await _operationsFromCommand(command, null);
+    await _db.transaction(() async {
+      if (command.scopeId == null) await _saveCursor(0);
+      final taskIds = operations
+          .where((op) => op.entityType == 'task')
+          .map((op) => op.entityId)
+          .toList();
+      await (_db.update(_db.syncCommands)..where(
+            (r) =>
+                r.clientId.isIn(taskIds) &
+                r.type.equals('task.kanbanStatus.set') &
+                r.status.equals('pending'),
+          ))
+          .write(
+            const SyncCommandsCompanion(
+              status: Value('rejected'),
+              lastError: Value('task_blocked:completion rejected'),
+            ),
+          );
+      for (final op in operations) {
+        if (op.entityType == 'task') {
+          // Lower only the local completion clock so an older authoritative row can replace it.
+          await (_db.update(
+            _db.tasks,
+          )..where((r) => r.id.equals(op.entityId))).write(
+            TasksCompanion(
+              status: const Value('open'),
+              completedAt: const Value(null),
+              completedBy: const Value(null),
+              updatedAt: Value(
+                DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+              ),
+            ),
+          );
+        } else if (op.entityType == 'task_completion') {
+          await (_db.delete(
+            _db.taskCompletions,
+          )..where((r) => r.id.equals(op.entityId))).go();
+        }
+      }
+    });
+  }
+
   bool _permanentPayloadError(PostgrestException error) =>
       error.code == '22023' &&
       const {
+        'task_blocked',
+        'Invalid task dependencies',
+        'Duplicate task dependencies',
+        'Invalid task dependency scope',
+        'Task dependencies cannot contain cycles or ancestor links',
+        'Invalid task blocking settings',
         'Invalid habit identity',
         'Invalid habit field',
         'Invalid habit timestamp',

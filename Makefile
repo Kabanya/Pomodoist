@@ -126,7 +126,7 @@ WINDOWS_RELEASE_DIR ?= $(FLUTTER_BUILD)/windows/x64/$(WINDOWS_RELEASE_FLAVOR)/ru
 # point one build at another environment, including production. Each
 # configuration is paired with its entry point, so an override must move the
 # matching _TARGET as well: a mismatch stops the app at startup with
-# "Entrypoint/config mismatch". macos-run follows the debug pair.
+# "Entrypoint/config mismatch". macos and macos-run follow the staging pair.
 MACOS_DEBUG_CONFIG   ?= $(MACOS_DEVELOPMENT_CONFIG)
 MACOS_DEBUG_TARGET   ?= $(MACOS_DEVELOPMENT_TARGET)
 MACOS_PROFILE_CONFIG ?= $(LOCAL_CONFIG)
@@ -346,9 +346,9 @@ help:
 	show_command 'Windows' 'windows-profile' 'Profile app'; \
 	show_command 'Windows' 'windows-release' 'Release app'; \
 	show_command 'Windows' 'windows-installer' 'EXE installer'; \
-	show_command 'macOS' 'macos' '   Debug app (alias of macos-debug)'; \
+	show_command 'macOS' 'macos' '   Debug app (alias of macos-staging-debug)'; \
 	show_command 'macOS' 'macos-debug' '   Debug app (development)'; \
-	show_command 'macOS' 'macos-run' '   Debug app with hot reload'; \
+	show_command 'macOS' 'macos-run' '   Staging debug app with hot reload'; \
 	show_command 'macOS' 'macos-profile' '   Profile app'; \
 	show_command 'macOS' 'macos-release' '   Release app'; \
 	show_command 'iPhone' 'ios-debug' 'Run Simulator (debug)'; \
@@ -671,9 +671,9 @@ macos-debug macos-run macos-profile macos-development-debug macos-staging-debug 
 # FLUTTER_XCODE_CODE_SIGNING_ALLOWED=NO, which builds without signing at all.
 MACOS_LOCAL_SIGNING_FLAGS ?=
 
-# `make macos` is the usual entry point; it builds the debug app, which is the
-# development environment. The same build is reachable as macos-development-debug.
-macos: macos-debug
+# `make macos` is the usual entry point; it builds the staging debug app.
+# macos-debug remains the development build.
+macos: macos-staging-debug
 
 # Swift Package Manager dependencies emit hundreds of deprecation warnings that
 # drown out the build result; the filter drops them while keeping real errors.
@@ -690,8 +690,10 @@ macos-profile:
 		$(MACOS_LOCAL_SIGNING_FLAGS) 2>&1 \
 		| awk -f "$(REPO_ROOT)/tool/xcode-warnings.awk"
 
-# Interactive debug run with hot reload. Output is left unfiltered so the
-# "Flutter run key commands" stay usable.
+# Interactive staging debug run with hot reload. Output is left unfiltered so
+# the "Flutter run key commands" stay usable.
+macos-run: MACOS_DEBUG_CONFIG = $(MACOS_STAGING_CONFIG)
+macos-run: MACOS_DEBUG_TARGET = $(MACOS_STAGING_TARGET)
 macos-run:
 	cd "$(FLUTTER_ROOT)" && "$(FLUTTER)" run -d macos --debug \
 		--flavor "$(MACOS_DEBUG_FLAVOR)" \

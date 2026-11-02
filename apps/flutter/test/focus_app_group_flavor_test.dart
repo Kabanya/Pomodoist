@@ -207,7 +207,7 @@ void main() {
         );
         expect(
           identity['Runner']?['ASSETCATALOG_COMPILER_APPICON_NAME'],
-          flavor.isProduction ? 'AppIcon' : 'AppIcon-$name',
+          '${flavor.isProduction ? 'AppIcon' : 'AppIcon-$name'}${mode.startsWith('Release') ? '' : '-$mode'}',
         );
       }
     }

@@ -8816,6 +8816,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decrease'**
   String get pickerDecrease;
+
+  /// No description provided for @blockingControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Dependencies and urgency'**
+  String get blockingControls;
+
+  /// No description provided for @blockingUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent for me'**
+  String get blockingUrgent;
+
+  /// No description provided for @blockingRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep future occurrences urgent'**
+  String get blockingRepeat;
+
+  /// No description provided for @blockingCascade.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority order'**
+  String get blockingCascade;
+
+  /// No description provided for @blockingSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a prerequisite'**
+  String get blockingSearch;
+
+  /// No description provided for @blockingDependency.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for prerequisites'**
+  String get blockingDependency;
+
+  /// No description provided for @blockingPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher-priority tasks first'**
+  String get blockingPriority;
+
+  /// No description provided for @blockingUrgentReason.
+  ///
+  /// In en, this message translates to:
+  /// **'An urgent task comes first'**
+  String get blockingUrgentReason;
+
+  /// No description provided for @blockingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is unavailable. Refresh and try again.'**
+  String get blockingUnavailable;
+
+  /// No description provided for @blockingDeleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting this task releases dependent tasks.'**
+  String get blockingDeleteWarning;
+
+  /// No description provided for @blockingNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No available prerequisites'**
+  String get blockingNoMatches;
+
+  /// No description provided for @blockingSyncConflictDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.'**
+  String get blockingSyncConflictDetails;
+
+  /// No description provided for @blockingSyncConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync conflict'**
+  String get blockingSyncConflict;
 }
 
 class _AppLocalizationsDelegate

@@ -1,11 +1,10 @@
-// Generates primary Pomo icons and classic alternatives for every flavor.
+// Generates primary Pomo icons and classic alternatives for every flavor and build mode.
 //
 // The masters live in `assets/branding/app_icons/` and are the only icon
 // artwork in the repository a human edits. icon-light-pomo.png is the default;
-// the three previous masters remain the classic alternatives. The opaque
-// development and staging masters are 1254x1254; production is 1024x1024.
-// Everything below is
-// generated from these masters, so an icon change is a master change plus a rerun.
+// pomodoist_icon_production.png is the clean Classic master. Legacy flavored
+// Classic masters remain unchanged. Build badges are rendered below, so every
+// mode uses the same artwork and production release keeps its original pixels.
 //
 // Usage, from `apps/flutter`:
 //
@@ -27,8 +26,8 @@
 //  * Primary production `Contents.json` files are Xcode-managed, so the
 //    script validates them structurally instead of rewriting them. Flavor
 //    and alternate icon catalogs are generated in full.
-//  * `web/manifest.json` keeps its existing path and JSON shape; the two extra
-//    manifests are the same shape with the other flavors' identity.
+//  * `web/manifest.json` keeps its existing path and JSON shape; other manifests
+//    use the same shape with the selected flavor and mode's icons.
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -36,6 +35,7 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 import 'package:pomodoist/domain/models/app_flavor.dart';
+import 'package:pomodoist/domain/models/settings/app_icon_choice.dart';
 
 /// Directory holding the Pomo master and the three classic flavor masters.
 const _masterDirectory = 'assets/branding/app_icons';
@@ -301,84 +301,161 @@ class _Plan {
 _Plan _buildPlan(Map<AppFlavor, img.Image> masters, img.Image pomo) {
   final plan = _Plan();
   for (final flavor in AppFlavor.values) {
-    final classic = masters[flavor]!;
-    final master = img.Image.from(pomo);
-    if (!flavor.isProduction) {
-      final badge = img.Image(width: 206, height: 80, numChannels: 4);
-      final isDevelopment = flavor == AppFlavor.development;
-      final radius = isDevelopment ? 16 : 40;
-      img.fillRect(
-        badge,
-        x1: 0,
-        y1: 0,
-        x2: badge.width - 1,
-        y2: badge.height - 1,
-        radius: radius,
-        color: isDevelopment
-            ? img.ColorRgb8(112, 163, 255)
-            : img.ColorRgb8(173, 108, 25),
+    for (final mode in ['release', 'debug', 'profile']) {
+      final master = renderBuildIcon(pomo, flavor, mode);
+      final classic = renderBuildIcon(
+        masters[AppFlavor.production]!,
+        flavor,
+        mode,
+        choice: AppIconChoice.classic,
       );
-      img.fillRect(
-        badge,
-        x1: 2,
-        y1: 2,
-        x2: badge.width - 3,
-        y2: badge.height - 3,
-        radius: radius - 2,
-        color: isDevelopment
-            ? img.ColorRgb8(32, 72, 172)
-            : img.ColorRgb8(255, 202, 72),
-      );
-      final label = img.Image(width: 206, height: 80, numChannels: 4);
-      img.drawString(
-        label,
-        flavor == AppFlavor.development ? "DEV" : "STG",
-        font: img.arial48,
-        x: 0,
-        y: 0,
-        color: isDevelopment
-            ? img.ColorRgb8(255, 255, 255)
-            : img.ColorRgb8(30, 30, 30),
-      );
-      final text = img.trim(label, mode: img.TrimMode.transparent);
-      img.compositeImage(
-        badge,
-        text,
-        dstX: (badge.width - text.width) ~/ 2,
-        dstY: (badge.height - text.height) ~/ 2,
-      );
-      final enlarged = img.copyResize(
-        badge,
-        width: badge.width * 4,
-        height: badge.height * 4,
-        interpolation: img.Interpolation.cubic,
-      );
-      // Keep the enlarged badge clear of the rounded macOS corners.
-      img.compositeImage(
-        master,
-        enlarged,
-        dstX: (master.width - enlarged.width) ~/ 2,
-        dstY: 24,
-      );
+      _addAlternatives(plan, flavor, master, classic, mode);
+      _addAndroid(plan, flavor, master, mode);
+      _addAppleApp(plan, flavor, master, mode);
+      _addWatchApp(plan, flavor, master, mode);
+      _addMacos(plan, flavor, master, mode);
+      _addWindows(plan, flavor, master, mode);
+      _addWeb(plan, flavor, master, mode);
     }
-    _addAlternatives(plan, flavor, master, classic);
-    _addAndroid(plan, flavor, master);
-    _addAppleApp(plan, flavor, master);
-    _addWatchApp(plan, flavor, master);
-    _addMacos(plan, flavor, master);
-    _addWindows(plan, flavor, master);
-    _addWeb(plan, flavor, master);
   }
   return plan;
 }
+
+/// Applies the approved environment and build-mode overlays to either artwork.
+/// Production release returns the original pixels without any overlays.
+img.Image renderBuildIcon(
+  img.Image artwork,
+  AppFlavor flavor,
+  String mode, {
+  AppIconChoice choice = AppIconChoice.pomo,
+}) {
+  if (!['debug', 'profile', 'release'].contains(mode)) {
+    throw ArgumentError.value(mode, 'mode');
+  }
+  final master = img.Image.from(artwork);
+  if (flavor.isProduction && mode == 'release') return master;
+  final size = master.width;
+  final (label, fill, rim, ink) = switch (flavor) {
+    AppFlavor.development => ('DEV', 0x2048AC, 0x70A3FF, 0xFFFFFF),
+    AppFlavor.staging => ('STG', 0xFFCA48, 0xAD6C19, 0x1E1E1E),
+    AppFlavor.production => ('PROD', 0x333333, 0x777777, 0xFFFFFF),
+  };
+  final environment = _badge(
+    label,
+    (size * .53).round(),
+    (size * .19).round(),
+    flavor == AppFlavor.staging ? .5 : .2,
+    fill,
+    rim,
+    ink,
+  );
+  img.compositeImage(
+    master,
+    environment,
+    dstX: (size * .15).round(),
+    dstY: (size * .025).round(),
+  );
+  final (modeFill, modeRim, modeInk) = switch (mode) {
+    'debug' => (0xE89AFF, 0x7E22CE, 0x40005B),
+    'profile' => (0x42F1EE, 0x008A91, 0x003F45),
+    _ => (0xB4FF68, 0x438D12, 0x163E00),
+  };
+  final badge = _badge(
+    mode.toUpperCase(),
+    (size * .72).round(),
+    (size * .205).round(),
+    .5,
+    modeFill,
+    modeRim,
+    modeInk,
+  );
+  final isClassic = choice == AppIconChoice.classic;
+  img.compositeImage(
+    master,
+    isClassic ? badge : img.copyRotate(badge, angle: 90),
+    dstX: isClassic ? (size - badge.width) ~/ 2 : (size * .77).round(),
+    dstY: (size * (isClassic ? .755 : .155)).round(),
+  );
+  return master;
+}
+
+img.Color _color(int rgb) =>
+    img.ColorRgb8((rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
+
+img.Image _badge(
+  String label,
+  int width,
+  int height,
+  double corner,
+  int fill,
+  int rim,
+  int ink,
+) {
+  final badge = img.Image(width: width, height: height, numChannels: 4);
+  final radius = height * corner;
+  final border = math.max(2, (height * .035).round());
+  img.fillRect(
+    badge,
+    x1: 0,
+    y1: 0,
+    x2: width - 1,
+    y2: height - 1,
+    radius: radius,
+    color: _color(rim),
+  );
+  img.fillRect(
+    badge,
+    x1: border,
+    y1: border,
+    x2: width - border - 1,
+    y2: height - border - 1,
+    radius: radius - border,
+    color: _color(fill),
+  );
+  final canvas = img.Image(width: 500, height: 80, numChannels: 4);
+  for (final x in [0, 1]) {
+    img.drawString(
+      canvas,
+      label,
+      font: img.arial48,
+      x: x,
+      y: 0,
+      color: _color(ink),
+    );
+  }
+  final text = img.trim(canvas, mode: img.TrimMode.transparent);
+  final scale = math.min(width * .80 / text.width, height * .57 / text.height);
+  final scaled = img.copyResize(
+    text,
+    width: (text.width * scale).round(),
+    height: (text.height * scale).round(),
+    interpolation: img.Interpolation.cubic,
+  );
+  img.compositeImage(
+    badge,
+    scaled,
+    dstX: (width - scaled.width) ~/ 2,
+    dstY: (height - scaled.height) ~/ 2,
+  );
+  return badge;
+}
+
+String _modePath(AppFlavor flavor, String mode) =>
+    '${flavor.name}${mode == 'release' ? '' : '/$mode'}';
+
+String _androidSourceSet(AppFlavor flavor, String mode) => mode == 'release'
+    ? flavor.name
+    : '${flavor.name}${mode[0].toUpperCase()}${mode.substring(1)}';
 
 void _addAlternatives(
   _Plan plan,
   AppFlavor flavor,
   img.Image pomo,
   img.Image classic,
+  String mode,
 ) {
-  final runtime = 'assets/branding/app_icons/generated/${flavor.name}';
+  final runtime =
+      'assets/branding/app_icons/generated/${_modePath(flavor, mode)}';
   plan.managedDirectories.add(runtime);
   for (final entry in {'icon-light-pomo': pomo, 'classic': classic}.entries) {
     plan.files.add(
@@ -420,14 +497,17 @@ void _addAlternatives(
   _addAppIconSet(
     plan,
     flavor,
-    'ios/Runner/Assets.xcassets/${_appIconSetName(flavor).replaceFirst('.appiconset', '-Classic.appiconset')}',
+    'ios/Runner/Assets.xcassets/${_appIconSetName(flavor, mode).replaceFirst('.appiconset', '-Classic.appiconset')}',
     slots,
     classic,
     rounded: false,
     writeContents: true,
   );
   for (final density in _androidDensities.entries) {
-    for (final sourceSet in [flavor.name, if (flavor.isProduction) 'main']) {
+    for (final sourceSet in [
+      _androidSourceSet(flavor, mode),
+      if (flavor.isProduction && mode == 'release') 'main',
+    ]) {
       final directory = 'android/app/src/$sourceSet/res/mipmap-${density.key}';
       plan.files.add(
         _Output.png(
@@ -441,7 +521,7 @@ void _addAlternatives(
   }
   plan.files.add(
     _Output.png(
-      'web/icons/${flavor.name}/classic.png',
+      'web/icons/${_modePath(flavor, mode)}/classic.png',
       _png(_opaque(_resize(classic, 192))),
       192,
       _AlphaPolicy.opaque,
@@ -449,13 +529,14 @@ void _addAlternatives(
   );
 }
 
-void _addAndroid(_Plan plan, AppFlavor flavor, img.Image master) {
+void _addAndroid(_Plan plan, AppFlavor flavor, img.Image master, String mode) {
   // Android launcher PNGs carry an alpha channel (fully opaque here, since the
   // artwork is full bleed) — that is how the launcher icons shipped before the
   // flavors existed, and the check enforces the same channel layout.
   _androidDensities.forEach((density, pixels) {
     final bytes = _png(_alpha(_resize(master, pixels)));
-    final directory = 'android/app/src/${flavor.name}/res/mipmap-$density';
+    final directory =
+        'android/app/src/${_androidSourceSet(flavor, mode)}/res/mipmap-$density';
     plan.managedDirectories.add(directory);
     plan.files.add(
       _Output.png(
@@ -465,7 +546,7 @@ void _addAndroid(_Plan plan, AppFlavor flavor, img.Image master) {
         _AlphaPolicy.alpha,
       ),
     );
-    if (flavor.isProduction) {
+    if (flavor.isProduction && mode == 'release') {
       // `main` is the manifest the flavor source sets merge over, so it keeps a
       // copy of the production launcher for builds that pass no flavor.
       final mainDirectory = 'android/app/src/main/res/mipmap-$density';
@@ -482,7 +563,7 @@ void _addAndroid(_Plan plan, AppFlavor flavor, img.Image master) {
   });
 }
 
-void _addAppleApp(_Plan plan, AppFlavor flavor, img.Image master) {
+void _addAppleApp(_Plan plan, AppFlavor flavor, img.Image master, String mode) {
   final slots = [
     for (final (idiom, size, scale) in _iosAppSlots)
       _AssetSlot({
@@ -495,14 +576,15 @@ void _addAppleApp(_Plan plan, AppFlavor flavor, img.Image master) {
   _addAppIconSet(
     plan,
     flavor,
-    'ios/Runner/Assets.xcassets/${_appIconSetName(flavor)}',
+    'ios/Runner/Assets.xcassets/${_appIconSetName(flavor, mode)}',
     slots,
     master,
     rounded: false,
+    writeContents: mode != 'release',
   );
 }
 
-void _addWatchApp(_Plan plan, AppFlavor flavor, img.Image master) {
+void _addWatchApp(_Plan plan, AppFlavor flavor, img.Image master, String mode) {
   final slots = [
     for (final (size, scale, role, subtype) in _watchAppSlots)
       _AssetSlot({
@@ -517,14 +599,15 @@ void _addWatchApp(_Plan plan, AppFlavor flavor, img.Image master) {
   _addAppIconSet(
     plan,
     flavor,
-    'ios/PomodoistWatch/Assets.xcassets/${_appIconSetName(flavor)}',
+    'ios/PomodoistWatch/Assets.xcassets/${_appIconSetName(flavor, mode)}',
     slots,
     master,
     rounded: false,
+    writeContents: mode != 'release',
   );
 }
 
-void _addMacos(_Plan plan, AppFlavor flavor, img.Image master) {
+void _addMacos(_Plan plan, AppFlavor flavor, img.Image master, String mode) {
   final slots = [
     for (final (pixels, size, scale) in _macosAppSlots)
       _AssetSlot({
@@ -537,10 +620,11 @@ void _addMacos(_Plan plan, AppFlavor flavor, img.Image master) {
   _addAppIconSet(
     plan,
     flavor,
-    'macos/Runner/Assets.xcassets/${_appIconSetName(flavor)}',
+    'macos/Runner/Assets.xcassets/${_appIconSetName(flavor, mode)}',
     slots,
     master,
     rounded: true,
+    writeContents: mode != 'release',
   );
 }
 
@@ -586,8 +670,10 @@ void _addAppIconSet(
   }
 }
 
-void _addWindows(_Plan plan, AppFlavor flavor, img.Image master) {
-  final name = flavor.isProduction
+void _addWindows(_Plan plan, AppFlavor flavor, img.Image master, String mode) {
+  final name = mode != 'release'
+      ? 'app_icon_${flavor.name}_$mode.ico'
+      : flavor.isProduction
       ? 'app_icon.ico'
       : 'app_icon_${flavor.name}.ico';
   final directory = 'windows/runner/resources';
@@ -603,8 +689,8 @@ void _addWindows(_Plan plan, AppFlavor flavor, img.Image master) {
   );
 }
 
-void _addWeb(_Plan plan, AppFlavor flavor, img.Image master) {
-  final directory = 'web/icons/${flavor.name}';
+void _addWeb(_Plan plan, AppFlavor flavor, img.Image master, String mode) {
+  final directory = 'web/icons/${_modePath(flavor, mode)}';
   plan.managedDirectories.add(directory);
 
   final icons = <int, Uint8List>{};
@@ -640,24 +726,31 @@ void _addWeb(_Plan plan, AppFlavor flavor, img.Image master) {
       _AlphaPolicy.alpha,
     ),
   );
-  if (flavor.isProduction) {
+  if (flavor.isProduction && mode == 'release') {
     // `web/index.html` still points at the unversioned favicon.
     plan.files.add(
       _Output.png('web/favicon.png', favicon, _faviconSize, _AlphaPolicy.alpha),
     );
   }
 
-  final manifestPath = flavor.isProduction
+  final manifestPath = mode != 'release'
+      ? 'web/manifest-${flavor.name}-$mode.json'
+      : flavor.isProduction
       ? 'web/manifest.json'
       : 'web/manifest-${flavor.name}.json';
   plan.manifests[manifestPath] = flavor;
-  plan.files.add(_Output.json(manifestPath, _manifestJson(flavor)));
+  plan.files.add(_Output.json(manifestPath, _manifestJson(flavor, mode)));
 }
 
-String _appIconSetName(AppFlavor flavor) {
-  if (flavor.isProduction) return 'AppIcon.appiconset';
+String _appIconSetName(AppFlavor flavor, String mode) {
   final name = flavor.name;
-  return 'AppIcon-${name[0].toUpperCase()}${name.substring(1)}.appiconset';
+  final environment = flavor.isProduction
+      ? 'AppIcon'
+      : 'AppIcon-${name[0].toUpperCase()}${name.substring(1)}';
+  final suffix = mode == 'release'
+      ? ''
+      : '-${mode[0].toUpperCase()}${mode.substring(1)}';
+  return '$environment$suffix.appiconset';
 }
 
 // ---------------------------------------------------------------------------
@@ -832,17 +925,17 @@ const _webDescription =
 /// `start_url` stays `"."` for every flavor: the same web image is deployed to
 /// each environment and reads its flavor from `config.js`, so an installed
 /// shortcut must stay on the origin it was installed from.
-Uint8List _manifestJson(AppFlavor flavor) {
+Uint8List _manifestJson(AppFlavor flavor, String mode) {
   final icons = <Map<String, Object>>[
     for (final pixels in _webIconSizes)
       {
-        'src': 'icons/${flavor.name}/Icon-$pixels.png',
+        'src': 'icons/${_modePath(flavor, mode)}/Icon-$pixels.png',
         'sizes': '${pixels}x$pixels',
         'type': 'image/png',
       },
     for (final pixels in _webIconSizes)
       {
-        'src': 'icons/${flavor.name}/Icon-maskable-$pixels.png',
+        'src': 'icons/${_modePath(flavor, mode)}/Icon-maskable-$pixels.png',
         'sizes': '${pixels}x$pixels',
         'type': 'image/png',
         'purpose': 'maskable',

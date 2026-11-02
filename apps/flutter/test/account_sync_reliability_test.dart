@@ -13,6 +13,7 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'support/account_sync_engine.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late AppDatabase db;
   late _Account account;
   late AccountSyncEngine engine;
@@ -386,11 +387,146 @@ void main() {
       );
     },
   );
+  test(
+    'a large branch is pushed atomically without splitting operations',
+    () async {
+      final tasks = DriftTaskRepository(db, queue);
+      final root = (await tasks.createTask(
+        CreateTaskInput(content: 'root'),
+      )).getOrThrow();
+      for (var i = 0; i < 35; i++) {
+        (await tasks.createTask(
+          CreateTaskInput(content: 'child $i', parentId: root),
+        )).getOrThrow();
+      }
+      await engine.pushPending();
+      account.attempts.clear();
+      (await tasks.completeTask(root)).getOrThrow();
+      expect(
+        (await queue.watchPending().first).single.type,
+        'task.completeBranch',
+      );
+      await engine.pushPending();
+      expect(account.attempts.length, 1);
+      expect(account.attempts.single.length, greaterThan(100));
+      expect(
+        account.attempts.single.where((o) => o['entityType'] == 'task').length,
+        36,
+      );
+    },
+  );
+
+  test(
+    'blocked offline completion adopts authoritative status and preserves Focus credit',
+    () async {
+      final tasks = DriftTaskRepository(db, queue);
+      final id = (await tasks.createTask(
+        CreateTaskInput(content: 'offline'),
+      )).getOrThrow();
+      await (db.update(db.tasks)..where((r) => r.id.equals(id))).write(
+        const TasksCompanion(
+          totalFocusSeconds: Value(42),
+          completedFocusIntervals: Value(1),
+        ),
+      );
+      final server = (await db.select(db.tasks).get()).single.toJson();
+      await engine.pushPending();
+      (await tasks.completeTask(id)).getOrThrow();
+      account.rejectId = id;
+      account.rejection = 'task_blocked';
+      await engine.pushPending();
+      expect((await tasks.watchTask(id).first)!.isCompleted, isFalse);
+      expect((await tasks.watchTask(id).first)!.totalFocusSeconds, 42);
+      expect(await db.select(db.taskCompletions).get(), isEmpty);
+      account.changes = [
+        AccountSyncEntity(
+          entityType: 'task',
+          entityId: id,
+          serverRevision: 88,
+          data: {
+            ...server,
+            'totalFocusSeconds': 0,
+            'completedFocusIntervals': 0,
+          },
+        ),
+      ];
+      await engine.pullLatest();
+      final restored = (await tasks.watchTask(id).first)!;
+      expect(
+        restored.updatedAt.toUtc(),
+        DateTime.fromMillisecondsSinceEpoch(
+          server['updatedAt'] as int,
+          isUtc: true,
+        ),
+      );
+      expect(restored.totalFocusSeconds, 42);
+      expect(
+        (await db.select(db.syncCommands).get())
+            .where((c) => c.status == 'rejected')
+            .every((c) => c.lastError?.startsWith('task_blocked') == true),
+        isTrue,
+      );
+      account.rejectId = null;
+      (await tasks.updateTask(
+        id,
+        UpdateTaskPatch(content: 'Still editable'),
+      )).getOrThrow();
+      (await tasks.completeTask(id)).getOrThrow();
+      account.attempts.clear();
+      await engine.pushPending();
+      expect(account.attempts, isNotEmpty);
+      expect(
+        account.attempts
+            .expand((ops) => ops)
+            .any(
+              (op) =>
+                  op['entityId'] == id &&
+                  (op['payload'] as Map)['status'] == 'completed',
+            ),
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'snapshot imports predecessors before older dependent task identities',
+    () async {
+      final tasks = DriftTaskRepository(db, queue);
+      final a = (await tasks.createTask(
+        CreateTaskInput(content: 'created first'),
+      )).getOrThrow();
+      final b = (await tasks.createTask(
+        CreateTaskInput(content: 'predecessor created second'),
+      )).getOrThrow();
+      (await tasks.updateTask(
+        a,
+        UpdateTaskPatch(prerequisiteIds: [b]),
+      )).getOrThrow();
+      await db.delete(db.syncCommands).go();
+      await (db.delete(
+        db.syncState,
+      )..where((r) => r.id.equals('pomodoist-import'))).go();
+      await engine.importLocalSnapshotIfNeeded(push: false);
+      final snapshots =
+          (await db.select(db.syncCommands).get())
+              .where((r) => r.type == 'sync.snapshot')
+              .toList()
+            ..sort((a, b) => a.id.compareTo(b.id));
+      final ids = [
+        for (final command in snapshots)
+          for (final op
+              in jsonDecode(command.payloadJson)['_syncOperationsV1'] as List)
+            if (op['entityType'] == 'task') op['entityId'],
+      ];
+      expect(ids, [b, a]);
+    },
+  );
 }
 
 class _Account implements AccountClient {
   bool paged = false;
   bool rejectBad = false;
+  String rejection = 'Invalid habit field';
   String? rejectId;
   bool failOnce = false;
   int pullCalls = 0;
@@ -410,10 +546,7 @@ class _Account implements AccountClient {
     attempts.add(operations.map((o) => o.toJson()).toList());
     if (operations.any((o) => o.entityId == rejectId) ||
         rejectBad && operations.any((o) => o.entityId == 'bad')) {
-      throw const PostgrestException(
-        message: 'Invalid habit field',
-        code: '22023',
-      );
+      throw PostgrestException(message: rejection, code: '22023');
     }
     pushed.addAll(operations);
     if (failOnce) {

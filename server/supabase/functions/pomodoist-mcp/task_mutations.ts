@@ -66,6 +66,7 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
           sectionId: null,
           parentId: arguments_.parent_id ?? null,
           priority: arguments_.priority ?? 4,
+          prerequisiteIdsJson: JSON.stringify(arguments_.prerequisite_ids ?? []),
           dueJson: arguments_.schedule ? dueJson(arguments_.schedule) : null,
           status: "open",
           estimatedFocusIntervals: arguments_.estimate ?? null,
@@ -124,6 +125,7 @@ export function taskMutations({ define, context, annotations }: MutationScope) {
             ...(root && arguments_.description !== undefined
               ? { description: arguments_.description }
               : {}),
+            ...(root && arguments_.prerequisite_ids !== undefined ? { prerequisiteIdsJson: JSON.stringify(arguments_.prerequisite_ids) } : {}),
             ...(root && arguments_.priority !== undefined
               ? { priority: arguments_.priority }
               : {}),

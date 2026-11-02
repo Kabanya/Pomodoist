@@ -1,4 +1,5 @@
 import 'package:pomodoist/domain/models/tasks/task_order.dart';
+import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
 import 'dart:convert';
@@ -155,6 +156,7 @@ class DriftTaskRepository implements TaskRepository {
           scopeId: Value(scopeId),
           createdBy: Value(creator),
           assigneeIdsJson: Value(jsonEncode(assignees)),
+          prerequisiteIdsJson: Value(jsonEncode(input.prerequisiteIds)),
           content: input.content,
           description: Value(input.description),
           projectId: projectId,
@@ -171,6 +173,14 @@ class DriftTaskRepository implements TaskRepository {
           updatedAt: now,
         ),
       );
+      if (input.prerequisiteIds.isNotEmpty) {
+        final blocking = DriftTaskBlockingRepository(_db, _syncQueue);
+        await blocking.initializeSettings();
+        (await blocking.policy()).validateDependencies(
+          id,
+          input.prerequisiteIds,
+        );
+      }
       await _kanbanTransitions.assignInitialStatusInTransaction(
         taskId: id,
         requestedStatusId: input.kanbanStatusId,
@@ -286,6 +296,14 @@ class DriftTaskRepository implements TaskRepository {
             scopeId: Value(source.scopeId),
             createdBy: Value(await _access.actorId()),
             assigneeIdsJson: Value(source.assigneeIdsJson),
+            prerequisiteIdsJson: Value(
+              jsonEncode(
+                (jsonDecode(source.prerequisiteIdsJson) as List)
+                    .cast<String>()
+                    .map((id) => idBySource[id] ?? id)
+                    .toList(),
+              ),
+            ),
             content: source.content,
             description: Value(source.description),
             projectId: source.projectId,
@@ -349,84 +367,99 @@ class DriftTaskRepository implements TaskRepository {
   });
 
   @override
-  Future<Result<void>> updateTask(String id, UpdateTaskPatch patch) =>
-      Result.capture<void>(() async {
-        if (patch.content != null ||
-            patch.updateDescription ||
-            patch.priority != null ||
-            patch.dueDate != null ||
-            patch.schedule != null ||
-            patch.clearSchedule ||
-            patch.estimatedFocusIntervals != null ||
-            patch.isFocusEstimateManual != null ||
-            patch.labelNames != null) {
-          await _access.task(id);
-        }
-        final now = DateTime.now().toUtc();
-        final schedule =
-            patch.schedule ??
-            (patch.dueDate == null
-                ? null
-                : TaskSchedule.allDay(patch.dueDate!));
-        await ownerBoundTransaction(_db, _syncQueue, () async {
-          await _tasks.updateTask(
-            id,
-            TasksCompanion(
-              content: patch.content == null
-                  ? const Value.absent()
-                  : Value(patch.content!),
-              description: patch.updateDescription
-                  ? Value(patch.description)
-                  : const Value.absent(),
-              priority: patch.priority == null
-                  ? const Value.absent()
-                  : Value(patch.priority!),
-              dueJson: patch.clearSchedule
-                  ? const Value(null)
-                  : schedule == null
-                  ? const Value.absent()
-                  : Value(_scheduleJson(schedule)),
-              durationSeconds: patch.clearSchedule || schedule != null
-                  ? Value(schedule?.duration?.inSeconds)
-                  : const Value.absent(),
-              estimatedFocusIntervals: patch.estimatedFocusIntervals == null
-                  ? const Value.absent()
-                  : Value(patch.estimatedFocusIntervals),
-              isFocusEstimateManual: patch.isFocusEstimateManual == null
-                  ? const Value.absent()
-                  : Value(patch.isFocusEstimateManual!),
-              isCollapsed: patch.isCollapsed == null
-                  ? const Value.absent()
-                  : Value(patch.isCollapsed!),
-              updatedAt: Value(now),
-            ),
-          );
-          if (patch.labelNames != null) {
-            await _attachLabels(id, patch.labelNames!, now);
-          }
-          await _syncQueue.enqueue(
-            type: 'task.update',
-            clientId: id,
-            payload: {
-              'id': id,
-              if (patch.content != null) 'content': patch.content,
-              if (patch.updateDescription) 'description': patch.description,
-              if (patch.priority != null) 'priority': patch.priority,
-              if (patch.clearSchedule)
-                'due': null
-              else if (schedule != null)
-                'due': schedule.toJsonString(),
-              if (patch.clearSchedule || schedule != null)
-                'durationSeconds': schedule?.duration?.inSeconds,
-              if (patch.estimatedFocusIntervals != null)
-                'estimatedFocusIntervals': patch.estimatedFocusIntervals,
-              if (patch.isFocusEstimateManual != null)
-                'isFocusEstimateManual': patch.isFocusEstimateManual,
-              if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
-            },
-          );
-        });
-      });
+  Future<Result<void>> updateTask(
+    String id,
+    UpdateTaskPatch patch,
+  ) => Result.capture<void>(() async {
+    if (patch.content != null ||
+        patch.updateDescription ||
+        patch.priority != null ||
+        patch.dueDate != null ||
+        patch.schedule != null ||
+        patch.clearSchedule ||
+        patch.estimatedFocusIntervals != null ||
+        patch.isFocusEstimateManual != null ||
+        patch.labelNames != null ||
+        patch.prerequisiteIds != null) {
+      await _access.task(id);
+    }
+    final now = DateTime.now().toUtc();
+    final schedule =
+        patch.schedule ??
+        (patch.dueDate == null ? null : TaskSchedule.allDay(patch.dueDate!));
+    await ownerBoundTransaction(_db, _syncQueue, () async {
+      await _tasks.updateTask(
+        id,
+        TasksCompanion(
+          prerequisiteIdsJson: patch.prerequisiteIds == null
+              ? const Value.absent()
+              : Value(jsonEncode(patch.prerequisiteIds)),
+          content: patch.content == null
+              ? const Value.absent()
+              : Value(patch.content!),
+          description: patch.updateDescription
+              ? Value(patch.description)
+              : const Value.absent(),
+          priority: patch.priority == null
+              ? const Value.absent()
+              : Value(patch.priority!),
+          dueJson: patch.clearSchedule
+              ? const Value(null)
+              : schedule == null
+              ? const Value.absent()
+              : Value(_scheduleJson(schedule)),
+          durationSeconds: patch.clearSchedule || schedule != null
+              ? Value(schedule?.duration?.inSeconds)
+              : const Value.absent(),
+          estimatedFocusIntervals: patch.estimatedFocusIntervals == null
+              ? const Value.absent()
+              : Value(patch.estimatedFocusIntervals),
+          isFocusEstimateManual: patch.isFocusEstimateManual == null
+              ? const Value.absent()
+              : Value(patch.isFocusEstimateManual!),
+          isCollapsed: patch.isCollapsed == null
+              ? const Value.absent()
+              : Value(patch.isCollapsed!),
+          updatedAt: Value(now),
+        ),
+      );
+      if (patch.prerequisiteIds?.isNotEmpty == true) {
+        await DriftTaskBlockingRepository(_db, _syncQueue).initializeSettings();
+      }
+      if (patch.prerequisiteIds != null) {
+        (await DriftTaskBlockingRepository(
+          _db,
+          _syncQueue,
+        ).policy()).validateDependencies(id, patch.prerequisiteIds!);
+      }
+      if (patch.labelNames != null) {
+        await _attachLabels(id, patch.labelNames!, now);
+      }
+      await _syncQueue.enqueue(
+        type: 'task.update',
+        clientId: id,
+        payload: {
+          'id': id,
+          if (patch.prerequisiteIds != null)
+            'prerequisiteIdsJson': jsonEncode(patch.prerequisiteIds),
+          if (patch.content != null) 'content': patch.content,
+          if (patch.updateDescription) 'description': patch.description,
+          if (patch.priority != null) 'priority': patch.priority,
+          if (patch.clearSchedule)
+            'due': null
+          else if (schedule != null)
+            'due': schedule.toJsonString(),
+          if (patch.clearSchedule || schedule != null)
+            'durationSeconds': schedule?.duration?.inSeconds,
+          if (patch.estimatedFocusIntervals != null)
+            'estimatedFocusIntervals': patch.estimatedFocusIntervals,
+          if (patch.isFocusEstimateManual != null)
+            'isFocusEstimateManual': patch.isFocusEstimateManual,
+          if (patch.isCollapsed != null) 'isCollapsed': patch.isCollapsed,
+        },
+      );
+    });
+  });
 
   @override
   Future<Result<void>> removeLabels(
@@ -584,6 +617,7 @@ class DriftTaskRepository implements TaskRepository {
           },
         );
       }
+      await _validateDependencyGraph();
     });
   });
 
@@ -913,9 +947,22 @@ class DriftTaskRepository implements TaskRepository {
           await _removeRecurringCopiesCreatedForDelete(deletedRows, batch);
           await _tasks.deleteCommands(commands.map((command) => command.id));
           await _tasks.restoreTasks(batch.taskIds, DateTime.now().toUtc());
+          await _validateDependencyGraph();
           return true;
         });
       });
+
+  Future<void> _validateDependencyGraph() async {
+    final policy = await DriftTaskBlockingRepository(_db, _syncQueue).policy();
+    for (final task in policy.tasks.values.where((t) => !t.isDeleted)) {
+      policy.validateDependencies(
+        task.id,
+        task.prerequisiteIds
+            .where((id) => policy.tasks[id]?.isDeleted != true)
+            .toList(),
+      );
+    }
+  }
 
   Future<void> _removeRecurringCopiesCreatedForDelete(
     List<TaskRow> deletedRows,
@@ -1184,6 +1231,14 @@ class DriftTaskRepository implements TaskRepository {
           scopeId: Value(source.scopeId),
           createdBy: Value(source.createdBy),
           assigneeIdsJson: Value(source.assigneeIdsJson),
+          prerequisiteIdsJson: Value(
+            jsonEncode(
+              (jsonDecode(source.prerequisiteIdsJson) as List)
+                  .cast<String>()
+                  .map((id) => idBySource[id] ?? id)
+                  .toList(),
+            ),
+          ),
           content: source.content,
           description: Value(source.description),
           projectId: source.projectId,
@@ -1465,36 +1520,8 @@ class DriftTaskRepository implements TaskRepository {
     }
   }
 
-  TaskItem _mapTask(TaskRow row, {SharedScope? scope}) => TaskItem(
-    scopeId: row.scopeId,
-    createdBy: row.createdBy,
-    completedBy: row.completedBy,
-    assigneeIds: collaborationIds(row.assigneeIdsJson),
-    canEdit: row.scopeId == null || (scope?.canEdit ?? false),
-    id: row.id,
-    userId: row.userId,
-    content: row.content,
-    description: row.description,
-    projectId: row.projectId,
-    sectionId: row.sectionId,
-    parentId: row.parentId,
-    priority: row.priority,
-    dueJson: row.dueJson,
-    deadlineJson: row.deadlineJson,
-    durationSeconds: row.durationSeconds,
-    status: row.status,
-    estimatedFocusIntervals: row.estimatedFocusIntervals,
-    isFocusEstimateManual: row.isFocusEstimateManual,
-    completedFocusIntervals: row.completedFocusIntervals,
-    totalFocusSeconds: row.totalFocusSeconds,
-    orderKey: row.orderKey,
-    dayOrder: row.dayOrder,
-    isCollapsed: row.isCollapsed,
-    isDeleted: row.isDeleted,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    completedAt: row.completedAt,
-  );
+  TaskItem _mapTask(TaskRow row, {SharedScope? scope}) =>
+      taskItemFromRow(row, scope: scope);
 
   String _orderKey(DateTime now) =>
       now.microsecondsSinceEpoch.toString().padLeft(20, '0');

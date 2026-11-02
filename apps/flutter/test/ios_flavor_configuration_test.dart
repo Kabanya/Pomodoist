@@ -141,8 +141,10 @@ void main() {
       // Both the app and the watch app carry a per-flavor appiconset; the
       // widget and the test bundles are not icons.
       for (final entry in flavored.entries) {
-        final icon = 'AppIcon-${entry.key}';
         for (final name in entry.value) {
+          final mode = name.split('-').first;
+          final icon =
+              'AppIcon-${entry.key}${mode == 'Release' ? '' : '-$mode'}';
           for (final target in ['Runner', 'Watch']) {
             expect(
               project.buildSettings(

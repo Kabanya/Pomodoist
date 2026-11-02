@@ -30,7 +30,7 @@ return {
   rpc: settings.rpc ?? (async (authorization, input) => {
     if (input.action === "reserveUpload" && settings.storageEnabled === false) throw new CollaborationError("File storage is unavailable", "storage_unavailable", 503);
     const { data, error } = await client(authorization).rpc(settings.rpcName ?? "pomodoist_collaboration", { p_request: input }).abortSignal(AbortSignal.timeout(20000));
-    if (error) throw new CollaborationError(error.message, error.code, error.code === "42501" ? 403 : error.code === "40001" ? 409 : error.code === "54000" ? 429 : 400);
+    if (error) throw new CollaborationError(error.message, error.message === "task_blocked" ? "task_blocked" : error.code, error.code === "42501" ? 403 : error.code === "40001" ? 409 : error.code === "54000" ? 429 : 400);
     return input.action === "capabilities" && settings.storageEnabled === false
       ? { ...data, canUpload: false, reason: "storage_unavailable" } : data;
   }),

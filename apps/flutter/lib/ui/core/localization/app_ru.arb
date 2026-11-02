@@ -1643,5 +1643,18 @@
   "pickerTimeWheels": "Колёсики времени",
   "pickerMinuteOffset": "{offset} мин",
   "pickerIncrease": "Увеличить",
-  "pickerDecrease": "Уменьшить"
+  "pickerDecrease": "Уменьшить",
+  "blockingControls": "Зависимости и срочность",
+  "blockingUrgent": "Горящая для меня",
+  "blockingRepeat": "Сохранять срочность следующих повторений",
+  "blockingCascade": "Порядок приоритетов",
+  "blockingSearch": "Найти предшественника",
+  "blockingDependency": "Ожидает предшественников",
+  "blockingPriority": "Сначала более важные задачи",
+  "blockingUrgentReason": "Сначала горящая задача",
+  "blockingUnavailable": "Действие недоступно. Обновите данные и повторите.",
+  "blockingDeleteWarning": "Удаление этой задачи разблокирует зависимые задачи.",
+  "blockingNoMatches": "Нет подходящих предшественников",
+  "blockingSyncConflictDetails": "Сервер отклонил завершение из-за блокировки. Статус задачи восстановлен, накопленный фокус сохранён.",
+  "blockingSyncConflict": "Конфликт синхронизации"
 }

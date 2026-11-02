@@ -2829,6 +2829,18 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $TasksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _prerequisiteIdsJsonMeta =
+      const VerificationMeta('prerequisiteIdsJson');
+  @override
+  late final GeneratedColumn<String> prerequisiteIdsJson =
+      GeneratedColumn<String>(
+        'prerequisite_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
   static const VerificationMeta _scopeIdMeta = const VerificationMeta(
     'scopeId',
   );
@@ -3139,6 +3151,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   );
   @override
   List<GeneratedColumn> get $columns => [
+    prerequisiteIdsJson,
     scopeId,
     createdBy,
     completedBy,
@@ -3179,6 +3192,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('prerequisite_ids_json')) {
+      context.handle(
+        _prerequisiteIdsJsonMeta,
+        prerequisiteIdsJson.isAcceptableOrUnknown(
+          data['prerequisite_ids_json']!,
+          _prerequisiteIdsJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('scope_id')) {
       context.handle(
         _scopeIdMeta,
@@ -3394,6 +3416,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
   TaskRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TaskRow(
+      prerequisiteIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prerequisite_ids_json'],
+      )!,
       scopeId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}scope_id'],
@@ -3512,6 +3538,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
 }
 
 class TaskRow extends DataClass implements Insertable<TaskRow> {
+  final String prerequisiteIdsJson;
   final String? scopeId;
   final String? createdBy;
   final String? completedBy;
@@ -3540,6 +3567,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   final DateTime updatedAt;
   final DateTime? completedAt;
   const TaskRow({
+    required this.prerequisiteIdsJson,
     this.scopeId,
     this.createdBy,
     this.completedBy,
@@ -3571,6 +3599,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['prerequisite_ids_json'] = Variable<String>(prerequisiteIdsJson);
     if (!nullToAbsent || scopeId != null) {
       map['scope_id'] = Variable<String>(scopeId);
     }
@@ -3627,6 +3656,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   TasksCompanion toCompanion(bool nullToAbsent) {
     return TasksCompanion(
+      prerequisiteIdsJson: Value(prerequisiteIdsJson),
       scopeId: scopeId == null && nullToAbsent
           ? const Value.absent()
           : Value(scopeId),
@@ -3687,6 +3717,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TaskRow(
+      prerequisiteIdsJson: serializer.fromJson<String>(
+        json['prerequisiteIdsJson'],
+      ),
       scopeId: serializer.fromJson<String?>(json['scopeId']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
       completedBy: serializer.fromJson<String?>(json['completedBy']),
@@ -3726,6 +3759,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'prerequisiteIdsJson': serializer.toJson<String>(prerequisiteIdsJson),
       'scopeId': serializer.toJson<String?>(scopeId),
       'createdBy': serializer.toJson<String?>(createdBy),
       'completedBy': serializer.toJson<String?>(completedBy),
@@ -3761,6 +3795,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   }
 
   TaskRow copyWith({
+    String? prerequisiteIdsJson,
     Value<String?> scopeId = const Value.absent(),
     Value<String?> createdBy = const Value.absent(),
     Value<String?> completedBy = const Value.absent(),
@@ -3789,6 +3824,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     DateTime? updatedAt,
     Value<DateTime?> completedAt = const Value.absent(),
   }) => TaskRow(
+    prerequisiteIdsJson: prerequisiteIdsJson ?? this.prerequisiteIdsJson,
     scopeId: scopeId.present ? scopeId.value : this.scopeId,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
     completedBy: completedBy.present ? completedBy.value : this.completedBy,
@@ -3824,6 +3860,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   );
   TaskRow copyWithCompanion(TasksCompanion data) {
     return TaskRow(
+      prerequisiteIdsJson: data.prerequisiteIdsJson.present
+          ? data.prerequisiteIdsJson.value
+          : this.prerequisiteIdsJson,
       scopeId: data.scopeId.present ? data.scopeId.value : this.scopeId,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       completedBy: data.completedBy.present
@@ -3879,6 +3918,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   @override
   String toString() {
     return (StringBuffer('TaskRow(')
+          ..write('prerequisiteIdsJson: $prerequisiteIdsJson, ')
           ..write('scopeId: $scopeId, ')
           ..write('createdBy: $createdBy, ')
           ..write('completedBy: $completedBy, ')
@@ -3912,6 +3952,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   @override
   int get hashCode => Object.hashAll([
+    prerequisiteIdsJson,
     scopeId,
     createdBy,
     completedBy,
@@ -3944,6 +3985,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TaskRow &&
+          other.prerequisiteIdsJson == this.prerequisiteIdsJson &&
           other.scopeId == this.scopeId &&
           other.createdBy == this.createdBy &&
           other.completedBy == this.completedBy &&
@@ -3974,6 +4016,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 }
 
 class TasksCompanion extends UpdateCompanion<TaskRow> {
+  final Value<String> prerequisiteIdsJson;
   final Value<String?> scopeId;
   final Value<String?> createdBy;
   final Value<String?> completedBy;
@@ -4003,6 +4046,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<DateTime?> completedAt;
   final Value<int> rowid;
   const TasksCompanion({
+    this.prerequisiteIdsJson = const Value.absent(),
     this.scopeId = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.completedBy = const Value.absent(),
@@ -4033,6 +4077,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.rowid = const Value.absent(),
   });
   TasksCompanion.insert({
+    this.prerequisiteIdsJson = const Value.absent(),
     this.scopeId = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.completedBy = const Value.absent(),
@@ -4069,6 +4114,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<TaskRow> custom({
+    Expression<String>? prerequisiteIdsJson,
     Expression<String>? scopeId,
     Expression<String>? createdBy,
     Expression<String>? completedBy,
@@ -4099,6 +4145,8 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (prerequisiteIdsJson != null)
+        'prerequisite_ids_json': prerequisiteIdsJson,
       if (scopeId != null) 'scope_id': scopeId,
       if (createdBy != null) 'created_by': createdBy,
       if (completedBy != null) 'completed_by': completedBy,
@@ -4134,6 +4182,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   }
 
   TasksCompanion copyWith({
+    Value<String>? prerequisiteIdsJson,
     Value<String?>? scopeId,
     Value<String?>? createdBy,
     Value<String?>? completedBy,
@@ -4164,6 +4213,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<int>? rowid,
   }) {
     return TasksCompanion(
+      prerequisiteIdsJson: prerequisiteIdsJson ?? this.prerequisiteIdsJson,
       scopeId: scopeId ?? this.scopeId,
       createdBy: createdBy ?? this.createdBy,
       completedBy: completedBy ?? this.completedBy,
@@ -4201,6 +4251,11 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (prerequisiteIdsJson.present) {
+      map['prerequisite_ids_json'] = Variable<String>(
+        prerequisiteIdsJson.value,
+      );
+    }
     if (scopeId.present) {
       map['scope_id'] = Variable<String>(scopeId.value);
     }
@@ -4297,6 +4352,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   @override
   String toString() {
     return (StringBuffer('TasksCompanion(')
+          ..write('prerequisiteIdsJson: $prerequisiteIdsJson, ')
           ..write('scopeId: $scopeId, ')
           ..write('createdBy: $createdBy, ')
           ..write('completedBy: $completedBy, ')
@@ -4324,6 +4380,272 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('completedAt: $completedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TaskBlockingRecordsTable extends TaskBlockingRecords
+    with TableInfo<$TaskBlockingRecordsTable, TaskBlockingRecordRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaskBlockingRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataJsonMeta = const VerificationMeta(
+    'dataJson',
+  );
+  @override
+  late final GeneratedColumn<String> dataJson = GeneratedColumn<String>(
+    'data_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, dataJson, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'task_blocking_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaskBlockingRecordRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('data_json')) {
+      context.handle(
+        _dataJsonMeta,
+        dataJson.isAcceptableOrUnknown(data['data_json']!, _dataJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataJsonMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TaskBlockingRecordRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaskBlockingRecordRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      dataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_json'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TaskBlockingRecordsTable createAlias(String alias) {
+    return $TaskBlockingRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class TaskBlockingRecordRow extends DataClass
+    implements Insertable<TaskBlockingRecordRow> {
+  final String id;
+  final String dataJson;
+  final DateTime updatedAt;
+  const TaskBlockingRecordRow({
+    required this.id,
+    required this.dataJson,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['data_json'] = Variable<String>(dataJson);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  TaskBlockingRecordsCompanion toCompanion(bool nullToAbsent) {
+    return TaskBlockingRecordsCompanion(
+      id: Value(id),
+      dataJson: Value(dataJson),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory TaskBlockingRecordRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaskBlockingRecordRow(
+      id: serializer.fromJson<String>(json['id']),
+      dataJson: serializer.fromJson<String>(json['dataJson']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'dataJson': serializer.toJson<String>(dataJson),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  TaskBlockingRecordRow copyWith({
+    String? id,
+    String? dataJson,
+    DateTime? updatedAt,
+  }) => TaskBlockingRecordRow(
+    id: id ?? this.id,
+    dataJson: dataJson ?? this.dataJson,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  TaskBlockingRecordRow copyWithCompanion(TaskBlockingRecordsCompanion data) {
+    return TaskBlockingRecordRow(
+      id: data.id.present ? data.id.value : this.id,
+      dataJson: data.dataJson.present ? data.dataJson.value : this.dataJson,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskBlockingRecordRow(')
+          ..write('id: $id, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, dataJson, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaskBlockingRecordRow &&
+          other.id == this.id &&
+          other.dataJson == this.dataJson &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TaskBlockingRecordsCompanion
+    extends UpdateCompanion<TaskBlockingRecordRow> {
+  final Value<String> id;
+  final Value<String> dataJson;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const TaskBlockingRecordsCompanion({
+    this.id = const Value.absent(),
+    this.dataJson = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TaskBlockingRecordsCompanion.insert({
+    required String id,
+    required String dataJson,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       dataJson = Value(dataJson),
+       updatedAt = Value(updatedAt);
+  static Insertable<TaskBlockingRecordRow> custom({
+    Expression<String>? id,
+    Expression<String>? dataJson,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dataJson != null) 'data_json': dataJson,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TaskBlockingRecordsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? dataJson,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return TaskBlockingRecordsCompanion(
+      id: id ?? this.id,
+      dataJson: dataJson ?? this.dataJson,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dataJson.present) {
+      map['data_json'] = Variable<String>(dataJson.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskBlockingRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -15890,6 +16212,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProjectsTable projects = $ProjectsTable(this);
   late final $SectionsTable sections = $SectionsTable(this);
   late final $TasksTable tasks = $TasksTable(this);
+  late final $TaskBlockingRecordsTable taskBlockingRecords =
+      $TaskBlockingRecordsTable(this);
   late final $TaskCompletionsTable taskCompletions = $TaskCompletionsTable(
     this,
   );
@@ -15954,6 +16278,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projects,
     sections,
     tasks,
+    taskBlockingRecords,
     taskCompletions,
     labels,
     taskLabels,
@@ -17439,6 +17764,7 @@ typedef $$SectionsTableProcessedTableManager =
     >;
 typedef $$TasksTableCreateCompanionBuilder =
     TasksCompanion Function({
+      Value<String> prerequisiteIdsJson,
       Value<String?> scopeId,
       Value<String?> createdBy,
       Value<String?> completedBy,
@@ -17470,6 +17796,7 @@ typedef $$TasksTableCreateCompanionBuilder =
     });
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
+      Value<String> prerequisiteIdsJson,
       Value<String?> scopeId,
       Value<String?> createdBy,
       Value<String?> completedBy,
@@ -17508,6 +17835,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get prerequisiteIdsJson => $composableBuilder(
+    column: $table.prerequisiteIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get scopeId => $composableBuilder(
     column: $table.scopeId,
     builder: (column) => ColumnFilters(column),
@@ -17653,6 +17985,11 @@ class $$TasksTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get prerequisiteIdsJson => $composableBuilder(
+    column: $table.prerequisiteIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get scopeId => $composableBuilder(
     column: $table.scopeId,
     builder: (column) => ColumnOrderings(column),
@@ -17798,6 +18135,11 @@ class $$TasksTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get prerequisiteIdsJson => $composableBuilder(
+    column: $table.prerequisiteIdsJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get scopeId =>
       $composableBuilder(column: $table.scopeId, builder: (column) => column);
 
@@ -17930,6 +18272,7 @@ class $$TasksTableTableManager
               $$TasksTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> prerequisiteIdsJson = const Value.absent(),
                 Value<String?> scopeId = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> completedBy = const Value.absent(),
@@ -17959,6 +18302,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
+                prerequisiteIdsJson: prerequisiteIdsJson,
                 scopeId: scopeId,
                 createdBy: createdBy,
                 completedBy: completedBy,
@@ -17990,6 +18334,7 @@ class $$TasksTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String> prerequisiteIdsJson = const Value.absent(),
                 Value<String?> scopeId = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> completedBy = const Value.absent(),
@@ -18019,6 +18364,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
+                prerequisiteIdsJson: prerequisiteIdsJson,
                 scopeId: scopeId,
                 createdBy: createdBy,
                 completedBy: completedBy,
@@ -18068,6 +18414,184 @@ typedef $$TasksTableProcessedTableManager =
       $$TasksTableUpdateCompanionBuilder,
       (TaskRow, BaseReferences<_$AppDatabase, $TasksTable, TaskRow>),
       TaskRow,
+      PrefetchHooks Function()
+    >;
+typedef $$TaskBlockingRecordsTableCreateCompanionBuilder =
+    TaskBlockingRecordsCompanion Function({
+      required String id,
+      required String dataJson,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$TaskBlockingRecordsTableUpdateCompanionBuilder =
+    TaskBlockingRecordsCompanion Function({
+      Value<String> id,
+      Value<String> dataJson,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$TaskBlockingRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $TaskBlockingRecordsTable> {
+  $$TaskBlockingRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TaskBlockingRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TaskBlockingRecordsTable> {
+  $$TaskBlockingRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TaskBlockingRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TaskBlockingRecordsTable> {
+  $$TaskBlockingRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dataJson =>
+      $composableBuilder(column: $table.dataJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$TaskBlockingRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TaskBlockingRecordsTable,
+          TaskBlockingRecordRow,
+          $$TaskBlockingRecordsTableFilterComposer,
+          $$TaskBlockingRecordsTableOrderingComposer,
+          $$TaskBlockingRecordsTableAnnotationComposer,
+          $$TaskBlockingRecordsTableCreateCompanionBuilder,
+          $$TaskBlockingRecordsTableUpdateCompanionBuilder,
+          (
+            TaskBlockingRecordRow,
+            BaseReferences<
+              _$AppDatabase,
+              $TaskBlockingRecordsTable,
+              TaskBlockingRecordRow
+            >,
+          ),
+          TaskBlockingRecordRow,
+          PrefetchHooks Function()
+        > {
+  $$TaskBlockingRecordsTableTableManager(
+    _$AppDatabase db,
+    $TaskBlockingRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaskBlockingRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TaskBlockingRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TaskBlockingRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> dataJson = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaskBlockingRecordsCompanion(
+                id: id,
+                dataJson: dataJson,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String dataJson,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TaskBlockingRecordsCompanion.insert(
+                id: id,
+                dataJson: dataJson,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TaskBlockingRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TaskBlockingRecordsTable,
+      TaskBlockingRecordRow,
+      $$TaskBlockingRecordsTableFilterComposer,
+      $$TaskBlockingRecordsTableOrderingComposer,
+      $$TaskBlockingRecordsTableAnnotationComposer,
+      $$TaskBlockingRecordsTableCreateCompanionBuilder,
+      $$TaskBlockingRecordsTableUpdateCompanionBuilder,
+      (
+        TaskBlockingRecordRow,
+        BaseReferences<
+          _$AppDatabase,
+          $TaskBlockingRecordsTable,
+          TaskBlockingRecordRow
+        >,
+      ),
+      TaskBlockingRecordRow,
       PrefetchHooks Function()
     >;
 typedef $$TaskCompletionsTableCreateCompanionBuilder =
@@ -23812,6 +24336,8 @@ class $AppDatabaseManager {
       $$SectionsTableTableManager(_db, _db.sections);
   $$TasksTableTableManager get tasks =>
       $$TasksTableTableManager(_db, _db.tasks);
+  $$TaskBlockingRecordsTableTableManager get taskBlockingRecords =>
+      $$TaskBlockingRecordsTableTableManager(_db, _db.taskBlockingRecords);
   $$TaskCompletionsTableTableManager get taskCompletions =>
       $$TaskCompletionsTableTableManager(_db, _db.taskCompletions);
   $$LabelsTableTableManager get labels =>

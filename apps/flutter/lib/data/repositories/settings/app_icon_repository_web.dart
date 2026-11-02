@@ -5,7 +5,7 @@ import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:pomodoist/domain/models/settings/app_icon_choice.dart';
 
 @JS('pomodoistSetAppIcon')
-external void _setIcon(JSString icon, JSString flavor);
+external void _setIcon(JSString icon, JSString flavor, JSString mode);
 
 class PlatformAppIconRepository implements AppIconRepository {
   AppIconChoice _current = AppIconChoice.pomo;
@@ -15,7 +15,7 @@ class PlatformAppIconRepository implements AppIconRepository {
 
   @override
   Future<void> apply(AppIconChoice choice) async {
-    _setIcon(choice.id.toJS, appFlavor.name.toJS);
+    _setIcon(choice.id.toJS, appFlavor.name.toJS, appIconBuildMode.toJS);
     _current = choice;
   }
 }

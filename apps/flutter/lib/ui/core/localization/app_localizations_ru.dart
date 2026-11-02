@@ -5124,4 +5124,46 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pickerDecrease => 'Уменьшить';
+
+  @override
+  String get blockingControls => 'Зависимости и срочность';
+
+  @override
+  String get blockingUrgent => 'Горящая для меня';
+
+  @override
+  String get blockingRepeat => 'Сохранять срочность следующих повторений';
+
+  @override
+  String get blockingCascade => 'Порядок приоритетов';
+
+  @override
+  String get blockingSearch => 'Найти предшественника';
+
+  @override
+  String get blockingDependency => 'Ожидает предшественников';
+
+  @override
+  String get blockingPriority => 'Сначала более важные задачи';
+
+  @override
+  String get blockingUrgentReason => 'Сначала горящая задача';
+
+  @override
+  String get blockingUnavailable =>
+      'Действие недоступно. Обновите данные и повторите.';
+
+  @override
+  String get blockingDeleteWarning =>
+      'Удаление этой задачи разблокирует зависимые задачи.';
+
+  @override
+  String get blockingNoMatches => 'Нет подходящих предшественников';
+
+  @override
+  String get blockingSyncConflictDetails =>
+      'Сервер отклонил завершение из-за блокировки. Статус задачи восстановлен, накопленный фокус сохранён.';
+
+  @override
+  String get blockingSyncConflict => 'Конфликт синхронизации';
 }

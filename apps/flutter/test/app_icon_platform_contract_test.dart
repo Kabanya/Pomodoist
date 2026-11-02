@@ -12,7 +12,7 @@ void main() {
         'ios/Runner.xcodeproj/project.pbxproj',
       ).readAsStringSync();
       final settings = RegExp(
-        r'buildSettings = \{(.*?)\n\s*\};',
+        r'buildSettings = \{(.*?)\n\s*\};\n\s*name = ([^;]+);',
         dotAll: true,
       ).allMatches(project);
       var runners = 0;
@@ -22,6 +22,18 @@ void main() {
           r'ASSETCATALOG_COMPILER_APPICON_NAME = ([^;]+);',
         ).firstMatch(text)?.group(1)?.replaceAll('"', '');
         if (primary == null) continue;
+        final configuration = block.group(2)!.replaceAll('"', '');
+        final mode = configuration.split('-').first;
+        final environment = text.contains('com.finchforge.pomodoist.dev')
+            ? '-Development'
+            : text.contains('com.finchforge.pomodoist.stg')
+            ? '-Staging'
+            : '';
+        expect(
+          primary,
+          'AppIcon$environment${mode == 'Release' ? '' : '-$mode'}',
+          reason: configuration,
+        );
         if (text.contains('PomodoistWatch/Info.plist')) {
           expect(text, isNot(contains('ALTERNATE_APPICON_NAMES')));
         } else {
@@ -107,6 +119,43 @@ void main() {
       }
     },
   );
+
+  test('every mode bundles its previews and Android install-time choices', () {
+    final assets =
+        loadYaml(File('pubspec.yaml').readAsStringSync())['flutter']['assets']
+            as YamlList;
+    for (final flavor in ['production', 'development', 'staging']) {
+      for (final mode in ['debug', 'profile', 'release']) {
+        final suffix = mode == 'release' ? '' : '/$mode';
+        final directory = 'assets/branding/app_icons/generated/$flavor$suffix';
+        final sourceSet = mode == 'release'
+            ? flavor
+            : '$flavor${mode[0].toUpperCase()}${mode.substring(1)}';
+        for (final icon in ['icon-light-pomo', 'classic']) {
+          expect(assets, contains('$directory/$icon.png'));
+          for (final extension in ['-macos.png', '.ico']) {
+            expect(
+              assets.whereType<YamlMap>().any(
+                (asset) => asset['path'] == '$directory/$icon$extension',
+              ),
+              isTrue,
+            );
+            expect(File('$directory/$icon$extension').existsSync(), isTrue);
+          }
+        }
+        for (final density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
+          for (final icon in ['ic_launcher', 'ic_launcher_classic']) {
+            expect(
+              File(
+                'android/app/src/$sourceSet/res/mipmap-$density/$icon.png',
+              ).existsSync(),
+              isTrue,
+            );
+          }
+        }
+      }
+    }
+  });
 
   test('both runtime choices are bundled separately for every flavor', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();

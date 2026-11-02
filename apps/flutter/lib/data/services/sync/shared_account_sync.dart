@@ -498,7 +498,7 @@ extension SharedAccountSync on AccountSyncEngine {
           ),
         ];
       }
-      final response = await _callCollaboration('push', {
+      final body = <String, dynamic>{
         'scopeId': scopeId,
         'deviceId': await _ensureDeviceId(),
         'operations': operations.map((op) {
@@ -528,7 +528,57 @@ extension SharedAccountSync on AccountSyncEngine {
             'baseRevision': command.baseRevision,
           };
         }).toList(),
-      });
+      };
+      if (command.type == 'task.completeBranch') {
+        body['rootTaskId'] = command.clientId;
+        for (final op in body['operations'] as List) {
+          final cached =
+              await (_db.select(_db.sharedEntities)..where(
+                    (r) =>
+                        r.scopeId.equals(scopeId) &
+                        r.entityType.equals(op['entityType'] as String) &
+                        r.entityId.equals(op['entityId'] as String),
+                  ))
+                  .getSingleOrNull();
+          op['baseRevision'] = cached?.serverRevision ?? 0;
+        }
+      }
+      late Map<String, dynamic> response;
+      try {
+        response = command.type == 'task.completeBranch'
+            ? await _pushAtomicBranch(body)
+            : await _callCollaboration('push', body);
+      } on PostgrestException catch (error) {
+        if (error.message != 'task_blocked') rethrow;
+        await (_db.update(
+          _db.syncCommands,
+        )..where((r) => r.id.equals(command.id))).write(
+          SyncCommandsCompanion(
+            status: const Value('rejected'),
+            lastError: Value('task_blocked:${error.details}'),
+          ),
+        );
+        await _reconcileBlockedCompletion(command);
+        response = {
+          'applied': [],
+          'conflicts': [],
+          'rejected': [
+            {'opId': command.uuid, 'error': 'task_blocked'},
+          ],
+        };
+      } on CollaborationException catch (error) {
+        if (error.message != 'task_blocked' && error.code != 'task_blocked') {
+          rethrow;
+        }
+        await _reconcileBlockedCompletion(command);
+        response = {
+          'applied': [],
+          'conflicts': [],
+          'rejected': [
+            {'opId': command.uuid, 'error': 'task_blocked'},
+          ],
+        };
+      }
       final conflicts = collaborationMaps(response['conflicts']);
       final rejected = collaborationMaps(response['rejected']);
       final applied = collaborationMaps(response['applied']);
@@ -540,9 +590,11 @@ extension SharedAccountSync on AccountSyncEngine {
           SyncCommandsCompanion(
             status: Value(conflicts.isNotEmpty ? 'conflict' : 'rejected'),
             lastError: Value(
-              jsonEncode(
-                conflicts.isNotEmpty ? conflicts.first : rejected.first,
-              ),
+              rejected.firstOrNull?['error'] == 'task_blocked'
+                  ? 'task_blocked:completion rejected'
+                  : jsonEncode(
+                      conflicts.isNotEmpty ? conflicts.first : rejected.first,
+                    ),
             ),
           ),
         );

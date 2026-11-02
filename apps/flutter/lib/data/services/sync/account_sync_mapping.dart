@@ -143,7 +143,8 @@ String syncTaskLabelEntityId(String taskId, String labelId) =>
     '$taskId:$labelId';
 
 bool syncUsesCapturedPatch(String commandType) {
-  return commandType.startsWith('habit.') ||
+  return commandType == 'task_blocking.upsert' ||
+      commandType.startsWith('habit.') ||
       commandType.startsWith('habit_check_in.') ||
       commandType == 'task.update' ||
       commandType == 'task.move' ||

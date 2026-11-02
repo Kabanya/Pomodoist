@@ -117,20 +117,26 @@
         if (!icon || !icon.src || !(await iconAvailable(icon.src))) {
           throw new Error(`${flavor.manifest} has no usable icon`);
         }
+        if (document.documentElement.dataset.appIconBuildMode) return;
         if (!document.documentElement.dataset.appIcon) setLink('icon', icon.src);
         setLink('apple-touch-icon', icon.src);
         if (manifest.theme_color) setMeta('theme-color', manifest.theme_color);
         if (manifest.name) document.title = manifest.name;
       };
 
-      window.pomodoistSetAppIcon = (icon, flavorName) => {
-        if (!['icon-light-pomo', 'classic'].includes(icon) || !Object.keys(flavors).includes(flavorName)) {
+      window.pomodoistSetAppIcon = (icon, flavorName, mode = 'release') => {
+        if (!['icon-light-pomo', 'classic'].includes(icon) || !Object.keys(flavors).includes(flavorName) || !['debug', 'profile', 'release'].includes(mode)) {
           throw new Error('Unsupported app icon');
         }
         document.documentElement.dataset.appIcon = icon;
+        document.documentElement.dataset.appIconBuildMode = mode;
+        const directory = `icons/${flavorName}${mode === 'release' ? '' : '/' + mode}`;
         const selected = icon === 'classic'
-          ? `icons/${flavorName}/classic.png` : flavors[flavorName].favicon;
+          ? `${directory}/classic.png`
+          : mode === 'release' ? flavors[flavorName].favicon : `${directory}/favicon.png`;
         setLink('icon', selected);
+        setLink('manifest', mode === 'release' ? flavors[flavorName].manifest : `manifest-${flavorName}-${mode}.json`);
+        setLink('apple-touch-icon', `${directory}/Icon-192.png`);
       };
 
       const config = window.pomodoistRuntimeConfig;
@@ -139,7 +145,9 @@
       const flavor = environments[environment] || 'production';
       apply(flavor);
       if (flavor !== 'production') {
-        adoptManifest(flavor).catch(() => apply('production'));
+        adoptManifest(flavor).catch(() => {
+          if (!document.documentElement.dataset.appIconBuildMode) apply('production');
+        });
       }
     })();
   </script>

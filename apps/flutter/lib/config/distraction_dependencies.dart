@@ -1,3 +1,6 @@
+import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
+import 'package:pomodoist/config/task_blocking_dependencies.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:app_account/app_account.dart' show AccountAppId;
@@ -44,6 +47,10 @@ final liveFocusRepositoryProvider = Provider<LiveFocusRepository>((ref) {
     owner: owner,
     deviceId: device,
     preferences: prefs,
+    requireTaskFocus: (taskId) async =>
+        (await ref.read(taskBlockingRepositoryProvider).policy())
+            .availability(taskId)
+            .requireFocus(),
     onServerOwned: ref.watch(serverOwnedFocusRunIdsProvider).add,
     adoptionHistory: (runId, currentId) => exportFocusAdoptionHistory(
       ref.read(appDatabaseProvider),
@@ -60,10 +67,18 @@ final liveFocusRepositoryProvider = Provider<LiveFocusRepository>((ref) {
               throw StateError('The account session has changed.');
             }
             final client = ref.read(accountOverviewSupabaseClientProvider);
-            final value = await client.rpc(
-              'pomodoist_focus',
-              params: {'p_command': command},
-            );
+            late Object? value;
+            try {
+              value = await client.rpc(
+                'pomodoist_focus',
+                params: {'p_command': command},
+              );
+            } on PostgrestException catch (error) {
+              if (error.message == 'task_blocked') {
+                throw TaskBlockedException.fromServer(error.details);
+              }
+              rethrow;
+            }
             if (account?.currentUserId != owner) {
               throw StateError('The account session has changed.');
             }

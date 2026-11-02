@@ -16,8 +16,8 @@ export type CollaborationDependencies = {
 export class CollaborationError extends Error {
   constructor(message: string, readonly code = "invalid_request", readonly status = 400) { super(message); }
 }
-const actions = new Set(["state", "share", "pull", "push", "invite", "accept", "members", "role", "remove", "leave", "transfer", "delete", "unshare", "publicLink", "publicRead", "notifications", "readNotification", "reserveUpload", "finishUpload", "deleteAttachment", "download", "export", "preferences"]);
-const noScope = new Set(["state", "share", "accept", "publicRead", "notifications", "readNotification"]);
+const actions = new Set(["completeBranch", "state", "share", "pull", "push", "invite", "accept", "members", "role", "remove", "leave", "transfer", "delete", "unshare", "publicLink", "publicRead", "notifications", "readNotification", "reserveUpload", "finishUpload", "deleteAttachment", "download", "export", "preferences"]);
+const noScope = new Set(["completeBranch", "state", "share", "accept", "publicRead", "notifications", "readNotification"]);
 export function required(map: Json, key: string, limit = 200): string {
   const value = map[key];
   if (typeof value !== "string" || !value.trim() || value.length > limit) throw new CollaborationError(`Invalid ${key}`);
@@ -60,13 +60,14 @@ export function validateCollaborationRequest(value: unknown): Json {
     required(request, "name", 255);
     if (!integer(request, "bytes", 20_000_000)) throw new CollaborationError("Empty attachment");
   }
-  if (action === "push") {
-    if (!Array.isArray(request.operations) || request.operations.length > 200) throw new CollaborationError("Expected at most 200 operations");
+  if (action === "completeBranch") { required(request, "rootTaskId"); required(request, "deviceId"); }
+  if (action === "push" || action === "completeBranch") {
+    if (!Array.isArray(request.operations) || (action === "push" && request.operations.length > 200)) throw new CollaborationError("Expected at most 200 operations");
     for (const raw of request.operations) {
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new CollaborationError("Invalid operation");
       const op = raw as Json;
       for (const key of ["opId", "entityType", "entityId"]) required(op, key);
-      integer(op, "baseRevision");
+      if (action === "push" || request.scopeId) integer(op, "baseRevision");
       if (!["upsert", "delete", "assign"].includes(String(op.operation)) || !op.payload || typeof op.payload !== "object" || Array.isArray(op.payload) || !Number.isFinite(Date.parse(required(op, "clientUpdatedAt")))) throw new CollaborationError("Invalid operation");
     }
   }

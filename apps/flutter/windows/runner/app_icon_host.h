@@ -150,12 +150,17 @@ CreateChannel(FlutterDesktopEngineRef engine) {
     }
     const auto *args = std::get_if<flutter::EncodableMap>(call.arguments());
     const std::string *icon = nullptr;
+    const std::string *mode = nullptr;
     if (args) {
       const auto found = args->find(flutter::EncodableValue("icon"));
       if (found != args->end())
         icon = std::get_if<std::string>(&found->second);
+      const auto build_mode = args->find(flutter::EncodableValue("mode"));
+      if (build_mode != args->end())
+        mode = std::get_if<std::string>(&build_mode->second);
     }
-    if (!icon || (*icon != "classic" && *icon != "icon-light-pomo")) {
+    if (!icon || (*icon != "classic" && *icon != "icon-light-pomo") ||
+        !mode || (*mode != "debug" && *mode != "profile" && *mode != "release")) {
       result->Error("invalid_icon", "Unsupported app icon.");
       return;
     }
@@ -173,7 +178,8 @@ CreateChannel(FlutterDesktopEngineRef engine) {
     const std::wstring base =
         executable.substr(0, executable.find_last_of(L"\\/"));
     const std::string asset =
-        std::string(POMODOIST_FLAVOR_NAME) + "/" + *icon + ".ico";
+        std::string(POMODOIST_FLAVOR_NAME) + "/" +
+        (*mode == "release" ? "" : *mode + "/") + *icon + ".ico";
     const std::wstring path =
         base +
         L"\\data\\flutter_assets\\assets\\branding\\app_icons\\generated\\" +

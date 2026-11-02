@@ -1,3 +1,5 @@
+import 'package:pomodoist/ui/tasks/widgets/task_blocking_controls.dart';
+import 'package:pomodoist/config/task_blocking_dependencies.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_list_view_model.dart'
     show taskListViewModelProvider;
 import 'package:pomodoist/ui/tasks/widgets/task_row_geometry.dart';
@@ -42,7 +44,36 @@ Future<void> deleteTaskWithRecurringPrompt(
   WidgetRef ref,
   TaskItem task, {
   VoidCallback? onDeleted,
+  bool skipBlockingWarning = false,
 }) async {
+  if (!skipBlockingWarning) {
+    final policy = await ref.read(taskBlockingPolicyProvider.future);
+    final ids = policy.subtree(task.id);
+    if (policy.tasks.values.any(
+      (t) =>
+          !t.isDeleted &&
+          !t.isCompleted &&
+          !ids.contains(t.id) &&
+          t.prerequisiteIds.any(ids.contains),
+    )) {
+      ref.read(inlineTaskDeleteRequestsProvider.notifier).request(
+        task.id,
+        () async {
+          if (context.mounted) {
+            await deleteTaskWithRecurringPrompt(
+              context,
+              ref,
+              task,
+              onDeleted: onDeleted,
+              skipBlockingWarning: true,
+            );
+          }
+        },
+      );
+      return;
+    }
+  }
+  if (!context.mounted) return;
   final schedule = task.schedule;
   final includeFollowing = schedule?.isRecurringOccurrence ?? false
       ? await showDialog<bool>(
@@ -728,17 +759,23 @@ class TaskListItem extends ConsumerWidget {
             ),
           ),
         );
-        final rowWithDisclosure = Row(
-          children: [
-            if (hierarchy != null && !usesTouchTaskInteraction)
-              SizedBox(width: taskBranchGutterWidth, child: branchDisclosure()),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsetsDirectional.only(start: rowIndent),
-                child: rowContent,
+        final rowWithDisclosure = TaskBlockingControls(
+          task: task,
+          child: Row(
+            children: [
+              if (hierarchy != null && !usesTouchTaskInteraction)
+                SizedBox(
+                  width: taskBranchGutterWidth,
+                  child: branchDisclosure(),
+                ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsetsDirectional.only(start: rowIndent),
+                  child: rowContent,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
         final content = hierarchy == null
             ? rowWithDisclosure

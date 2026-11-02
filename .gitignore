@@ -106,6 +106,7 @@ pomodoist_app_icon_no_background.png
 !apps/flutter/assets/branding/app_icons/pomodoist_icon_production.png
 !apps/flutter/assets/branding/app_icons/icon-light-pomo.png
 !apps/flutter/assets/branding/app_icons/generated/*/*.png
+!apps/flutter/assets/branding/app_icons/generated/*/*/*.png
 
 # Tracked Android launcher icons: the shared main source set plus each flavor.
 !apps/flutter/android/app/src/main/res/mipmap-*/ic_launcher.png
@@ -122,6 +123,7 @@ pomodoist_app_icon_no_background.png
 !apps/flutter/web/favicon.png
 !apps/flutter/web/icons/*.png
 !apps/flutter/web/icons/*/*.png
+!apps/flutter/web/icons/*/*/*.png
 .codex**
 key-**.md
 key-**.key

@@ -1,4 +1,5 @@
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
+import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import '../../../../testing/fakes/fake_focus_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/repositories/distractions/live_focus_repository.dart';
@@ -39,6 +40,101 @@ Map<String, dynamic> session(DateTime time, {bool paused = false}) => {
   },
 };
 void main() {
+  test(
+    'live work commands recheck blocking while current work and breaks can finish',
+    () async {
+      final sent = <String>[];
+      final repo = LiveFocusRepository(
+        local: Local(),
+        owner: 'u',
+        deviceId: 'd',
+        preferences: null,
+        requireTaskFocus: (_) async => throw const TaskBlockedException(
+          TaskAvailability(canStartFocus: false, canComplete: false),
+        ),
+        remote: (command) async {
+          sent.add(command['action']);
+          return {'session': null};
+        },
+      );
+      addTearDown(repo.dispose);
+      final work = session(DateTime.utc(2026, 11, 2));
+      for (final action in ['start', 'resume', 'restart', 'startReady']) {
+        repo.session = work;
+        await expectLater(
+          repo.command(action),
+          throwsA(isA<TaskBlockedException>()),
+        );
+      }
+      expect(sent, isEmpty);
+      repo.session = work;
+      await repo.command('complete');
+      final rest = {
+        ...work,
+        'interval': {
+          ...work['interval'] as Map,
+          'type': 'shortBreak',
+          'status': 'ready',
+        },
+      };
+      for (final action in ['startReady', 'resume', 'restart']) {
+        repo.session = rest;
+        await repo.command(action);
+      }
+      await repo.command('start', {
+        'adopt': {'run': rest['run'], 'interval': rest['interval']},
+      });
+      expect(sent, ['complete', 'startReady', 'resume', 'restart', 'start']);
+    },
+  );
+
+  test(
+    'blocked automatic next work keeps the completed interval acknowledged',
+    () async {
+      final time = DateTime.utc(2026, 11, 2);
+      final work = session(time);
+      work['protectionExpiresAt'] = time.toIso8601String();
+      (work['interval'] as Map)['startedAt'] = time
+          .subtract(const Duration(minutes: 25))
+          .toIso8601String();
+      final ready = {
+        ...work,
+        'revision': 3,
+        'preset': {'autoStartWork': true},
+        'interval': {
+          ...work['interval'] as Map,
+          'id': 'next',
+          'status': 'ready',
+        },
+      };
+      final actions = <String>[];
+      final repo = LiveFocusRepository(
+        local: Local(),
+        owner: 'u',
+        deviceId: 'd',
+        preferences: null,
+        clock: () => time,
+        requireTaskFocus: (_) async => throw const TaskBlockedException(
+          TaskAvailability(canStartFocus: false, canComplete: false),
+        ),
+        remote: (command) async {
+          actions.add(command['action']);
+          return {
+            'session': command['action'] == 'read' ? work : ready,
+            'code': 'ok',
+          };
+        },
+      );
+      addTearDown(repo.dispose);
+      repo.session = work;
+      await repo.command('read');
+      actions.clear();
+      (await repo.completeActiveInterval()).getOrThrow();
+      expect(actions, ['complete']);
+      expect(repo.session?['interval']?['status'], 'ready');
+    },
+  );
+
   for (final interval in [false, true]) {
     test(
       'active ${interval ? 'interval' : 'run'} keeps startup updates',

@@ -5,6 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { existsSync } from "node:fs";
 
 import { registerPomodoistTools } from "./tools.ts";
+import { nextSchedule } from "./mutation_helpers.ts";
 
 Deno.test("registers personal tools and shared project collaboration", async () => {
   await withClient(() => Promise.reject(new Error("unexpected fetch")), async (
@@ -748,39 +749,48 @@ Deno.test("materializes the next selected recurring subtree in the same atomic b
   );
 });
 
-Deno.test("keeps a timed recurrence at the same IANA local time across DST", async () => {
-  const recurring = structuredClone(snapshot);
-  (recurring.tasks[0] as Record<string, unknown>).dueJson = JSON.stringify({
+Deno.test("keeps a timed recurrence at the same IANA local time across DST", () => {
+  const next = nextSchedule({
     type: "timed",
     start: "2026-10-25T13:00:00.000Z",
     end: "2026-10-25T14:00:00.000Z",
     timeZone: "America/New_York",
     recurrence: { interval: 1, unit: "week", seriesId: "series-dst" },
-  });
+  }, new Date("2026-10-25T15:00:00.000Z"));
+  assert("start" in next);
+  assertEquals(next.start, "2026-11-01T14:00:00.000Z");
+});
+
+Deno.test("task dependencies are explicit and omitted updates preserve stored links", async () => {
+  const linked = structuredClone(snapshot);
+  (linked.tasks[0] as Record<string, unknown>).prerequisiteIdsJson = '["task-completed"]';
   const calls: RpcCall[] = [];
-  await withClient(
-    rpcFetcher(calls, { snapshot: recurring }),
-    async (client) => {
-      assertSuccessParity(
-        await client.callTool({
-          name: "delete_task",
-          arguments: {
-            task_id: "task-a",
-            recurrence_scope: "selected",
-          },
-        }),
-      );
-    },
-  );
-  const rootCopy = writeOperations(calls).find((operation) =>
-    operation.entityType === "task" &&
-    operation.operation === "upsert" &&
-    operation.payload.parentId === null
-  )!;
-  assertEquals(
-    JSON.parse(rootCopy.payload.dueJson as string).start,
-    "2026-11-01T14:00:00.000Z",
-  );
+  await withClient(rpcFetcher(calls, { snapshot: linked }), async client => {
+    assertSuccessParity(await client.callTool({ name: "update_task", arguments: { task_id: "task-a", content: "Renamed" } }));
+    assertEquals(writeOperations(calls).find(op => op.entityType === "task")!.payload.prerequisiteIdsJson, '["task-completed"]');
+    calls.length = 0;
+    assertSuccessParity(await client.callTool({ name: "update_task", arguments: { task_id: "task-a", prerequisite_ids: [] } }));
+    assertEquals(writeOperations(calls).find(op => op.entityType === "task")!.payload.prerequisiteIdsJson, '[]');
+    calls.length = 0;
+    assertSuccessParity(await client.callTool({ name: "create_task", arguments: { content: "Dependent", prerequisite_ids: ["task-completed"] } }));
+    assertEquals(writeOperations(calls).find(op => op.entityType === "task")!.payload.prerequisiteIdsJson, '["task-completed"]');
+  });
+});
+
+Deno.test("recurring branches remap internal dependencies and retain external occurrences", async () => {
+  const linked = structuredClone(snapshot);
+  const sibling = { ...linked.tasks[1], id: "task-sibling", prerequisiteIdsJson: '["task-child","task-completed"]' };
+  linked.tasks.push(sibling);
+  (linked.tasks[0] as Record<string, unknown>).dueJson = JSON.stringify({ type: "allDay", date: "2026-07-01", recurrence: { interval: 1, unit: "week", seriesId: "linked-series" } });
+  const calls: RpcCall[] = [];
+  await withClient(rpcFetcher(calls, { snapshot: linked }), async client => {
+    assertSuccessParity(await client.callTool({ name: "delete_task", arguments: { task_id: "task-a", recurrence_scope: "selected" } }));
+  });
+  const copies = writeOperations(calls).filter(op => op.entityType === "task" && op.operation === "upsert");
+  const copy = copies.find(op => JSON.parse(String(op.payload.prerequisiteIdsJson)).length > 0)!;
+  const links = JSON.parse(String(copy.payload.prerequisiteIdsJson));
+  assertEquals(links[1], "task-completed");
+  assert(links[0] !== "task-child" && copies.some(op => op.entityId === links[0]));
 });
 
 Deno.test("uses top-level recurrence series for selected-and-following", async () => {

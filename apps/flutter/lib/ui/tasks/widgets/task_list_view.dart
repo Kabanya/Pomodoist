@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/tasks/widgets/task_blocking_controls.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_subtask_progress.dart';
 import 'dart:async';
 import 'package:pomodoist/utils/startup_diagnostics.dart';
@@ -165,6 +166,8 @@ class TaskListView extends ConsumerWidget {
                               ),
                             ],
                           ),
+                          if (query.kind == TaskQueryKind.today)
+                            const TaskPriorityCascadeControl(),
                           if (subtitle != null) ...[
                             const SizedBox(height: 4),
                             Text(

@@ -61,7 +61,7 @@ class AppIconSettings extends ConsumerWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.asset(
-                                'assets/branding/app_icons/generated/${appFlavor.name}/${choice.id}.png',
+                                '${appIconDirectory(appFlavor)}/${choice.id}.png',
                                 width: 64,
                                 height: 64,
                               ),

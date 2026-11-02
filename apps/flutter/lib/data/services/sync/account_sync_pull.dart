@@ -97,7 +97,8 @@ extension AccountSyncPull on AccountSyncEngine {
               (change.entityType == 'task_kanban_status'
                   ? change.entityId
                   : null);
-          if (taskId != null &&
+          if (change.entityType != 'task_blocking' &&
+              taskId != null &&
               (await (_db.select(_db.tasks)
                             ..where((row) => row.id.equals(taskId)))
                           .getSingleOrNull())
@@ -128,6 +129,17 @@ extension AccountSyncPull on AccountSyncEngine {
   Future<void> _applyUpsert(AccountSyncEntity entity) async {
     final data = syncDataWithoutSyncMetadata(entity.data);
     switch (entity.entityType) {
+      case 'task_blocking':
+        await _db
+            .into(_db.taskBlockingRecords)
+            .insertOnConflictUpdate(
+              TaskBlockingRecordsCompanion.insert(
+                id: entity.entityId,
+                dataJson: jsonEncode(data),
+                updatedAt: entity.updatedAt ?? DateTime.now().toUtc(),
+              ),
+            );
+        return;
       case 'habit':
       case 'habit_check_in':
         await _applyHabitEntity(entity);
@@ -248,6 +260,11 @@ extension AccountSyncPull on AccountSyncEngine {
     await _resolveUnreadableEntity(entity);
     final now = entity.deletedAt ?? DateTime.now().toUtc();
     switch (entity.entityType) {
+      case 'task_blocking':
+        await (_db.delete(
+          _db.taskBlockingRecords,
+        )..where((r) => r.id.equals(entity.entityId))).go();
+        return;
       case 'habit':
       case 'habit_check_in':
         await _applyHabitEntity(entity);

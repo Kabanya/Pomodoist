@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,8 +25,10 @@ class LiveFocusRepository implements FocusRepository {
     this.onServerOwned,
     this.adoptionHistory,
     this.onTransition,
+    this.requireTaskFocus,
     DateTime Function()? clock,
   }) : now = clock ?? DateTime.now;
+  final Future<void> Function(String? taskId)? requireTaskFocus;
   final FocusRepository local;
   final FocusRemote? remote;
   final String owner, deviceId;
@@ -384,6 +387,16 @@ class LiveFocusRepository implements FocusRepository {
     _tail = done.future;
     await previous;
     try {
+      if (action == 'start' &&
+              ((payload['adopt'] as Map?)?['interval']?['type'] ?? 'work') ==
+                  'work' ||
+          const {'startReady', 'resume', 'restart'}.contains(action) &&
+              session?['interval']?['type'] == 'work') {
+        final taskId = action == 'start'
+            ? payload['taskId'] ?? (payload['adopt'] as Map?)?['run']?['taskId']
+            : session?['run']?['taskId'];
+        await requireTaskFocus?.call(taskId as String?);
+      }
       final observedAt = now();
       final result = await remote!({
         'action': action,
@@ -540,7 +553,11 @@ class LiveFocusRepository implements FocusRepository {
             ? 'autoStartWork'
             : 'autoStartBreaks'] ==
         true) {
-      await command('startReady');
+      try {
+        await command('startReady');
+      } on TaskBlockedException {
+        /* The completed interval remains credited; the next one stays ready. */
+      }
     }
   }
 

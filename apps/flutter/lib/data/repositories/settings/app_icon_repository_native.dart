@@ -19,10 +19,13 @@ class PlatformAppIconRepository implements AppIconRepository {
 
   @override
   Future<void> apply(AppIconChoice choice) async {
-    final arguments = <String, Object>{'icon': choice.id};
+    final arguments = <String, Object>{
+      'icon': choice.id,
+      'mode': appIconBuildMode,
+    };
     if (Platform.isMacOS) {
       final data = await rootBundle.load(
-        'assets/branding/app_icons/generated/${appFlavor.name}/${choice.id}-macos.png',
+        '${appIconDirectory(appFlavor)}/${choice.id}-macos.png',
       );
       arguments['image'] = data.buffer.asUint8List(
         data.offsetInBytes,

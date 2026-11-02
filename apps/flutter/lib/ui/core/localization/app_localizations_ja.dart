@@ -4955,4 +4955,46 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pickerDecrease => '減らす';
+
+  @override
+  String get blockingControls => 'Dependencies and urgency';
+
+  @override
+  String get blockingUrgent => 'Urgent for me';
+
+  @override
+  String get blockingRepeat => 'Keep future occurrences urgent';
+
+  @override
+  String get blockingCascade => 'Priority order';
+
+  @override
+  String get blockingSearch => 'Find a prerequisite';
+
+  @override
+  String get blockingDependency => 'Waiting for prerequisites';
+
+  @override
+  String get blockingPriority => 'Higher-priority tasks first';
+
+  @override
+  String get blockingUrgentReason => 'An urgent task comes first';
+
+  @override
+  String get blockingUnavailable =>
+      'This action is unavailable. Refresh and try again.';
+
+  @override
+  String get blockingDeleteWarning =>
+      'Deleting this task releases dependent tasks.';
+
+  @override
+  String get blockingNoMatches => 'No available prerequisites';
+
+  @override
+  String get blockingSyncConflictDetails =>
+      'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.';
+
+  @override
+  String get blockingSyncConflict => 'Sync conflict';
 }

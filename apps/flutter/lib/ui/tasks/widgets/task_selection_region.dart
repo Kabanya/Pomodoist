@@ -1,3 +1,4 @@
+import 'package:pomodoist/config/task_blocking_dependencies.dart';
 import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
@@ -522,8 +523,37 @@ class _TaskSelectionRegionState extends ConsumerState<TaskSelectionRegion> {
     }
   }
 
-  Future<void> _delete(BuildContext context) async {
+  Future<void> _delete(
+    BuildContext context, {
+    bool skipBlockingWarning = false,
+  }) async {
     if (!_controller.hasSelection) return;
+    if (!skipBlockingWarning) {
+      final policy = await ref.read(taskBlockingPolicyProvider.future);
+      final selected = _controller.selectedTasks.map((t) => t.id).toSet();
+      final ids = {for (final id in selected) ...policy.subtree(id)};
+      if (policy.tasks.values.any(
+        (t) =>
+            !t.isDeleted &&
+            !t.isCompleted &&
+            !ids.contains(t.id) &&
+            t.prerequisiteIds.any(ids.contains),
+      )) {
+        ref.read(inlineTaskDeleteRequestsProvider.notifier).request(
+          selected.first,
+          () async {
+            final latest = _controller.selectedTasks.map((t) => t.id).toSet();
+            if (mounted &&
+                latest.length == selected.length &&
+                latest.containsAll(selected)) {
+              await _delete(this.context, skipBlockingWarning: true);
+            }
+          },
+        );
+        return;
+      }
+    }
+    if (!context.mounted) return;
     final hasRecurring = _controller.selectedTasks.any(
       (task) => task.schedule?.isRecurringOccurrence ?? false,
     );

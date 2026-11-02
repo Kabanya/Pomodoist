@@ -28,7 +28,8 @@ extension AccountSyncOperations on AccountSyncEngine {
       if (!entityType.startsWith('focus_') &&
           (data['scopeId'] != null ||
               sharedProjects.contains(data['projectId']) ||
-              sharedTasks.contains(data['taskId']) ||
+              entityType != 'task_blocking' &&
+                  sharedTasks.contains(data['taskId']) ||
               sharedEntityIds.contains('$entityType:$entityId'))) {
         return;
       }
@@ -54,11 +55,35 @@ extension AccountSyncOperations on AccountSyncEngine {
     for (final row in await rows(_db.sections)) {
       add('section', row.id, row.toJson(), row.updatedAt);
     }
-    for (final row in await rows(_db.tasks)) {
-      if (_taskRowPastHistoryCutoff(row, taskHistoryCutoff)) {
-        continue;
+    final taskRows = {for (final row in await rows(_db.tasks)) row.id: row};
+    final included = <String>{};
+    final pending = taskRows.values
+        .where((r) => !_taskRowPastHistoryCutoff(r, taskHistoryCutoff))
+        .map((r) => r.id)
+        .toList();
+    while (pending.isNotEmpty) {
+      final id = pending.removeLast();
+      final row = taskRows[id];
+      if (row == null || !included.add(id)) continue;
+      pending.addAll(
+        (jsonDecode(row.prerequisiteIdsJson) as List).cast<String>(),
+      );
+      if (row.parentId != null) pending.add(row.parentId!);
+    }
+    final added = <String>{};
+    void addTask(String id) {
+      final row = taskRows[id];
+      if (row == null || !included.contains(id) || !added.add(id)) return;
+      if (row.parentId != null) addTask(row.parentId!);
+      for (final id
+          in (jsonDecode(row.prerequisiteIdsJson) as List).cast<String>()) {
+        addTask(id);
       }
       add('task', row.id, row.toJson(), row.updatedAt);
+    }
+
+    for (final id in taskRows.keys) {
+      addTask(id);
     }
     for (final row in await rows(_db.taskCompletions)) {
       add('task_completion', row.id, row.toJson(), row.createdAt);
@@ -88,6 +113,14 @@ extension AccountSyncOperations on AccountSyncEngine {
         row.id,
         row.toJson(),
         _snapshotClockForSettings(row),
+      );
+    }
+    for (final row in await rows(_db.taskBlockingRecords)) {
+      add(
+        'task_blocking',
+        row.id,
+        Map<String, dynamic>.from(jsonDecode(row.dataJson) as Map),
+        row.updatedAt,
       );
     }
     for (final row in await rows(_db.filters)) {
@@ -187,6 +220,27 @@ extension AccountSyncOperations on AccountSyncEngine {
       return _storedOperations(payloadMap);
     }
     final commandType = command.type;
+    if (commandType == 'task.completeBranch') {
+      final result = <AccountSyncOperation>[];
+      final children = payloadMap['commands'] as List;
+      for (var i = 0; i < children.length; i++) {
+        final child = Map<String, dynamic>.from(children[i] as Map);
+        result.addAll(
+          await _operationsFromCommand(
+            command.copyWith(
+              uuid: '${command.uuid}:$i',
+              type: child['type'] as String,
+              clientId: Value(child['clientId'] as String?),
+              payloadJson: jsonEncode(child['payload']),
+            ),
+            taskHistoryCutoff,
+            sourceOperations: sourceOperations,
+          ),
+        );
+      }
+      return result;
+    }
+
     final focusLifecycleCommand =
         commandType.startsWith('focus.run.') ||
         commandType.startsWith('focus.interval.') ||
@@ -503,6 +557,13 @@ extension AccountSyncOperations on AccountSyncEngine {
     Map<String, Object?> fallback,
   ) async {
     switch (entityType) {
+      case 'task_blocking':
+        final row = await (_db.select(
+          _db.taskBlockingRecords,
+        )..where((r) => r.id.equals(entityId))).getSingleOrNull();
+        return row == null
+            ? fallback
+            : Map<String, Object?>.from(jsonDecode(row.dataJson) as Map);
       case 'workspace':
         final row = await (_db.select(
           _db.workspaces,

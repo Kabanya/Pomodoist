@@ -357,6 +357,38 @@ extension AccountSyncUpserts on AccountSyncEngine {
     }
     final merged = syncMergeRow(existing?.toJson(), data);
     merged.putIfAbsent('assigneeIdsJson', () => '[]');
+    merged.putIfAbsent('prerequisiteIdsJson', () => '[]');
+    if (existing != null &&
+        ((merged['totalFocusSeconds'] as num? ?? 0) <
+                existing.totalFocusSeconds ||
+            (merged['completedFocusIntervals'] as num? ?? 0) <
+                existing.completedFocusIntervals)) {
+      final rejected =
+          await (_db.select(_db.syncCommands)..where(
+                (r) =>
+                    r.status.equals('rejected') &
+                    r.lastError.like('task_blocked%'),
+              ))
+              .get();
+      for (final command in rejected) {
+        if ((await _operationsFromCommand(
+          command,
+          null,
+        )).any((op) => op.entityType == 'task' && op.entityId == id)) {
+          if ((merged['totalFocusSeconds'] as num? ?? 0) <
+              existing.totalFocusSeconds) {
+            merged['totalFocusSeconds'] = existing.totalFocusSeconds;
+          }
+          if ((merged['completedFocusIntervals'] as num? ?? 0) <
+              existing.completedFocusIntervals) {
+            merged['completedFocusIntervals'] =
+                existing.completedFocusIntervals;
+          }
+          break;
+        }
+      }
+    }
+
     merged['isFocusEstimateManual'] ??= false;
     merged['createdBy'] =
         data['createdBy'] ??

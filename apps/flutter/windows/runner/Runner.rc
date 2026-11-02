@@ -59,12 +59,30 @@ END
 // stay here rather than in flavor_config.h because the resource compiler is
 // happiest with a literal path, and a macro holding backslashes is awkward to
 // get right.
+#if defined(_DEBUG)
+#if POMODOIST_FLAVOR_IS_DEVELOPMENT
+IDI_APP_ICON            ICON                    "resources\\app_icon_development_debug.ico"
+#elif POMODOIST_FLAVOR_IS_STAGING
+IDI_APP_ICON            ICON                    "resources\\app_icon_staging_debug.ico"
+#else
+IDI_APP_ICON            ICON                    "resources\\app_icon_production_debug.ico"
+#endif
+#elif defined(POMODOIST_PROFILE_BUILD)
+#if POMODOIST_FLAVOR_IS_DEVELOPMENT
+IDI_APP_ICON            ICON                    "resources\\app_icon_development_profile.ico"
+#elif POMODOIST_FLAVOR_IS_STAGING
+IDI_APP_ICON            ICON                    "resources\\app_icon_staging_profile.ico"
+#else
+IDI_APP_ICON            ICON                    "resources\\app_icon_production_profile.ico"
+#endif
+#else
 #if POMODOIST_FLAVOR_IS_DEVELOPMENT
 IDI_APP_ICON            ICON                    "resources\\app_icon_development.ico"
 #elif POMODOIST_FLAVOR_IS_STAGING
 IDI_APP_ICON            ICON                    "resources\\app_icon_staging.ico"
 #else
 IDI_APP_ICON            ICON                    "resources\\app_icon.ico"
+#endif
 #endif
 
 

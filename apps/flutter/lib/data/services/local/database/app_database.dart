@@ -122,6 +122,8 @@ class Sections extends Table {
 )
 @DataClassName('TaskRow')
 class Tasks extends Table {
+  TextColumn get prerequisiteIdsJson =>
+      text().withDefault(const Constant('[]'))();
   TextColumn get scopeId => text().nullable()();
   TextColumn get createdBy => text().nullable()();
   TextColumn get completedBy => text().nullable()();
@@ -527,6 +529,15 @@ class HabitCheckIns extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('TaskBlockingRecordRow')
+class TaskBlockingRecords extends Table {
+  TextColumn get id => text()();
+  TextColumn get dataJson => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Users,
@@ -536,6 +547,7 @@ class HabitCheckIns extends Table {
     Projects,
     Sections,
     Tasks,
+    TaskBlockingRecords,
     TaskCompletions,
     Labels,
     TaskLabels,
@@ -576,12 +588,22 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      if (from < 16) {
+        await _runResumableMigrationStep(
+          () => m.addColumn(tasks, tasks.prerequisiteIdsJson),
+          alreadyAppliedMessage: 'duplicate column name: prerequisite_ids_json',
+        );
+        await _runResumableMigrationStep(
+          () => m.createTable(taskBlockingRecords),
+          alreadyAppliedMessage: 'already exists',
+        );
+      }
       if (from < 15) {
         await _runResumableMigrationStep(
           () => m.addColumn(
@@ -853,6 +875,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> resetAccountData() async {
     await transaction(() async {
+      await delete(taskBlockingRecords).go();
       await delete(calendarProjections).go();
       await delete(googleCalendarEventLinks).go();
       await delete(googleCalendarConnections).go();

@@ -141,13 +141,12 @@ void main() {
         );
         var commands = await syncQueue.watchPending().first;
         expect(commands.map((command) => command.type), [
-          'task.complete',
-          'task.kanbanStatus.set',
-          'task.complete',
-          'task.kanbanStatus.set',
-          'task.complete',
-          'task.kanbanStatus.set',
+          'task.completeBranch',
         ]);
+        expect(
+          (jsonDecode(commands.single.payloadJson)['commands'] as List).length,
+          6,
+        );
 
         await db.delete(db.syncCommands).go();
         await tasks
