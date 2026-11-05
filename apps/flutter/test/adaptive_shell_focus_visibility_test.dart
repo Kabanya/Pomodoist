@@ -9,6 +9,7 @@ import 'package:pomodoist/data/repositories/achievements/achievement_repository.
 import 'package:go_router/go_router.dart';
 import 'support/test_app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +25,10 @@ import 'package:pomodoist/ui/core/widgets/mini_focus_player.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
 import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
+import 'package:pomodoist/ui/tasks/widgets/inbox_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
+import 'package:pomodoist/utils/clock.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_detail_screen.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,6 +38,213 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
+
+  for (final width in [390.0, 819.0, 820.0]) {
+    testWidgets('Today switches layout at 820 px on mobile ($width)', (
+      tester,
+    ) async {
+      await _pumpShell(
+        tester,
+        size: Size(width, 850),
+        initialLocation: '/today',
+      );
+      final context = tester.element(find.byType(TodayScreen));
+      final l10n = AppLocalizations.of(context);
+      final summary = find.text(l10n.todayTaskSummary(0, 2, '0m'));
+      final options = find.byKey(const Key('today-options'));
+      final quickAdd = find.byKey(const Key('compact-add-task'));
+      final shellTitle = find.byKey(const Key('shell-page-title'));
+      if (width >= 820) {
+        expect(shellTitle, findsNothing);
+        expect(options, findsNothing);
+        expect(summary, findsOneWidget);
+        expect(quickAdd, findsNothing);
+        expect(find.byType(QuickAddBar), findsOneWidget);
+        return;
+      }
+      expect(tester.widget<Text>(shellTitle).data, l10n.navToday);
+      expect(
+        find.descendant(
+          of: find.byType(TodayScreen),
+          matching: find.text(l10n.navToday),
+        ),
+        findsNothing,
+      );
+      expect(tester.getCenter(shellTitle).dx, width / 2);
+      expect(tester.getCenter(options).dx, greaterThan(width / 2));
+      expect(find.byType(EditableText), findsNothing);
+      expect(summary, findsNothing);
+      expect(quickAdd, findsOneWidget);
+      expect(_miniPlayerSurface, findsOneWidget);
+      await tester.tap(options);
+      await _pumpShellFrame(tester);
+      expect(summary, findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('task-priority-cascade')),
+        findsOneWidget,
+      );
+      Navigator.of(tester.element(summary)).pop();
+      await _pumpShellFrame(tester);
+      if (width == 390) {
+        await tester.tap(quickAdd);
+      } else {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      }
+      await _pumpShellFrame(tester);
+      expect(
+        tester
+            .widget<QuickAddComposer>(find.byType(QuickAddComposer))
+            .defaultDate,
+        DateUtils.dateOnly(_shellNow.toLocal()),
+      );
+    }, variant: TargetPlatformVariant({TargetPlatform.iOS}));
+  }
+
+  testWidgets(
+    'compact Today keeps deadlines and branches in open and completed rows',
+    (tester) async {
+      final day = DateUtils.dateOnly(_shellNow.toLocal());
+      final childTitle = List.filled(8, 'A long subtask title').join(' ');
+      final tasks = [
+        _task(id: 'parent', schedule: TaskSchedule.allDay(day)),
+        _task(
+          id: 'subtask',
+          title: childTitle,
+          parentId: 'parent',
+          schedule: TaskSchedule.allDay(day),
+        ),
+        _task(
+          id: 'overdue',
+          schedule: TaskSchedule.allDay(day.subtract(const Duration(days: 1))),
+        ),
+        _task(
+          id: 'midnight',
+          schedule: TaskSchedule.timed(
+            start: day.add(const Duration(hours: 23)),
+            end: day.add(const Duration(days: 1, hours: 1)),
+            recurrence: const TaskRecurrence(
+              interval: 1,
+              unit: TaskRecurrenceUnit.day,
+              seriesId: 'night',
+            ),
+          ),
+        ),
+        _task(
+          id: 'done',
+          schedule: TaskSchedule.allDay(day),
+          completedAt: _shellNow,
+        ),
+      ];
+      await _pumpShell(
+        tester,
+        size: const Size(390, 850),
+        initialLocation: '/today',
+        tasks: tasks,
+        taskRepository: _TaskRepository(tasks.first),
+      );
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TodayScreen)),
+      );
+      Finder timing(String id) => find.byKey(ValueKey('task-time-label-$id'));
+      expect(timing('parent'), findsNothing);
+      expect(
+        find.descendant(
+          of: timing('overdue'),
+          matching: find.text(l10n.taskTimeStatusOverdue),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.widget<Column>(timing('midnight')).children, hasLength(3));
+      expect(
+        find.descendant(
+          of: timing('midnight'),
+          matching: find.text(l10n.recurrenceEveryDays(1)),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Hidden description'), findsNothing);
+      final branch = find.byKey(const ValueKey('task-branch-toggle-parent'));
+      if (find.text(childTitle).evaluate().isEmpty) {
+        await tester.tap(branch);
+        await _pumpShellFrame(tester);
+      }
+      expect(tester.widget<Text>(find.text(childTitle)).maxLines, isNull);
+      await tester.tap(branch);
+      await _pumpShellFrame(tester);
+      expect(find.text(childTitle), findsNothing);
+      final completed = find.text(l10n.todayCompletedTasks(1));
+      await tester.ensureVisible(completed);
+      await tester.tap(completed);
+      await _pumpShellFrame(tester);
+      expect(
+        tester
+            .widget<TaskListItem>(find.byKey(const ValueKey('done')))
+            .quietDay,
+        day,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant({TargetPlatform.iOS}),
+  );
+
+  testWidgets('closing compact Today details restores the scrolled list', (
+    tester,
+  ) async {
+    final day = DateUtils.dateOnly(_shellNow.toLocal());
+    final tasks = [
+      for (var index = 0; index < 20; index++)
+        _task(
+          id: 'task-${100 + index}',
+          title: 'Task ${100 + index}',
+          schedule: TaskSchedule.allDay(day),
+        ),
+    ];
+    await _pumpShell(
+      tester,
+      size: const Size(390, 720),
+      initialLocation: '/today',
+      tasks: tasks,
+      taskRepository: _TaskRepository(tasks[6]),
+    );
+    final list = find.descendant(
+      of: find.byType(TodayScreen),
+      matching: find.byType(CustomScrollView),
+    );
+    final scrollable = find
+        .descendant(of: list, matching: find.byType(Scrollable))
+        .first;
+    tester.state<ScrollableState>(scrollable).position.jumpTo(270);
+    await _pumpShellFrame(tester);
+    await tester.tap(find.text(tasks[6].content));
+    await _pumpShellFrame(tester);
+    final menu = find.byKey(const Key('shell-menu-button'));
+    expect(find.byType(TaskDetailScreen), findsOneWidget);
+    expect(menu, findsNothing);
+    expect(find.byKey(const Key('shell-page-title')), findsNothing);
+    expect(_miniPlayerSurface, findsNothing);
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(TaskDetailScreen)),
+    );
+    await tester.tap(find.byTooltip(l10n.commonClose).first);
+    await _pumpShellFrame(tester);
+    expect(find.byType(TaskDetailScreen), findsNothing);
+    expect(menu, findsOneWidget);
+    expect(tester.state<ScrollableState>(scrollable).position.pixels, 270);
+  }, variant: TargetPlatformVariant({TargetPlatform.iOS}));
+
+  testWidgets('compact Inbox keeps its inline composer', (tester) async {
+    await _pumpShell(
+      tester,
+      size: const Size(390, 850),
+      initialLocation: '/inbox',
+      showInbox: true,
+    );
+    expect(find.byKey(const Key('today-options')), findsNothing);
+    expect(find.byType(QuickAddBar), findsOneWidget);
+    expect(find.byKey(const Key('compact-add-task')), findsOneWidget);
+  }, variant: TargetPlatformVariant({TargetPlatform.iOS}));
 
   testWidgets(
     'opening Focus advances the guided route without starting a run',
@@ -83,9 +295,10 @@ void main() {
             find.text(
               AppLocalizations.of(context).todayTaskSummary(0, 2, '0m'),
             ),
-            findsOneWidget,
+            layout.key == 'compact' ? findsNothing : findsOneWidget,
           );
         },
+        variant: TargetPlatformVariant({TargetPlatform.iOS}),
       );
     }
 
@@ -287,6 +500,8 @@ void main() {
 Finder get _miniPlayerSurface =>
     find.byKey(const Key('mini-focus-player-surface'));
 
+final _shellNow = DateTime.utc(2026, 7, 10, 10);
+
 Future<void> _pumpShell(
   WidgetTester tester, {
   required Size size,
@@ -294,6 +509,8 @@ Future<void> _pumpShell(
   String intervalStatus = 'running',
   String? taskId,
   TaskRepository? taskRepository,
+  List<TaskItem> tasks = const [],
+  bool showInbox = false,
 }) async {
   final previousSize = tester.view.physicalSize;
   final previousDevicePixelRatio = tester.view.devicePixelRatio;
@@ -306,7 +523,7 @@ Future<void> _pumpShell(
       ..devicePixelRatio = previousDevicePixelRatio;
   });
 
-  final now = DateTime.utc(2026, 7, 10, 10);
+  final now = _shellNow;
   final router = GoRouter(
     initialLocation: taskId == null
         ? '/'
@@ -317,6 +534,7 @@ Future<void> _pumpShell(
         builder: (_, state) => _AdaptiveShellRouteHarness(
           initialLocation: initialLocation,
           taskId: state.uri.queryParameters['task'],
+          showInbox: showInbox,
         ),
       ),
     ],
@@ -343,8 +561,17 @@ Future<void> _pumpShell(
         ),
         focusTickerProvider.overrideWith((ref) => Stream.value(now)),
         accountProfileProvider.overrideWith((ref) => null),
+        clockProvider.overrideWithValue(FixedClock(now)),
         tasksByQueryProvider.overrideWith(
-          (ref, query) => Stream.value(const []),
+          (ref, query) => Stream.value(
+            tasks
+                .where(
+                  (task) =>
+                      task.isCompleted ==
+                      (query.kind == TaskQueryKind.completed),
+                )
+                .toList(),
+          ),
         ),
         projectsProvider.overrideWith((ref) => Stream.value(const [])),
         achievementRepositoryProvider.overrideWithValue(
@@ -385,10 +612,12 @@ class _AdaptiveShellRouteHarness extends StatefulWidget {
   const _AdaptiveShellRouteHarness({
     required this.initialLocation,
     required this.taskId,
+    required this.showInbox,
   });
 
   final String initialLocation;
   final String? taskId;
+  final bool showInbox;
 
   @override
   State<_AdaptiveShellRouteHarness> createState() =>
@@ -407,6 +636,8 @@ class _AdaptiveShellRouteHarnessState
       taskId: widget.taskId,
       child: _location == '/today'
           ? const TodayScreen()
+          : widget.showInbox
+          ? const InboxScreen()
           : Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -524,18 +755,28 @@ const _bottomAchievement = AchievementItem(
   target: 1,
 );
 
-TaskItem _task() {
+TaskItem _task({
+  String id = 'task-1',
+  String title = 'Ship celebration',
+  String? parentId,
+  TaskSchedule? schedule,
+  DateTime? completedAt,
+}) {
   final now = DateTime.utc(2026, 8, 19, 12);
   return TaskItem(
-    id: 'task-1',
+    id: id,
     userId: 'local',
-    content: 'Ship celebration',
+    content: title,
+    description: 'Hidden description',
+    parentId: parentId,
+    dueJson: schedule?.toJsonString(),
+    completedAt: completedAt,
     projectId: 'project-1',
     priority: 1,
-    status: 'open',
+    status: completedAt == null ? 'open' : 'completed',
     completedFocusIntervals: 4,
     totalFocusSeconds: 6000,
-    orderKey: '1',
+    orderKey: id,
     isDeleted: false,
     createdAt: now,
     updatedAt: now,

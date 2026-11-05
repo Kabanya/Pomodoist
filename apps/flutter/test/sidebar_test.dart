@@ -19,6 +19,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/voice_dependencies.dart';
@@ -163,6 +164,66 @@ void main() {
     );
     await _disposeApp(tester);
   });
+
+  testWidgets(
+    'mobile headings follow routes and live project and label names',
+    (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      var projectName = _longProjectName;
+      var labelName = 'Design';
+      await _pumpApp(
+        tester,
+        size: const Size(390, 800),
+        liveProjectName: () => projectName,
+        liveLabelName: () => labelName,
+      );
+      final pageTitle = find.byKey(const Key('shell-page-title'));
+      final context = tester.element(pageTitle);
+      final router = GoRouter.of(context);
+      final container = ProviderScope.containerOf(context);
+      final bodyTitleSize = Theme.of(
+        context,
+      ).textTheme.headlineMedium?.fontSize;
+      Finder duplicateHeading(String title) => find.byWidgetPredicate(
+        (widget) =>
+            widget is Text &&
+            widget.data == title &&
+            widget.style?.fontSize == bodyTitleSize,
+      );
+      for (final (location, title) in [
+        ('/kanban', 'Kanban'),
+        ('/browse/overdue', 'Overdue'),
+        ('/settings/shortcuts', 'Keyboard shortcuts'),
+        ('/project/work', projectName),
+        ('/label/design', '@$labelName'),
+      ]) {
+        router.go(location);
+        await _pumpFrames(tester);
+        expect(tester.widget<Text>(pageTitle).data, title);
+        expect(duplicateHeading(title), findsNothing);
+        expect(tester.getCenter(pageTitle).dx, 195);
+        if (location == '/project/work') {
+          expect(tester.getSize(pageTitle).height, greaterThan(52));
+        }
+      }
+
+      labelName = 'Research';
+      container.invalidate(labelsProvider);
+      await _pumpFrames(tester);
+      expect(tester.widget<Text>(pageTitle).data, '@Research');
+
+      router.go('/project/work');
+      await _pumpFrames(tester);
+      projectName = 'An updated name for the same project';
+      container.invalidate(projectsProvider);
+      await _pumpFrames(tester);
+      expect(tester.widget<Text>(pageTitle).data, projectName);
+      expect(duplicateHeading(projectName), findsNothing);
+      await _disposeApp(tester);
+    },
+    variant: TargetPlatformVariant({TargetPlatform.iOS}),
+  );
 
   testWidgets('sidebar keyboard shortcut toggles wide layout', (tester) async {
     await _pumpWideApp(tester);
@@ -1368,6 +1429,8 @@ Future<_SidebarHarness> _pumpApp(
   VoiceRecognitionController? voiceController,
   String workProjectName = 'Work',
   String? workProjectScopeId,
+  String Function()? liveProjectName,
+  String Function()? liveLabelName,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -1382,10 +1445,10 @@ Future<_SidebarHarness> _pumpApp(
   final createdAt = DateTime.utc(2026);
   const workProjectId = 'work';
   const archivedProjectId = 'archived-work';
-  final project = ProjectItem(
+  ProjectItem project() => ProjectItem(
     id: workProjectId,
     userId: localUserId,
-    name: workProjectName,
+    name: liveProjectName?.call() ?? workProjectName,
     scopeId: workProjectScopeId,
     color: '#3B6EA8',
     orderKey: 'b',
@@ -1402,11 +1465,11 @@ Future<_SidebarHarness> _pumpApp(
     createdAt: createdAt,
     updatedAt: createdAt,
   );
-  final labels = [
+  List<LabelItem> labels() => [
     LabelItem(
       id: 'design',
       userId: localUserId,
-      name: 'Design',
+      name: liveLabelName?.call() ?? 'Design',
       orderKey: 'a',
       createdAt: createdAt,
       updatedAt: createdAt,
@@ -1494,9 +1557,9 @@ Future<_SidebarHarness> _pumpApp(
           });
         }),
         projectsProvider.overrideWith(
-          (ref) => Stream.value([project, archivedProject]),
+          (ref) => Stream.value([project(), archivedProject]),
         ),
-        labelsProvider.overrideWith((ref) => Stream.value(labels)),
+        labelsProvider.overrideWith((ref) => Stream.value(labels())),
         productivitySummaryProvider.overrideWith(
           (ref) => Stream.value(
             ProductivitySummary(

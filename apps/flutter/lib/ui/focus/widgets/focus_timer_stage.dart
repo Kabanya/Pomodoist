@@ -1,47 +1,51 @@
 part of 'focus_stage.dart';
 
 /// Grow with the available content width while keeping a readable, bounded dial.
-double focusTimerDiameter(double maxWidth, {required bool compact}) =>
-    compact ? math.min(300.0, math.max(200.0, maxWidth - 24)) : 320.0;
+double focusTimerDiameter(double maxWidth) => math.min(320.0, maxWidth);
 
 class _FocusTimerStage extends StatelessWidget {
   const _FocusTimerStage({
-    required this.interval,
+    this.interval,
     required this.remaining,
     required this.style,
     required this.compact,
     required this.minimal,
-    required this.diameter,
     super.key,
   });
 
-  final FocusIntervalItem interval;
-  final Duration remaining;
+  final FocusIntervalItem? interval;
+  final Duration? remaining;
   final FocusTimerVisualStyle style;
   final bool compact;
   final bool minimal;
-  final double diameter;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final phaseLabel = _phaseLabel(context, interval);
-    final remainingLabel = formatDurationCompact(remaining);
+    final interval = this.interval;
+    final remaining = this.remaining;
+    final phaseLabel = interval == null
+        ? context.l10n.workInterval
+        : _phaseLabel(context, interval);
+    final remainingLabel = remaining == null
+        ? '--:--'
+        : formatDurationCompact(remaining);
     final plannedLabel = formatDurationCompact(
-      Duration(seconds: interval.plannedSeconds),
+      Duration(seconds: interval?.plannedSeconds ?? remaining?.inSeconds ?? 0),
     );
-    final totalLabel = context.l10n.focusTimerTotal(plannedLabel);
-    final progress = _progress(interval, remaining);
-    final stateColor = interval.status == 'paused'
+    final progress = interval == null ? 0.0 : _progress(interval, remaining!);
+    final stateColor = interval?.status == 'paused'
         ? colors.warning
-        : interval.type == 'work'
+        : interval == null || interval.type == 'work'
         ? colors.accent
         : colors.info;
-    final phaseIcon = interval.type == 'work'
+    final phaseIcon = interval == null || interval.type == 'work'
         ? LucideIcons.timer
         : interval.type == 'longBreak'
         ? LucideIcons.clock
         : LucideIcons.coffee;
+    final phaseKey =
+        '${interval?.type ?? 'work'}:${interval?.status ?? 'idle'}';
 
     return TweenAnimationBuilder<Color?>(
       duration: AppMotion.duration(context, AppMotion.state),
@@ -55,7 +59,9 @@ class _FocusTimerStage extends StatelessWidget {
             key: const Key('focus-timer-semantics'),
             label: context.l10n.focusTimerSummary(
               phaseLabel,
-              _activeStatusLabel(context, interval.status),
+              interval == null
+                  ? context.l10n.noActiveSession
+                  : _activeStatusLabel(context, interval.status),
               remainingLabel,
               plannedLabel,
             ),
@@ -63,7 +69,7 @@ class _FocusTimerStage extends StatelessWidget {
             child: ExcludeSemantics(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final circleSize = diameter;
+                  final circleSize = focusTimerDiameter(constraints.maxWidth);
                   final fontSize = circleSize * 2 / 9;
                   if (minimal) {
                     return Column(
@@ -95,8 +101,7 @@ class _FocusTimerStage extends StatelessWidget {
                           remainingLabel: remainingLabel,
                           progress: progress,
                           color: color,
-                          compact: compact,
-                          maxWidth: circleSize,
+                          maxWidth: constraints.maxWidth,
                         ),
                       ],
                     );
@@ -105,7 +110,7 @@ class _FocusTimerStage extends StatelessWidget {
                     return Column(
                       children: [
                         _PhaseLabel(
-                          motionKey: '${interval.type}:${interval.status}',
+                          motionKey: phaseKey,
                           icon: phaseIcon,
                           label: phaseLabel,
                           color: color,
@@ -120,16 +125,6 @@ class _FocusTimerStage extends StatelessWidget {
                               color: colors.primaryText,
                               fontWeight: FontWeight.w400,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          totalLabel,
-                          style: AppTheme.monoTextStyle.copyWith(
-                            fontSize: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.fontSize,
-                            color: colors.secondaryText,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -169,8 +164,7 @@ class _FocusTimerStage extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _PhaseLabel(
-                                    motionKey:
-                                        '${interval.type}:${interval.status}',
+                                    motionKey: phaseKey,
                                     icon: phaseIcon,
                                     label: phaseLabel,
                                     color: color,
@@ -182,16 +176,6 @@ class _FocusTimerStage extends StatelessWidget {
                                       color: colors.primaryText,
                                       fontWeight: FontWeight.w400,
                                       fontSize: fontSize,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    totalLabel,
-                                    style: AppTheme.monoTextStyle.copyWith(
-                                      fontSize: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.fontSize,
-                                      color: colors.secondaryText,
                                     ),
                                   ),
                                 ],
@@ -219,7 +203,6 @@ class _FocusMinimalTimer extends StatelessWidget {
     required this.progress,
     required this.color,
     required this.maxWidth,
-    this.compact = false,
   });
 
   final FocusTimerVisualStyle style;
@@ -227,11 +210,10 @@ class _FocusMinimalTimer extends StatelessWidget {
   final double progress;
   final Color color;
   final double maxWidth;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final diameter = focusTimerDiameter(maxWidth, compact: compact);
+    final diameter = focusTimerDiameter(maxWidth);
     final time = FittedBox(
       fit: BoxFit.scaleDown,
       child: Text(

@@ -72,19 +72,20 @@ metadata and source/dependency hashes are under
 
 ## Reproduction
 
-From `apps/flutter`, leave this command running:
+From the repository root, leave the isolated macOS profiler running:
 
 ```sh
-../../.fvm/flutter_sdk/bin/flutter run --profile -d macos --flavor staging \
-  --target tool/pomo_resource_profile.dart --no-pub \
-  --host-vmservice-port 55291 --disable-service-auth-codes
+tool/macos/run-resource-profile.sh 55291
 ```
 
-From the repository root:
+Use the full Dart VM service URI printed by Flutter. The profiler writes its
+macOS build to `apps/flutter/build/profile-harness`. For the motion profilers,
+run `flutter run --profile -d chrome -t tool/focus_motion_profile.dart` or
+`flutter run --profile -d chrome -t tool/task_motion_profile.dart` from `apps/flutter`.
 
 ```sh
 python3 apps/flutter/tool/pomo_resource_profile.py \
-  http://127.0.0.1:55291/ build/resource-profile/2026-10-26
+  HTTP_VM_SERVICE_URI build/resource-profile/2026-10-26
 ```
 
 The Python collector requires only the standard library and macOS. The Dart

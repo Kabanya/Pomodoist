@@ -13,6 +13,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
@@ -174,6 +175,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         final wide = constraints.maxWidth >= 960;
         _navigation.resolveLayout(wide: wide, pomoAvailable: pomoSupported);
         final selected = _navigation.selected;
+        final showTitle = !CompactShellHeading.isShown(context);
+        final showBack = !wide && selected != null;
         if (selected != null) _visited.add(selected);
         return PopScope(
           canPop: wide || selected == null,
@@ -185,28 +188,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  if (!wide && selected != null) ...[
-                    IconButton(
-                      tooltip: MaterialLocalizations.of(
-                        context,
-                      ).backButtonTooltip,
-                      onPressed: () =>
-                          context.go(settingsLocation(null).toString()),
-                      icon: const Icon(LucideIcons.arrowLeft),
-                    ),
-                    const SizedBox(width: 8),
+              if (showTitle || showBack) ...[
+                Row(
+                  children: [
+                    if (showBack)
+                      IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).backButtonTooltip,
+                        onPressed: () =>
+                            context.go(settingsLocation(null).toString()),
+                        icon: const Icon(LucideIcons.arrowLeft),
+                      ),
+                    if (showBack && showTitle) const SizedBox(width: 8),
+                    if (showTitle)
+                      Expanded(
+                        child: Text(
+                          context.l10n.settingsTitle,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ),
                   ],
-                  Expanded(
-                    child: Text(
-                      context.l10n.settingsTitle,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                ),
+                const SizedBox(height: 24),
+              ],
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -4900,4 +4900,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get blockingSyncConflict => 'Sync conflict';
+
+  @override
+  String get focusDuration => '时长';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return '计划 · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−5 分钟';
+
+  @override
+  String get focusExtendDuration => '+5 分钟';
+
+  @override
+  String get focusFinish => '结束';
 }

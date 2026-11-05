@@ -5166,4 +5166,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get blockingSyncConflict => 'Конфликт синхронизации';
+
+  @override
+  String get focusDuration => 'Длительность';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return 'План · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−5 мин';
+
+  @override
+  String get focusExtendDuration => '+5 мин';
+
+  @override
+  String get focusFinish => 'Завершить';
 }

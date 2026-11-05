@@ -492,6 +492,24 @@ The unscheduled sheet owns its own selection region and bulk toolbar, so Select
 all targets the visible list rather than hidden tasks from the current day.
 All controls retain touch targets and text scaling in both themes.
 
+### Timeline
+
+Keep the Timeline within the shared navigation shell. Use the vertical time
+axis below the shell breakpoint or when the timeline pane is narrower than
+560 logical pixels. A contextual detail panel preserves the background axis.
+The wide view uses horizontal time and a fixed project column. Align color
+dots and labels across Inbox, projects, and subprojects. Put expand and
+collapse actions at the trailing edge. On the vertical view, keep the hour
+gutter fixed when overlapping cards need horizontal space.
+
+Use the same date controls and an expandable all-day card in both layouts.
+Keep visible hours and timeline zoom available in the toolbar. Use neutral
+hour lines, a soft accent fill for timed cards and the project's own color on
+the leading edge. Label time and project in text where the axes do not already
+identify them. Preserve the existing completion, creation, drag and resize
+interactions. Vertical drag changes the time within the current project.
+Project changes remain available in task details.
+
 ### Mobile bottom panels
 
 Below the 820 px shell breakpoint, contextual calendar actions, bulk task
@@ -586,6 +604,18 @@ Save failures retain the draft and show a retryable error; block edits and
 dismissal during saving. Close, outside tap, Back and Escape discard the draft.
 Route/detail changes, fullscreen map entry and switching to the wide shell also
 close the editor. Do not migrate or synchronize existing navigation preferences.
+
+### Compact page headings
+
+Below 820 px on iOS, Android, and web, use the Kanban header for pages
+inside the shell. Center the localized page title in `titleLarge` at weight
+700, keep the drawer button at the leading edge, and place header actions at
+the trailing edge. Use a 52 px minimum height, a bottom border and the system
+safe area. Reserve equal space at both edges. Allow two title lines with text
+scaling and expose the full title to assistive technology. Use live project
+and label names. Omit the duplicate body heading while keeping its controls
+and supporting text. Standalone screens keep their own headings. Fullscreen
+task and habit details and the fullscreen map keep their own chrome.
 
 ### Compact task creation
 
@@ -759,6 +789,22 @@ mini player follows the same visibility rules as other task lists, appearing
 above bottom navigation on compact layouts and below content on wide layouts.
 Completed-today rows form a collapsed group with independent selection, using
 the local completion day.
+
+Below the 820 px shell breakpoint on iOS, Android, and web, show a short
+localized date at the top of the list. Open the daily summary and priority
+order control from the overflow button in the shell header. Use the
+shell's floating Add task button as the single visible entry point, including
+empty states. Both the button and the Quick Add shortcut default to the current
+local day. Reserve enough scroll clearance for the button.
+
+Keep shared task rows, ordering, branch disclosure, completion controls and task
+actions. Compact Today rows show the title, timing and blocking indicators.
+Descriptions, projects and progress counts are available in task details. Omit
+the current date from the row, keep earlier dates and cross-midnight end dates,
+and retain recurrence and time display preferences. Use text and semantic color
+for overdue schedules. The expanded completed section uses the same compact rows.
+Use the platform's existing task gestures and preserve the bottom chrome and
+full-screen task details behavior.
 
 ### Upcoming
 
@@ -1336,30 +1382,30 @@ Place the direct Full view action in the Focus header, outside the centered
 column. Hide it when the host fixes the view mode. Honor the stored Circle / Bar
 preference in both Minimal and Full views: visual style and detail level are
 independent. Minimal uses a circular progress ring for Circle and an 80 px by
-2 px progress track for Bar, both while idle and during an active interval.
-Both views scale the circle with the available width and window height, from
-280 px up to 520 px on large windows. Digits scale proportionally; the dial and
-long countdown values shrink to fit narrower layouts.
+2 px progress track for Bar. In Minimal, base the dial and digits on the same
+available width before and during a run, with a maximum dial diameter of
+320 px. Fit long countdown values within the dial.
 
 ### Full Focus layout
 
-Use the control-dock composition: header actions and the session rhythm at the
-top, linked task above the horizontally centered timer, and a separated control
-dock at the bottom of the available viewport. Keep the task and timer grouped
-with the header: use a 64 px gap below the rhythm on desktop and 16 px on compact
-layouts. Compact Full view has no extra top page padding, keeps 16 px below the
-stage and timer, and uses 12 px between the header and rhythm. Linked tasks have
-no extra top padding and 12 px below them. Subtract the actual page padding from
-the available stage height, preserving system safe areas and control sizes.
-Extra viewport height belongs below the timer, before the dock. Let the entire stage scroll when its content
-exceeds that height; embedded stages size to their contents. Center the primary
-action independently of the session summary and Complete interval action. Below
-680 px of dock width, place the overflow menu at the trailing edge of the session
-summary row, with matching leading space to keep the summary centered. Stack the
-primary action and Complete interval on the timer's center axis with a 12 px gap.
-Reuse the summary's surrounding spacing for the 48 px menu target instead of
-adding another control row. Let summary text wrap when space or text scaling
-requires it, keeping every action reachable.
+Place the preset picker, direct Minimal view action and overflow in the
+header, above the rhythm rail. Hide the Minimal action when the host fixes
+the view mode.
+The rail conveys session progress without duplicating it in visible labels.
+Keep the linked task above the centered timer when present. Use the same dial
+renderer before and during a run. Full and Minimal both size the dial to the
+available content width, up to 320 px. The timer shows the phase and remaining
+time, and its accessible summary includes the planned time.
+
+Place equal-width primary and Finish actions in one row. Below that row, show
+the current interval's planned duration and five-minute adjustment buttons.
+These buttons change only the current interval and do not reset elapsed time.
+Disable shortening in strict mode or when it would end the interval. Keep
+48 px control targets, allow labels to wrap at larger text scales, and move
+the duration buttons below their label when horizontal space is limited.
+Keep extra viewport height between the timer and the dock, and let the page
+scroll when its content exceeds the available height. Embedded stages size to
+their contents.
 
 The overflow menu offers **Compact** and **Icons** session displays. Compact
 uses duration-weighted segments; Icons preserves the numbered work sessions,

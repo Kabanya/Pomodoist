@@ -2596,5 +2596,17 @@
   "blockingDeleteWarning": "Deleting this task releases dependent tasks.",
   "blockingNoMatches": "No available prerequisites",
   "blockingSyncConflictDetails": "The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.",
-  "blockingSyncConflict": "Sync conflict"
+  "blockingSyncConflict": "Sync conflict",
+  "focusDuration": "Duration",
+  "focusPlannedDuration": "Plan · {duration}",
+  "focusShortenDuration": "−5 min",
+  "focusExtendDuration": "+5 min",
+  "focusFinish": "Finish",
+  "@focusPlannedDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  }
 }

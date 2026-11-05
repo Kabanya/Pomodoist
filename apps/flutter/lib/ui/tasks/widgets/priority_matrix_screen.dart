@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/tasks/view_models/priority_matrix_view_model.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_branch_rows.dart';
@@ -39,11 +40,13 @@ class PriorityMatrixScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          l10n.navPriorityMatrix,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 4),
+                        if (!CompactShellHeading.isShown(context)) ...[
+                          Text(
+                            l10n.navPriorityMatrix,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 4),
+                        ],
                         Text(
                           l10n.priorityMatrixSubtitle,
                           style: Theme.of(context).textTheme.bodyMedium

@@ -194,6 +194,7 @@ class TaskListRow extends ConsumerWidget {
     this.progress,
     this.query,
     this.project,
+    this.quietDay,
     this.presentation = TaskListItemPresentation.standard,
     super.key,
   });
@@ -202,6 +203,7 @@ class TaskListRow extends ConsumerWidget {
   final String branchScope;
   final TaskSubtaskProgress? progress;
   final ProjectItem? project;
+  final DateTime? quietDay;
   final TaskListItemPresentation presentation;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -225,6 +227,7 @@ class TaskListRow extends ConsumerWidget {
       subtaskProgress: progress,
       project: project,
       presentation: presentation,
+      quietDay: quietDay,
     );
   }
 }
@@ -238,6 +241,7 @@ class TaskListItem extends ConsumerWidget {
     this.subtaskProgress,
     this.enableSubtaskDrop = true,
     this.compactDetails = false,
+    this.quietDay,
     this.presentation = TaskListItemPresentation.standard,
     this.project,
     this.diagram = false,
@@ -253,6 +257,7 @@ class TaskListItem extends ConsumerWidget {
   final TaskSubtaskProgress? subtaskProgress;
   final bool enableSubtaskDrop;
   final bool compactDetails;
+  final DateTime? quietDay;
   final TaskListItemPresentation presentation;
   final ProjectItem? project;
   final bool diagram;
@@ -662,10 +667,13 @@ class TaskListItem extends ConsumerWidget {
                         rowSpacing: viewState.rowSpacing,
                         task: task,
                         modern: isModern,
-                        description: isAgenda ? null : description,
-                        project: rowProject,
-                        progress: progress,
-                        focusEstimate: focusEstimate,
+                        description: isAgenda || quietDay != null
+                            ? null
+                            : description,
+                        project: quietDay == null ? rowProject : null,
+                        progress: quietDay == null ? progress : null,
+                        focusEstimate: quietDay == null ? focusEstimate : null,
+                        quietDay: quietDay,
                         taskTimeState: taskTimeState,
                         timeDisplayMode: timeDisplayMode,
                         defaultTimedBlockMinutes: defaultTimedBlockMinutes,
@@ -694,13 +702,14 @@ class TaskListItem extends ConsumerWidget {
                                     task: task,
                                     ancestors: ancestors,
                                   ),
-                                if (isAgenda || isModern)
+                                if (isAgenda || isModern || quietDay != null)
                                   _AgendaTaskContent(
                                     rowSpacing: viewState.rowSpacing,
                                     task: task,
                                     project: rowProject,
                                     modern: isModern,
                                     withinDate: isAgenda,
+                                    quietDay: quietDay,
                                     description: isAgenda ? null : description,
                                     focusEstimate: focusEstimate,
                                     subtaskProgress: progress,
@@ -1308,6 +1317,7 @@ class TaskListDivider extends ConsumerWidget {
     this.nextDepth = 0,
     this.nextRow,
     this.previousRow,
+    this.quietDay,
     super.key,
   }) : _previewBranchStyle = null,
        _previewHasTrailingContent = null;
@@ -1322,9 +1332,11 @@ class TaskListDivider extends ConsumerWidget {
        nextRow = next,
        previousDepth = previous.depth,
        nextDepth = next.depth,
+       quietDay = null,
        _previewBranchStyle = branchStyle,
        _previewHasTrailingContent = hasTrailingContent;
 
+  final DateTime? quietDay;
   final int previousDepth;
   final int nextDepth;
   final VisibleTaskRow? nextRow;
@@ -1343,6 +1355,13 @@ class TaskListDivider extends ConsumerWidget {
           _previewHasTrailingContent ??
           (() {
             final task = previousRow!.task;
+            if (quietDay != null) {
+              final schedule = task.schedule;
+              return schedule != null &&
+                  (schedule.displayDate != quietDay ||
+                      schedule.isTimed ||
+                      schedule.recurrence != null);
+            }
             final state = ref.watch(taskItemViewModelProvider(task));
             final progress = ref.watch(taskProgressProvider(task.id)).progress;
             return (task.description?.trim().isNotEmpty ?? false) ||
@@ -1670,6 +1689,7 @@ class _MobileTaskContent extends StatelessWidget {
     required this.timeDisplayMode,
     required this.defaultTimedBlockMinutes,
     required this.withinDate,
+    this.quietDay,
     required this.parentContext,
     required this.completion,
     required this.disclosure,
@@ -1685,6 +1705,7 @@ class _MobileTaskContent extends StatelessWidget {
   final TaskTimeDisplayMode timeDisplayMode;
   final int defaultTimedBlockMinutes;
   final bool withinDate;
+  final DateTime? quietDay;
   final TaskParentContext? parentContext;
   final Widget completion;
   final Widget disclosure;
@@ -1700,20 +1721,15 @@ class _MobileTaskContent extends StatelessWidget {
       color: task.isCompleted ? colors.mutedText : colors.primaryText,
       decoration: task.isCompleted ? TextDecoration.lineThrough : null,
     );
-    final scheduleRows = formatTaskListScheduleRows(
+    final schedule = _TaskScheduleBlock.buildIfPresent(
       context,
-      task.schedule,
-      withinDate: withinDate,
+      task: task,
+      state: taskTimeState,
       displayMode: timeDisplayMode,
       defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+      withinDate: withinDate,
+      quietDay: quietDay,
     );
-    final scheduleColor = taskTimeState == null
-        ? colors.mutedText
-        : colors.taskTimeColor(taskTimeState!);
-    final scheduleLabel = scheduleRows.map((row) => row.join(' ')).join(', ');
-    final status = taskTimeState == null
-        ? null
-        : taskTimeStatusLabel(context.l10n, taskTimeState!);
     final blocks = <Widget>[
       if (description?.isNotEmpty ?? false)
         Text(
@@ -1724,41 +1740,7 @@ class _MobileTaskContent extends StatelessWidget {
             context,
           ).textTheme.bodySmall?.copyWith(color: colors.mutedText),
         ),
-      if (scheduleRows.isNotEmpty)
-        Semantics(
-          label: status == null ? scheduleLabel : '$scheduleLabel, $status',
-          excludeSemantics: true,
-          child: Row(
-            key: ValueKey('task-time-meta-${task.id}'),
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(LucideIcons.calendar, size: 14, color: scheduleColor),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Column(
-                  key: ValueKey('task-time-label-${task.id}'),
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final row in scheduleRows)
-                      Wrap(
-                        spacing: 4,
-                        children: [
-                          for (final part in row)
-                            Text(
-                              part,
-                              softWrap: true,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(color: scheduleColor),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      ?schedule,
       if (project != null ||
           focusEstimate != null ||
           (progress?.total ?? 0) > 0)
@@ -1854,6 +1836,78 @@ class _MobileTaskContent extends StatelessWidget {
   }
 }
 
+abstract final class _TaskScheduleBlock {
+  static Widget? buildIfPresent(
+    BuildContext context, {
+    required TaskItem task,
+    required TaskTimeState? state,
+    required TaskTimeDisplayMode displayMode,
+    required int defaultTimedBlockMinutes,
+    required bool withinDate,
+    DateTime? quietDay,
+  }) {
+    final colors = context.appColors;
+    final rows = formatTaskListScheduleRows(
+      context,
+      task.schedule,
+      withinDate: withinDate || (quietDay != null && task.dueDate == quietDay),
+      displayMode: displayMode,
+      defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+    );
+    if (rows.isEmpty) return null;
+    final status = state == null
+        ? null
+        : taskTimeStatusLabel(context.l10n, state);
+    final showOverdue = quietDay != null && state == TaskTimeState.overdue;
+    final scheduleRows = showOverdue
+        ? [
+            [status!, ...rows.first],
+            ...rows.skip(1),
+          ]
+        : rows;
+    final scheduleColor = state == null
+        ? colors.mutedText
+        : colors.taskTimeColor(state);
+    final scheduleLabel = scheduleRows.map((row) => row.join(' ')).join(', ');
+    return Semantics(
+      label: status == null || showOverdue
+          ? scheduleLabel
+          : '$scheduleLabel, $status',
+      excludeSemantics: true,
+      child: Row(
+        key: ValueKey('task-time-meta-${task.id}'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.calendar, size: 14, color: scheduleColor),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              key: ValueKey('task-time-label-${task.id}'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final row in scheduleRows)
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      for (final part in row)
+                        Text(
+                          part,
+                          softWrap: true,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(color: scheduleColor),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _AgendaTaskContent extends StatelessWidget {
   const _AgendaTaskContent({
     required this.rowSpacing,
@@ -1868,6 +1922,7 @@ class _AgendaTaskContent extends StatelessWidget {
     required this.defaultTimedBlockMinutes,
     this.modern = false,
     this.withinDate = true,
+    this.quietDay,
     this.description,
   });
 
@@ -1883,11 +1938,47 @@ class _AgendaTaskContent extends StatelessWidget {
   final int defaultTimedBlockMinutes;
   final bool modern;
   final bool withinDate;
+  final DateTime? quietDay;
   final String? description;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    Widget dragSource(Widget child) =>
+        _TaskTextDragSource(task: task, enabled: dragEnabled, child: child);
+    if (quietDay != null) {
+      final timing = _TaskScheduleBlock.buildIfPresent(
+        context,
+        task: task,
+        state: taskTimeState,
+        displayMode: timeDisplayMode,
+        defaultTimedBlockMinutes: defaultTimedBlockMinutes,
+        withinDate: false,
+        quietDay: quietDay,
+      );
+      return dragSource(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              task.content,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: modern ? FontWeight.w600 : null,
+                color: task.isCompleted ? colors.mutedText : colors.primaryText,
+                decoration: task.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
+              ),
+            ),
+            if (timing != null) ...[
+              SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
+              timing,
+            ],
+          ],
+        ),
+      );
+    }
     final schedule = task.schedule;
     final scheduleLabel = schedule == null
         ? null
@@ -1899,8 +1990,6 @@ class _AgendaTaskContent extends StatelessWidget {
             displayMode: timeDisplayMode,
             defaultTimedBlockMinutes: defaultTimedBlockMinutes,
           );
-    Widget dragSource(Widget child) =>
-        _TaskTextDragSource(task: task, enabled: dragEnabled, child: child);
     final textScaler = MediaQuery.textScalerOf(context);
     final metadata = <Widget>[
       SizedBox(

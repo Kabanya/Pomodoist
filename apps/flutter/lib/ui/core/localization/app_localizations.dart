@@ -8894,6 +8894,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync conflict'**
   String get blockingSyncConflict;
+
+  /// No description provided for @focusDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get focusDuration;
+
+  /// No description provided for @focusPlannedDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan · {duration}'**
+  String focusPlannedDuration(String duration);
+
+  /// No description provided for @focusShortenDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'−5 min'**
+  String get focusShortenDuration;
+
+  /// No description provided for @focusExtendDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'+5 min'**
+  String get focusExtendDuration;
+
+  /// No description provided for @focusFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get focusFinish;
 }
 
 class _AppLocalizationsDelegate

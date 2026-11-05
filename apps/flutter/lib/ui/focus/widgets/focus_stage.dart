@@ -1,10 +1,10 @@
-import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
-import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/pomo/view_models/pomo_controller.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_settings.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
 import 'package:pomodoist/ui/core/widgets/app_action_menu.dart';
+import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
+import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
 import 'package:pomodoist/ui/focus/view_models/focus_view_model.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadContextMenuItem;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
@@ -40,8 +41,11 @@ final class FocusStageActions {
     required this.completeActiveInterval,
     required this.skipActiveInterval,
     required this.stopActiveRun,
+    this.adjustActiveIntervalDuration,
   });
 
+  final Future<void> Function(String intervalId, int deltaSeconds)?
+  adjustActiveIntervalDuration;
   final Future<void> Function() startReadyInterval;
   final Future<void> Function() pauseActiveInterval;
   final Future<void> Function() resumeActiveInterval;
@@ -109,13 +113,6 @@ class FocusIdleStage extends StatelessWidget {
       onCustomize: onCustomize,
       onCreate: onCreate,
     );
-    final sessionLabel = preset == null
-        ? l10n.noPreset
-        : l10n.focusSessionProgress(1, cadence);
-    final nextLabel = _nextIntervalLabel(
-      context,
-      rhythm?.steps.skip(1).firstOrNull,
-    );
 
     return ConstrainedBox(
       key: const Key('focus-state-idle'),
@@ -140,19 +137,16 @@ class FocusIdleStage extends StatelessWidget {
                       menu: _FocusViewModeMenu(
                         viewMode: viewMode,
                         onChanged: onViewModeChanged,
-                        // A fixed view mode belongs to a surface that owns its
-                        // own way out, so it exposes no view-mode menu.
-                        showViewModeMenu: false,
+                        showViewModeMenu: showViewModeMenu,
                         sessionDisplay: sessionDisplay,
                         onSessionDisplayChanged: onSessionDisplayChanged,
                       ),
                     ),
                     if (rhythm != null) ...[
                       SizedBox(height: compact ? 12 : 24),
-                      _FocusSessionOverview(
+                      FocusRhythmRail(
                         rhythm: rhythm,
-                        label: sessionLabel,
-                        presetName: preset!.displayName(l10n),
+                        activeProgress: 0,
                         semanticsLabel: l10n.focusRhythmPreviewSummary(
                           rhythm.steps.length,
                         ),
@@ -164,33 +158,35 @@ class FocusIdleStage extends StatelessWidget {
                 ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: full ? (compact ? 16 : 64) : 8,
+                  top: full ? (compact ? 32 : 56) : 8,
                   bottom: full && compact ? 16 : 32,
                 ),
                 child: Column(
                   key: const Key('focus-primary-stage'),
                   children: [
-                    if (full)
-                      Text(
-                        l10n.noActiveSession,
-                        key: const Key('focus-idle-full-copy'),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    if (!full) presetMenu,
-                    SizedBox(height: full && compact ? 16 : 28),
+                    if (!full) ...[presetMenu, const SizedBox(height: 28)],
                     LayoutBuilder(
-                      builder: (context, constraints) => _FocusMinimalTimer(
-                        style: timerVisualStyle,
-                        remainingLabel: preset == null
-                            ? '--:--'
-                            : formatDurationCompact(
-                                Duration(seconds: preset.workSeconds),
-                              ),
-                        progress: 0,
-                        color: context.appColors.accent,
-                        maxWidth: constraints.maxWidth,
-                      ),
+                      builder: (context, constraints) {
+                        final remaining = preset == null
+                            ? null
+                            : Duration(seconds: preset.workSeconds);
+                        return full
+                            ? _FocusTimerStage(
+                                remaining: remaining,
+                                style: timerVisualStyle,
+                                compact: compact,
+                                minimal: false,
+                              )
+                            : _FocusMinimalTimer(
+                                style: timerVisualStyle,
+                                remainingLabel: remaining == null
+                                    ? '--:--'
+                                    : formatDurationCompact(remaining),
+                                progress: 0,
+                                color: context.appColors.accent,
+                                maxWidth: constraints.maxWidth,
+                              );
+                      },
                     ),
                   ],
                 ),
@@ -198,12 +194,7 @@ class FocusIdleStage extends StatelessWidget {
             ],
           ),
           if (full)
-            _FocusControlDock(
-              summary: nextLabel == null
-                  ? sessionLabel
-                  : '$sessionLabel\n$nextLabel',
-              primary: primary,
-            )
+            _FocusControlDock(primary: primary)
           else
             Center(child: primary),
         ],
@@ -390,7 +381,6 @@ class FocusActiveStage extends StatelessWidget {
     required this.selectedPreset,
     required this.timerVisualStyle,
     required this.compact,
-    this.width = 320,
     required this.viewMode,
     this.showViewModeMenu = true,
     this.sessionDisplay = FocusSessionDisplay.compact,
@@ -412,7 +402,6 @@ class FocusActiveStage extends StatelessWidget {
   final FocusPresetItem? selectedPreset;
   final FocusTimerVisualStyle timerVisualStyle;
   final bool compact;
-  final double width;
   final FocusViewMode viewMode;
   final bool showViewModeMenu;
   final FocusSessionDisplay sessionDisplay;
@@ -467,22 +456,6 @@ class FocusActiveStage extends StatelessWidget {
     final activeStepNumber = activeStepIndex == null || activeStepIndex < 0
         ? 1
         : activeStepIndex + 1;
-    final sessionNumber = math.min(
-      run.targetWorkIntervals,
-      math.max(
-        1,
-        run.completedWorkIntervals + (interval.type == 'work' ? 1 : 0),
-      ),
-    );
-
-    final sessionLabel = l10n.focusSessionProgress(
-      sessionNumber,
-      run.targetWorkIntervals,
-    );
-    final nextStep = rhythm?.steps
-        .where((step) => step.sequence > interval.sequenceNumber)
-        .firstOrNull;
-    final nextLabel = _nextIntervalLabel(context, nextStep);
     return ConstrainedBox(
       key: const Key('focus-state-active'),
       constraints: BoxConstraints(minHeight: full ? minHeight : 0),
@@ -512,13 +485,12 @@ class FocusActiveStage extends StatelessWidget {
                       onMinimize: showViewModeMenu
                           ? () => onViewModeChanged(FocusViewMode.minimal)
                           : null,
+                      menu: menu,
                     ),
                     if (rhythm != null) ...[
                       SizedBox(height: compact ? 12 : 24),
-                      _FocusSessionOverview(
+                      FocusRhythmRail(
                         rhythm: rhythm,
-                        label: sessionLabel,
-                        presetName: preset!.displayName(l10n),
                         compact: compact,
                         display: sessionDisplay,
                         activeSequence: interval.sequenceNumber,
@@ -538,7 +510,7 @@ class FocusActiveStage extends StatelessWidget {
               ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: full ? (compact ? 16 : 64) : 0,
+                  top: full ? (compact ? 32 : 56) : 0,
                   bottom: full && compact ? 16 : 32,
                 ),
                 child: Column(
@@ -560,7 +532,6 @@ class FocusActiveStage extends StatelessWidget {
                       style: timerVisualStyle,
                       compact: compact,
                       minimal: !full,
-                      diameter: focusTimerDiameter(width, compact: compact),
                     ),
                   ],
                 ),
@@ -574,10 +545,6 @@ class FocusActiveStage extends StatelessWidget {
             minimal: !full,
             actions: actions,
             primary: primary,
-            menu: menu,
-            summary: nextLabel == null
-                ? sessionLabel
-                : '$sessionLabel\n$nextLabel',
           ),
         ],
       ),

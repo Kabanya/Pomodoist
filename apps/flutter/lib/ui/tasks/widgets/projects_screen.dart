@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pomodoist/routing/project_map_navigation.dart';
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
 import 'package:pomodoist/ui/tasks/view_models/projects_view_model.dart';
 import 'package:pomodoist/ui/tasks/view_models/browse_view_model.dart';
@@ -115,10 +116,13 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                           runSpacing: 8,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Text(
-                              l10n.navProjects,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
+                            if (!CompactShellHeading.isShown(context))
+                              Text(
+                                l10n.navProjects,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
+                              ),
                             IntrinsicWidth(
                               child: ShadTabs<_ProjectsMode>(
                                 key: const Key(

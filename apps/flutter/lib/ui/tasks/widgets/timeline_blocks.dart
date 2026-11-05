@@ -6,20 +6,26 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
     this.project,
     this.showProjectName = false,
     this.fillHeight = false,
+    this.allDayRow = false,
+    this.vertical = false,
     this.allowResize = true,
     this.onResizeStart,
     this.onResizeUpdate,
     this.onResizeEnd,
+    this.onResizeCancel,
   });
 
   final TaskItem task;
   final ProjectItem? project;
   final bool showProjectName;
   final bool fillHeight;
+  final bool allDayRow;
+  final bool vertical;
   final bool allowResize;
   final VoidCallback? onResizeStart;
   final ValueChanged<double>? onResizeUpdate;
   final VoidCallback? onResizeEnd;
+  final VoidCallback? onResizeCancel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,19 +35,25 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
         ? inboxProjectColorHex
         : effectiveProjectColor(project!);
     final projectColor = projectColorValue(projectHex);
-    final surfaceColor = Color.alphaBlend(
-      projectColor.withValues(alpha: 0.08),
-      colors.surface,
-    );
     final schedule = task.schedule;
-    final rawTimeLabel = schedule == null
-        ? null
-        : schedule.isTimed
-        ? '${_formatMinutes(timelineStartMinutes(schedule))}-${_formatMinutes(timelineEndMinutes(schedule))}'
-        : context.l10n.timelineAllDay;
-    final timeLabel = showProjectName && project != null
-        ? '${project!.name} · ${rawTimeLabel ?? ''}'
-        : rawTimeLabel;
+    final timeRange = schedule?.isTimed == true
+        ? '${_formatMinutes(timelineStartMinutes(schedule!))} – '
+              '${_formatMinutes(timelineEndMinutes(schedule))}'
+        : null;
+    final projectName =
+        project?.displayName(context.l10n) ??
+        (task.projectId == inboxProjectId ? context.l10n.navInbox : null);
+    final timeLabel = showProjectName && projectName != null
+        ? [projectName, ?timeRange].join(' · ')
+        : timeRange;
+    final splitMetadata =
+        vertical &&
+        projectName != null &&
+        timeRange != null &&
+        MediaQuery.textScalerOf(context).scale(16) > 20;
+    final canResize =
+        allowResize && onResizeStart != null && onResizeEnd != null;
+    void finishResize() => onResizeEnd?.call();
     final block = Material(
       color: Colors.transparent,
       child: InkWell(
@@ -51,39 +63,47 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
         child: Container(
           constraints: fillHeight
               ? const BoxConstraints.expand()
-              : const BoxConstraints(minHeight: 44),
+              : BoxConstraints(minHeight: allDayRow ? 60 : 44),
           decoration: BoxDecoration(
-            color: surfaceColor,
-            border: Border.all(color: colors.border),
+            color: allDayRow ? Colors.transparent : colors.accentTint,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Stack(
             children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 3,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: projectColor,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(8),
+              if (!allDayRow)
+                PositionedDirectional(
+                  start: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 4,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: projectColor,
+                      borderRadius: const BorderRadiusDirectional.horizontal(
+                        start: Radius.circular(8),
+                      ),
                     ),
                   ),
                 ),
-              ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(11, 6, 8, 6),
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  allDayRow ? 0 : 10,
+                  4,
+                  canResize && !vertical ? 13 : 6,
+                  4,
+                ),
                 child: LayoutBuilder(
                   builder: (context, constraints) => Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      if (constraints.maxWidth >= 72) ...[
+                      if (allDayRow || constraints.maxWidth >= 68) ...[
                         SizedBox.square(
-                          dimension: 28,
+                          dimension: allDayRow ? 44 : 36,
                           child: TaskCompletionControl(
                             taskId: task.id,
+                            tooltip: task.isCompleted
+                                ? context.l10n.markOpen
+                                : context.l10n.markComplete,
                             isCompleted: task.isCompleted,
                             color: priorityColor,
                             fillColor: colors.accentFill,
@@ -132,13 +152,18 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
                                 Expanded(
                                   child: Text(
                                     task.content,
-                                    maxLines: 1,
+                                    maxLines:
+                                        allDayRow || (fillHeight && !vertical)
+                                        ? 2
+                                        : 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
                                         ?.copyWith(
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight: allDayRow
+                                              ? FontWeight.w500
+                                              : FontWeight.w700,
                                           color: colors.primaryText,
                                         ),
                                   ),
@@ -154,43 +179,18 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            if (timeLabel != null &&
-                                (!schedule!.isTimed ||
-                                    constraints.maxWidth >= 104)) ...[
-                              const SizedBox(height: 2),
-                              if (schedule.isTimed)
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: colors.surface.withValues(
-                                      alpha: 0.72,
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 1,
-                                    ),
-                                    child: Text(
-                                      timeLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(color: colors.mutedText),
-                                    ),
-                                  ),
-                                )
-                              else
-                                Text(
-                                  timeLabel,
-                                  maxLines: 1,
+                            if (timeLabel != null)
+                              Flexible(
+                                child: Text(
+                                  splitMetadata
+                                      ? '$projectName\n$timeRange'
+                                      : timeLabel,
+                                  maxLines: splitMetadata ? 2 : 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(color: colors.mutedText),
                                 ),
-                            ],
+                              ),
                           ],
                         ),
                       ),
@@ -198,19 +198,39 @@ class _TimelineCompactTaskBlock extends ConsumerWidget {
                   ),
                 ),
               ),
-              if (allowResize && onResizeStart != null && onResizeEnd != null)
-                Positioned(
+              if (canResize)
+                PositionedDirectional(
                   key: Key('timeline-resize-${task.id}'),
-                  right: 0,
-                  top: 0,
+                  end: 0,
+                  start: vertical ? 0 : null,
+                  top: vertical ? null : 0,
                   bottom: 0,
-                  width: 12,
+                  width: vertical ? null : 12,
+                  height: vertical ? 9 : null,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onHorizontalDragStart: (_) => onResizeStart?.call(),
-                    onHorizontalDragUpdate: (details) =>
-                        onResizeUpdate?.call(details.delta.dx),
-                    onHorizontalDragEnd: (_) => onResizeEnd?.call(),
+                    onHorizontalDragStart: vertical
+                        ? null
+                        : (_) => onResizeStart?.call(),
+                    onHorizontalDragUpdate: vertical
+                        ? null
+                        : (details) => onResizeUpdate?.call(
+                            Directionality.of(context) == TextDirection.rtl
+                                ? -details.delta.dx
+                                : details.delta.dx,
+                          ),
+                    onHorizontalDragEnd: vertical
+                        ? null
+                        : (_) => finishResize(),
+                    onVerticalDragStart: vertical
+                        ? (_) => onResizeStart?.call()
+                        : null,
+                    onVerticalDragUpdate: vertical
+                        ? (details) => onResizeUpdate?.call(details.delta.dy)
+                        : null,
+                    onVerticalDragEnd: vertical ? (_) => finishResize() : null,
+                    onHorizontalDragCancel: vertical ? null : onResizeCancel,
+                    onVerticalDragCancel: vertical ? onResizeCancel : null,
                     child: const SizedBox.expand(),
                   ),
                 ),

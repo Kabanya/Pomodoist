@@ -7,13 +7,23 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:shadcn_ui/shadcn_ui.dart'
-    show LucideIcons, ShadButton, ShadIconButton, ShadOption, ShadSelect;
+    show
+        LucideIcons,
+        ShadAnchorAuto,
+        ShadButton,
+        ShadIconButton,
+        ShadOption,
+        ShadPopover,
+        ShadPopoverController,
+        ShadSelect;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/tasks/view_models/timeline_view_model.dart';
@@ -21,6 +31,12 @@ import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
+import 'package:pomodoist/ui/core/widgets/app_action_menu.dart'
+    show actionMenuPlacement;
+import 'package:pomodoist/ui/core/widgets/task_details_host.dart'
+    show DetailsPanelViewport;
+import 'package:pomodoist/ui/tasks/widgets/quick_add_dialog.dart'
+    show showQuickAddDialog;
 import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_completion_feedback.dart';
@@ -59,73 +75,119 @@ class _TimelineScreen extends ConsumerWidget {
     final projects = viewState.projects;
     final visibleHours = viewState.visibleHours;
 
-    return TaskMotionScope(
-      key: ValueKey(day),
-      builder: (context, motion) => SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.navTimeline,
-                      style: Theme.of(context).textTheme.headlineMedium,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final layoutWidth =
+            DetailsPanelViewport.maybeOf(
+              context,
+            )?.backgroundLayoutWidth(constraints.maxWidth) ??
+            constraints.maxWidth;
+        final compact =
+            MediaQuery.sizeOf(context).width < 820 || layoutWidth < 560;
+        final padding = compact ? 16.0 : 28.0;
+        return TaskMotionScope(
+          key: ValueKey(day),
+          builder: (context, motion) {
+            final presentation = tasks.hasValue && projects.hasValue
+                ? ref.watch(
+                    timelineDayPresentationProvider((
+                      day: day,
+                      retained: motion.retainedTasks,
+                    )),
+                  )
+                : null;
+            return SafeArea(
+              bottom: false,
+              child: CustomScrollView(
+                key: const Key('timeline-page-scroll'),
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      padding,
+                      compact ? 24 : 40,
+                      padding,
+                      24,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.timelineSubtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _TimelineHeader(day: day, today: today),
-                    const SizedBox(height: 12),
-                    _VisibleHoursControls(visibleHours: visibleHours),
-                  ],
-                ),
-              ),
-            ),
-            tasks.when(
-              data: (items) {
-                return projects.when(
-                  data: (projectItems) => SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                     sliver: SliverToBoxAdapter(
-                      child: _TimelineDay(
-                        day: day,
-                        presentation: ref.watch(
-                          timelineDayPresentationProvider((
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (!CompactShellHeading.isShown(context)) ...[
+                            Text(
+                              l10n.navTimeline,
+                              style: Theme.of(context).textTheme.headlineLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            SizedBox(height: compact ? 24 : 32),
+                          ],
+                          _TimelineHeader(
                             day: day,
-                            retained: motion.retainedTasks,
-                          )),
-                        ),
-                        visibleHours: visibleHours,
+                            today: today,
+                            compact: compact,
+                            presentation: presentation,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  loading: () => const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
+                  tasks.when(
+                    data: (_) => projects.when(
+                      data: (_) => SliverPadding(
+                        padding: EdgeInsets.fromLTRB(padding, 0, padding, 32),
+                        sliver: SliverToBoxAdapter(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _TimelineDay(
+                                day: day,
+                                presentation: presentation!,
+                                visibleHours: visibleHours,
+                                compact: compact,
+                              ),
+                              if (!compact) ...[
+                                const SizedBox(height: 40),
+                                Align(
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  child: ShadButton(
+                                    key: const Key('timeline-add-task'),
+                                    onPressed: () => unawaited(
+                                      showQuickAddDialog(
+                                        context,
+                                        defaultDate: day,
+                                      ),
+                                    ),
+                                    height: 48,
+                                    leading: const Icon(LucideIcons.plus),
+                                    child: Text(l10n.addTask),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      loading: () => const SliverFillRemaining(
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, _) => SliverFillRemaining(
+                        child: Center(
+                          child: Text(l10n.projectsUnavailable(error)),
+                        ),
+                      ),
+                    ),
+                    loading: () => const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, _) => SliverFillRemaining(
+                      child: Center(child: Text(l10n.failedToLoadTasks(error))),
+                    ),
                   ),
-                  error: (error, stackTrace) => SliverFillRemaining(
-                    child: Center(child: Text(l10n.projectsUnavailable(error))),
-                  ),
-                );
-              },
-              loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
+                ],
               ),
-              error: (error, stackTrace) => SliverFillRemaining(
-                child: Center(child: Text(l10n.failedToLoadTasks(error))),
-              ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -1643,5 +1643,10 @@
   "pickerTimeWheels": "Ruedas de hora",
   "pickerMinuteOffset": "{offset} min",
   "pickerIncrease": "Aumentar",
-  "pickerDecrease": "Disminuir"
+  "pickerDecrease": "Disminuir",
+  "focusDuration": "Duración",
+  "focusPlannedDuration": "Plan · {duration}",
+  "focusShortenDuration": "−5 min",
+  "focusExtendDuration": "+5 min",
+  "focusFinish": "Finalizar"
 }

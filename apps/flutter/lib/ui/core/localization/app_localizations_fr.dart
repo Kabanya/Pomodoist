@@ -5183,4 +5183,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get blockingSyncConflict => 'Sync conflict';
+
+  @override
+  String get focusDuration => 'Durée';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return 'Prévu · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−5 min';
+
+  @override
+  String get focusExtendDuration => '+5 min';
+
+  @override
+  String get focusFinish => 'Terminer';
 }

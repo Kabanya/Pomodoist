@@ -1656,5 +1656,10 @@
   "blockingDeleteWarning": "Удаление этой задачи разблокирует зависимые задачи.",
   "blockingNoMatches": "Нет подходящих предшественников",
   "blockingSyncConflictDetails": "Сервер отклонил завершение из-за блокировки. Статус задачи восстановлен, накопленный фокус сохранён.",
-  "blockingSyncConflict": "Конфликт синхронизации"
+  "blockingSyncConflict": "Конфликт синхронизации",
+  "focusDuration": "Длительность",
+  "focusPlannedDuration": "План · {duration}",
+  "focusShortenDuration": "−5 мин",
+  "focusExtendDuration": "+5 мин",
+  "focusFinish": "Завершить"
 }

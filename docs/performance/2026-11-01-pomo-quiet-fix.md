@@ -41,8 +41,8 @@ separate native texture-provider leak identified in the audit.
 
 ## Automated regression check
 
-Build/run `tool/pomo_resource_profile.dart` in profile mode, then run from
-`apps/flutter`:
+Start `tool/macos/run-resource-profile.sh` from the repository root. Use the
+full Dart VM service URI printed by Flutter, then run from `apps/flutter`:
 
 ```sh
 python3 tool/pomo/check_quiet.py HTTP_VM_SERVICE_URI OUTPUT_DIRECTORY

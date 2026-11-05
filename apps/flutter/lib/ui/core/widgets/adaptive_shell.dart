@@ -4,6 +4,11 @@ import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dar
 // ignore_for_file: deprecated_member_use
 
 import 'package:pomodoist/ui/core/widgets/compact_task_button_location.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_title.dart';
+import 'package:pomodoist/ui/planning/view_models/today_view_model.dart';
+import 'package:pomodoist/ui/planning/widgets/today_screen.dart'
+    show TodayOptionsButton;
 
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
@@ -59,7 +64,6 @@ import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
 
-const double _wideLayoutBreakpoint = 820;
 const double _wideSidebarDefaultWidth = 280;
 const double _wideSidebarMinWidth = 220;
 const double _wideSidebarMaxWidth = 380;
@@ -184,7 +188,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {
+    if (MediaQuery.sizeOf(context).width >= compactShellBreakpoint) {
       _resetNavigationEditor();
     }
   }
@@ -309,8 +313,12 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         ),
       );
     }
-    final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
+    final wide = MediaQuery.sizeOf(context).width >= compactShellBreakpoint;
     final mapFullscreen = widget.mapFullscreen;
+    final mobileLayout = usesCompactMobileLayout(context);
+    final pageTitle = widget.dataReady && mobileLayout
+        ? compactShellTitle(context, ref, widget.location)
+        : null;
     // Contextual editors and standalone task details replace compact chrome.
     final habitOverviewOpen =
         widget.dataReady &&
@@ -354,6 +362,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
             dataReady: widget.dataReady,
             location: widget.location,
             onMenuPressed: _toggleSidebar,
+            pageTitle: pageTitle,
           ),
         Expanded(
           // Keep the route mounted when the surrounding shell bars disappear.
@@ -365,7 +374,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                 context: context,
                 removeTop: !compactDetailsOpen && !mapFullscreen,
                 removeBottom: !wide && !mapFullscreen,
-                child: widget.child,
+                child: CompactShellHeading(
+                  shown: pageTitle != null,
+                  child: widget.child,
+                ),
               ),
               if (widget.dataReady)
                 const Positioned(
@@ -574,7 +586,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                                   elevation: 3,
                                   shape: const CircleBorder(),
                                   onPressed: () => unawaited(
-                                    showLearningTourQuickAdd(context, ref),
+                                    showLearningTourQuickAdd(
+                                      context,
+                                      ref,
+                                      defaultDate: _quietTodayQuickAddDate(),
+                                    ),
                                   ),
                                   child: const Icon(LucideIcons.plus, size: 24),
                                 ),
@@ -787,6 +803,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     }
   }
 
+  DateTime? _quietTodayQuickAddDate() =>
+      widget.location == '/today' && usesCompactMobileLayout(context)
+      ? ref.read(todayViewModelProvider).day
+      : null;
+
   void _openQuickAddFromShortcut() {
     if (!widget.dataReady || _quickAddShortcutDialogOpen) return;
     _quickAddShortcutDialogOpen = true;
@@ -794,6 +815,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       showLearningTourQuickAdd(
         context,
         ref,
+        defaultDate: _quietTodayQuickAddDate(),
       ).whenComplete(() => _quickAddShortcutDialogOpen = false),
     );
   }
@@ -805,7 +827,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 
   void _toggleSidebar() {
     final scaffold = _scaffoldKey.currentState;
-    final wide = MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint;
+    final wide = MediaQuery.sizeOf(context).width >= compactShellBreakpoint;
     if (wide) {
       if (scaffold?.isDrawerOpen ?? false) {
         scaffold?.closeDrawer();
@@ -830,7 +852,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 
   void _go(String path) {
     if (path == '/search' &&
-        MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {
+        MediaQuery.sizeOf(context).width >= compactShellBreakpoint) {
       if (_searchPaletteOpen) return;
       _searchPaletteOpen = true;
       unawaited(
@@ -1068,36 +1090,73 @@ class _ShellTopBar extends StatelessWidget {
     required this.location,
     required this.onMenuPressed,
     required this.dataReady,
+    required this.pageTitle,
   });
 
   final String location;
   final VoidCallback onMenuPressed;
   final bool dataReady;
+  final String? pageTitle;
 
   @override
   Widget build(BuildContext context) {
     final compactKanban =
         location == '/kanban' &&
-        MediaQuery.sizeOf(context).width < _wideLayoutBreakpoint;
-    final content = SizedBox(
-      height: _shellTopBarHeight,
+        MediaQuery.sizeOf(context).width < compactShellBreakpoint;
+    final title =
+        pageTitle ?? (compactKanban ? context.l10n.kanbanTitle : null);
+    final sideSpace = pageTitle == null ? 0.0 : (compactKanban ? 100.0 : 48.0);
+    final content = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: _shellTopBarHeight),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _ShellMenuButton(onPressed: onMenuPressed),
+          PositionedDirectional(
+            start: 0,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: _ShellMenuButton(
+                onPressed: onMenuPressed,
+                compact: pageTitle != null,
+              ),
+            ),
           ),
-          if (compactKanban)
-            Text(
-              context.l10n.kanbanTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: sideSpace, vertical: 8),
+              child: title == null
+                  ? null
+                  : Semantics(
+                      header: true,
+                      label: title,
+                      excludeSemantics: true,
+                      child: Text(
+                        title,
+                        key: const Key('shell-page-title'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          if (pageTitle != null && location == '/today')
+            const PositionedDirectional(
+              end: 0,
+              top: 0,
+              bottom: 0,
+              child: Center(child: TodayOptionsButton()),
             ),
           if (compactKanban)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
+            PositionedDirectional(
+              end: 0,
+              top: 0,
+              bottom: 0,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1128,7 +1187,7 @@ class _ShellTopBar extends StatelessWidget {
       bottom: false,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: compactKanban
+          border: title != null
               ? Border(bottom: BorderSide(color: context.appColors.border))
               : null,
         ),
@@ -1139,22 +1198,32 @@ class _ShellTopBar extends StatelessWidget {
 }
 
 class _ShellMenuButton extends StatelessWidget {
-  const _ShellMenuButton({required this.onPressed});
+  const _ShellMenuButton({required this.onPressed, required this.compact});
 
   final VoidCallback onPressed;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final button = IconButton(
+      key: const Key('shell-menu-button'),
+      tooltip: context.l10n.menuTooltip,
+      onPressed: onPressed,
+      icon: const Icon(LucideIcons.panelLeft),
+    );
+    final showHint = shortcutHintsSupported(Theme.of(context).platform);
+    if (compact && showHint) {
+      return ShortcutHintBadge(
+        command: AppShortcutCommand.toggleSidebar,
+        outside: true,
+        child: button,
+      );
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          key: const Key('shell-menu-button'),
-          tooltip: context.l10n.menuTooltip,
-          onPressed: onPressed,
-          icon: const Icon(LucideIcons.panelLeft),
-        ),
-        if (shortcutHintsSupported(Theme.of(context).platform))
+        button,
+        if (showHint)
           const ShortcutHintBadge(
             command: AppShortcutCommand.toggleSidebar,
             alignment: Alignment.centerLeft,

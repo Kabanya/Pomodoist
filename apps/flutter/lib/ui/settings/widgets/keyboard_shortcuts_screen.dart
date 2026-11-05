@@ -12,6 +12,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
     show LucideIcons, ShadButton, ShadSwitch;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_components.dart';
 import 'package:pomodoist/domain/models/settings/app_shortcut.dart';
 import 'package:pomodoist/ui/settings/view_models/keyboard_shortcuts_view_model.dart';
@@ -67,13 +68,15 @@ class _KeyboardShortcutsScreenState
                 onPressed: () => _goBack(context),
                 icon: const Icon(LucideIcons.arrowLeft),
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  l10n.settingsShortcutsTitle,
-                  style: Theme.of(context).textTheme.headlineMedium,
+              if (!CompactShellHeading.isShown(context)) ...[
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.settingsShortcutsTitle,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 4),

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/focus/view_models/focus_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
@@ -37,11 +38,21 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final intervals = state.intervals;
     final remaining = state.remaining;
     final viewMode = widget.fixedViewMode ?? state.viewMode;
+    final showTitle = widget.embedded || !CompactShellHeading.isShown(context);
+    final showExpand =
+        viewMode == FocusViewMode.minimal && widget.fixedViewMode == null;
     final timerVisualStyle = state.timerVisualStyle;
     final effectivePreset = state.effectivePreset;
     final activePreset = state.activePreset;
     final loading = state.loading;
     final loadError = state.loadError;
+    final showStatusTitle =
+        showTitle &&
+        (viewMode == FocusViewMode.minimal ||
+            loading ||
+            loadError != null ||
+            (run == null) != (interval == null) ||
+            (run != null && (interval?.runId != run.id || remaining == null)));
     final viewModel = ref.read(focusViewModelProvider.notifier);
     final actions = FocusStageActions(
       startReadyInterval: viewModel.startReadyInterval,
@@ -50,6 +61,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       completeActiveInterval: viewModel.completeActiveInterval,
       skipActiveInterval: viewModel.skipActiveInterval,
       stopActiveRun: viewModel.stopActiveRun,
+      adjustActiveIntervalDuration: viewModel.adjustActiveIntervalDuration,
     );
 
     final content = LayoutBuilder(
@@ -68,17 +80,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (viewMode == FocusViewMode.minimal ||
-                    loading ||
-                    loadError != null ||
-                    (run == null) != (interval == null) ||
-                    (run != null &&
-                        (interval?.runId != run.id || remaining == null)))
+                if (showExpand || showStatusTitle)
                   Row(
                     children: [
-                      const Expanded(child: FocusHeader()),
-                      if (viewMode == FocusViewMode.minimal &&
-                          widget.fixedViewMode == null)
+                      Expanded(
+                        child: showTitle
+                            ? const FocusHeader()
+                            : const SizedBox.shrink(),
+                      ),
+                      if (showExpand)
                         Semantics(
                           key: const Key('focus-switch-view-mode'),
                           button: true,
@@ -154,7 +164,6 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         selectedPreset: activePreset,
                         timerVisualStyle: timerVisualStyle,
                         compact: !desktop,
-                        width: constraints.maxWidth,
                         viewMode: viewMode,
                         sessionDisplay: state.sessionDisplay,
                         onSessionDisplayChanged: _setSessionDisplay,

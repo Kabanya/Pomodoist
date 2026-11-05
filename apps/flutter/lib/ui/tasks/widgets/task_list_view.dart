@@ -9,12 +9,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_list_view_model.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
-import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart'
-    show showQuickAddDialog;
+import 'package:pomodoist/ui/tasks/widgets/quick_add_dialog.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_list_item.dart';
@@ -27,6 +27,7 @@ class TaskListView extends ConsumerWidget {
     required this.title,
     required this.query,
     this.subtitle,
+    this.subtitleSemanticsLabel,
     this.headerAddon,
     this.footerAddon,
     this.emptyMessage,
@@ -35,15 +36,19 @@ class TaskListView extends ConsumerWidget {
     this.showQuickAdd = true,
     this.quickAddProjectId,
     this.titleLeading,
+    this.titleTrailing,
     this.showHeader = true,
+    this.quietToday = false,
     this.isActive = true,
     super.key,
   });
 
   final bool showHeader;
+  final bool quietToday;
   final bool isActive;
   final String title;
   final String? subtitle;
+  final String? subtitleSemanticsLabel;
   final TaskQuery query;
   final Widget? headerAddon;
   final Widget? footerAddon;
@@ -53,10 +58,13 @@ class TaskListView extends ConsumerWidget {
   final bool showQuickAdd;
   final String? quickAddProjectId;
   final Widget? titleLeading;
+  final Widget? titleTrailing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final showTitle = !CompactShellHeading.isShown(context);
+    final quietDay = quietToday ? query.now : null;
     final viewState = taskFilter == null
         ? ref
               .watch(
@@ -138,11 +146,18 @@ class TaskListView extends ConsumerWidget {
             },
             child: CustomScrollView(
               slivers: [
-                if (showHeader)
+                if (showHeader &&
+                    (showTitle ||
+                        titleLeading != null ||
+                        subtitle != null ||
+                        headerAddon != null ||
+                        showQuickAdd))
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       24,
-                      query.kind == TaskQueryKind.today ? 32 : 20,
+                      query.kind == TaskQueryKind.today
+                          ? (showTitle ? 32 : 12)
+                          : 20,
                       24,
                       8,
                     ),
@@ -150,28 +165,36 @@ class TaskListView extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              if (titleLeading != null) ...[
-                                titleLeading!,
-                                const SizedBox(width: 8),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  title,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.headlineMedium,
+                          if (showTitle)
+                            Row(
+                              crossAxisAlignment: titleTrailing == null
+                                  ? CrossAxisAlignment.center
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                if (titleLeading != null) ...[
+                                  titleLeading!,
+                                  const SizedBox(width: 8),
+                                ],
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.headlineMedium,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          if (query.kind == TaskQueryKind.today)
+                                ?titleTrailing,
+                              ],
+                            )
+                          else
+                            ?titleLeading,
+                          if (query.kind == TaskQueryKind.today && !quietToday)
                             const TaskPriorityCascadeControl(),
                           if (subtitle != null) ...[
-                            const SizedBox(height: 4),
+                            if (showTitle) const SizedBox(height: 4),
                             Text(
                               subtitle!,
+                              semanticsLabel: subtitleSemanticsLabel,
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: Theme.of(
@@ -181,11 +204,15 @@ class TaskListView extends ConsumerWidget {
                             ),
                           ],
                           if (headerAddon != null) ...[
-                            const SizedBox(height: 16),
+                            if (showTitle || subtitle != null)
+                              const SizedBox(height: 16),
                             headerAddon!,
                           ],
                           if (showQuickAdd) ...[
-                            const SizedBox(height: 16),
+                            if (showTitle ||
+                                subtitle != null ||
+                                headerAddon != null)
+                              const SizedBox(height: 16),
                             QuickAddBar(
                               defaultDate: query.kind == TaskQueryKind.today
                                   ? query.now
@@ -283,6 +310,7 @@ class TaskListView extends ConsumerWidget {
                             query: query,
                             branchScope: branchScope,
                             progress: progressById[row.task.id],
+                            quietDay: quietDay,
                           );
                         },
                         separatorBuilder: (context, index) {
@@ -292,6 +320,7 @@ class TaskListView extends ConsumerWidget {
                             previousRow: rows[index],
                             nextDepth: rows[index + 1].depth,
                             nextRow: rows[index + 1],
+                            quietDay: quietDay,
                           );
                           if (!supportsRootDrop) {
                             return divider;
@@ -353,6 +382,8 @@ class TaskListView extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                     sliver: SliverToBoxAdapter(child: footerAddon),
                   ),
+                if (quietToday)
+                  const SliverToBoxAdapter(child: SizedBox(height: 68)),
                 if (supportsRootDrop && visibleItems.isNotEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,

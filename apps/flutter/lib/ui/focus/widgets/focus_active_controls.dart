@@ -96,8 +96,6 @@ class _FocusActiveActions extends StatelessWidget {
     required this.minimal,
     required this.actions,
     required this.primary,
-    required this.menu,
-    required this.summary,
   });
   final FocusIntervalItem interval;
   final Duration remaining;
@@ -105,8 +103,6 @@ class _FocusActiveActions extends StatelessWidget {
   final bool minimal;
   final FocusStageActions actions;
   final Widget primary;
-  final Widget menu;
-  final String summary;
 
   @override
   Widget build(BuildContext context) {
@@ -115,18 +111,31 @@ class _FocusActiveActions extends StatelessWidget {
         interval.status == 'ready' ||
         ((selectedPreset?.strictMode ?? false) && remaining > Duration.zero);
     return _FocusControlDock(
-      summary: summary,
       primary: primary,
-      menu: menu,
+      duration: actions.adjustActiveIntervalDuration == null
+          ? null
+          : _FocusDurationControls(
+              interval: interval,
+              remaining: remaining,
+              strict: selectedPreset?.strictMode ?? false,
+              onAdjust: actions.adjustActiveIntervalDuration!,
+            ),
       secondary: OutlinedButton.icon(
-        style: OutlinedButton.styleFrom(minimumSize: const Size(200, 48)),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        ),
         onPressed: blocked
             ? null
             : () => unawaited(
                 _performFocusAction(context, actions.completeActiveInterval),
               ),
         icon: const Icon(LucideIcons.check, size: 18),
-        label: Text(context.l10n.completeInterval),
+        label: Text(
+          context.l10n.focusFinish,
+          semanticsLabel: context.l10n.completeInterval,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -156,7 +165,10 @@ class _FocusPrimaryButton extends StatelessWidget {
               padding: EdgeInsets.zero,
               shape: const CircleBorder(),
             )
-          : FilledButton.styleFrom(minimumSize: const Size(176, 48)),
+          : FilledButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            ),
       onPressed: onPressed,
       child: AnimatedSwitcher(
         duration: AppMotion.duration(context, AppMotion.state),
@@ -169,7 +181,10 @@ class _FocusPrimaryButton extends StatelessWidget {
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 8,
-                children: [Icon(icon, size: 18), Text(label)],
+                children: [
+                  Icon(icon, size: 18),
+                  Text(label, textAlign: TextAlign.center),
+                ],
               ),
       ),
     );

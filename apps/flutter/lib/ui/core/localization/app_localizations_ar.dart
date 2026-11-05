@@ -5077,4 +5077,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get blockingSyncConflict => 'Sync conflict';
+
+  @override
+  String get focusDuration => 'المدة';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return 'المخطط · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−٥ د';
+
+  @override
+  String get focusExtendDuration => '+٥ د';
+
+  @override
+  String get focusFinish => 'إنهاء';
 }

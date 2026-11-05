@@ -333,7 +333,7 @@ void main() {
     }
 
     expect(find.text('Focus'), findsOneWidget);
-    expect(find.text('No active session'), findsOneWidget);
+    expect(find.text('No active session'), findsNothing);
     expect(find.text('Classic'), findsAtLeastNWidgets(1));
     expect(find.text('Classic default'), findsNothing);
     expect(find.text('25:00'), findsOneWidget);
@@ -1270,7 +1270,7 @@ void main() {
 
     expect(
       tester.getSize(find.byKey(const Key('focus-circular-timer'))),
-      const Size.square(300),
+      const Size.square(320),
     );
   });
 
@@ -1753,6 +1753,13 @@ class _FakeNotificationScheduler extends NotificationScheduler {
 
 class _FakeFocusRepository implements FocusRepository {
   @override
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  }) async => throw UnimplementedError();
+
+  @override
   Future<Result<void>> setPresetDistractionProfile(
     String presetId,
     String? profileId,
@@ -1860,10 +1867,12 @@ class _FakeFocusRepository implements FocusRepository {
       Result.capture<void>(() async {});
 
   @override
-  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
-      Result.capture<void>(() async {
-        completeCount++;
-      });
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  }) => Result.capture<void>(() async {
+    completeCount++;
+  });
 
   @override
   Future<Result<void>> skipActiveInterval({DateTime? now}) =>

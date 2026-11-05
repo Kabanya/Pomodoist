@@ -360,6 +360,7 @@ help:
 	show_command 'iOS' 'testflight-ios' 'Upload iOS to TestFlight'; \
 	show_command 'macOS' 'testflight-macos' 'Upload macOS to TestFlight'; \
 	show_command 'All' 'testflight' 'Upload iOS + macOS to TestFlight'; \
+	show_command 'All' 'app-store' 'Check App Store listing copy and screenshots'; \
 	show_command 'Deploy' 'deploy-staging' '    Deploy backend + web staging'; \
 	show_command 'Deploy' 'deploy-production' '    Deploy backend + web production'; \
 	show_command 'Deploy' 'deploy-all' '    Deploy everything, including both Telegram bots'; \
@@ -884,6 +885,18 @@ telegram-staging-deploy: setup-telegram deploy-staging
 
 telegram-production-deploy: setup-telegram deploy-production
 	$(MAKE) telegram-configure TELEGRAM_ENV=production
+
+APP_STORE_MODE ?= check
+APP_STORE_VERSION ?= $(shell sed -n 's/^version: \([^+]*\)+.*/\1/p' "$(FLUTTER_ROOT)/pubspec.yaml")
+APP_STORE_SCREENSHOTS ?= design/app-store/localized
+APP_STORE_APPLY ?= 0
+
+.PHONY: app-store
+app-store:
+	python3 tool/apple/app_store.py "$(APP_STORE_MODE)" --version "$(APP_STORE_VERSION)" \
+		--screenshots "$(abspath $(APP_STORE_SCREENSHOTS))" --dart "$(DART)" \
+		--private-config "$(PRIVATE_CONFIG)" $(if $(filter 1,$(APP_STORE_APPLY)),--apply) \
+		$(if $(APP_STORE_BUILD),--build "$(APP_STORE_BUILD)")
 
 testflight-preflight:
 	python3 tool/check_testflight_env.py "$(TESTFLIGHT_CONFIG)"

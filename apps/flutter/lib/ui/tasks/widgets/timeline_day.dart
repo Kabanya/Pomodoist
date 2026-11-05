@@ -5,11 +5,13 @@ class _TimelineDay extends ConsumerWidget {
     required this.day,
     required this.presentation,
     required this.visibleHours,
+    required this.compact,
   });
 
   final DateTime day;
   final TimelineDayPresentation presentation;
   final TimelineVisibleHours visibleHours;
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,7 +22,6 @@ class _TimelineDay extends ConsumerWidget {
     final tasksById = presentation.tasksById;
     final projectsById = presentation.projectsById;
     final projectRows = presentation.projectRows;
-    final projects = presentation.menuProjects;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,15 +50,32 @@ class _TimelineDay extends ConsumerWidget {
             projectsById: projectsById,
           ),
         ],
-        const SizedBox(height: 12),
-        _TimelineGrid(
-          day: day,
-          projectRows: projectRows,
-          tasksByProject: data.timedByProject,
-          projects: projects,
-          tasksById: tasksById,
-          visibleHours: visibleHours,
-          hourWidth: hourWidth,
+        const SizedBox(height: 32),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final projectWidth = _timelineProjectColumnWidth(
+              context,
+              constraints.maxWidth,
+            );
+            return _TimelineGrid(
+              day: day,
+              projectRows: projectRows,
+              tasksByProject: data.timedByProject,
+              compact: compact,
+              baseHourExtent: compact
+                  ? 48
+                  : math.max(
+                      60,
+                      (constraints.maxWidth -
+                              projectWidth -
+                              _timelineRulerTail(context)) /
+                          9,
+                    ),
+              tasksById: tasksById,
+              visibleHours: visibleHours,
+              hourWidth: hourWidth,
+            );
+          },
         ),
       ],
     );
@@ -83,6 +101,7 @@ class _AllDaySection extends ConsumerStatefulWidget {
 
 class _AllDaySectionState extends ConsumerState<_AllDaySection> {
   bool _adding = false;
+  bool _expanded = true;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +134,7 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
             border: Border.all(
               color: accepting ? colors.accent : colors.border,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
           ),
           curve: AppMotion.curve,
           child: Padding(
@@ -126,43 +145,90 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        context.l10n.timelineAllDay,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      child: Semantics(
+                        expanded: _expanded,
+                        child: InkWell(
+                          key: const Key('timeline-all-day-toggle'),
+                          onTap: () => setState(() => _expanded = !_expanded),
+                          borderRadius: BorderRadius.circular(8),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 44),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _expanded
+                                      ? LucideIcons.chevronDown
+                                      : LucideIcons.chevronRight,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Flexible(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: context.l10n.timelineAllDay,
+                                        ),
+                                        TextSpan(
+                                          text: ' · ${widget.tasks.length}',
+                                          style: TextStyle(
+                                            color: colors.mutedText,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    Text(
-                      '${widget.tasks.length}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(color: colors.mutedText),
-                    ),
+                    if (_expanded && !_adding && widget.tasks.isNotEmpty)
+                      Tooltip(
+                        message: context.l10n.timelineAddAllDayHint,
+                        child: ShadIconButton.ghost(
+                          onPressed: () => setState(() => _adding = true),
+                          width: 44,
+                          height: 44,
+                          icon: const Icon(LucideIcons.plus, size: 18),
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 10),
                 if (_adding)
-                  _InlineAddField(
-                    key: const Key('timeline-inline-add-all-day'),
-                    hintText: context.l10n.timelineAddAllDayHint,
-                    onCancel: () => setState(() => _adding = false),
-                    onSubmit: (input) async {
-                      final taskId = await ref
-                          .read(timelineViewModelProvider.notifier)
-                          .create(
-                            input,
-                            schedule: TaskSchedule.allDay(widget.day),
-                          );
-                      if (mounted) {
-                        TaskMotionScope.maybeOf(
-                          this.context,
-                        )?.created({taskId});
-                        await playHaptic(AppHapticCue.light);
-                        setState(() => _adding = false);
-                      }
-                    },
+                  Offstage(
+                    offstage: !_expanded,
+                    child: ExcludeFocus(
+                      excluding: !_expanded,
+                      child: _InlineAddField(
+                        key: const Key('timeline-inline-add-all-day'),
+                        hintText: context.l10n.timelineAddAllDayHint,
+                        onCancel: () => setState(() => _adding = false),
+                        onSubmit: (input) async {
+                          final taskId = await ref
+                              .read(timelineViewModelProvider.notifier)
+                              .create(
+                                input,
+                                schedule: TaskSchedule.allDay(widget.day),
+                              );
+                          if (mounted) {
+                            TaskMotionScope.maybeOf(
+                              this.context,
+                            )?.created({taskId});
+                            await playHaptic(AppHapticCue.light);
+                            setState(() => _adding = false);
+                          }
+                        },
+                      ),
+                    ),
                   )
-                else if (widget.tasks.isEmpty)
+                else if (_expanded && widget.tasks.isEmpty)
                   InkWell(
                     onTap: () => setState(() => _adding = true),
                     borderRadius: BorderRadius.circular(8),
@@ -177,7 +243,7 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
                       ),
                     ),
                   )
-                else
+                else if (_expanded)
                   Column(
                     children: [
                       for (final task in widget.tasks) ...[
@@ -185,18 +251,11 @@ class _AllDaySectionState extends ConsumerState<_AllDaySection> {
                           task: task,
                           project: widget.projectsById[task.projectId],
                           showProjectName: true,
+                          allDayRow: true,
                         ),
                         if (task != widget.tasks.last)
-                          const SizedBox(height: 8),
+                          Divider(height: 1, color: colors.border),
                       ],
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: ShadButton.ghost(
-                          onPressed: () => setState(() => _adding = true),
-                          leading: const Icon(LucideIcons.plus),
-                          child: Text(context.l10n.commonAdd),
-                        ),
-                      ),
                     ],
                   ),
               ],

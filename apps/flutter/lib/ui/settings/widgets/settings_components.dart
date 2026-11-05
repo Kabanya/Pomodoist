@@ -24,6 +24,7 @@ class SettingsRow extends StatelessWidget {
     required this.title,
     required this.control,
     this.subtitle,
+    this.showTitle = true,
     this.leading,
     this.onTap,
     this.controlWidth = 280,
@@ -32,6 +33,7 @@ class SettingsRow extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+  final bool showTitle;
   final Widget? leading;
   final Widget control;
   final double controlWidth;
@@ -42,9 +44,10 @@ class SettingsRow extends StatelessWidget {
     final text = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        if (showTitle)
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
         if (subtitle != null) ...[
-          const SizedBox(height: 4),
+          if (showTitle) const SizedBox(height: 4),
           Text(
             subtitle!,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(

@@ -25,7 +25,10 @@ final class CompleteExpiredFocusIntervalUseCase {
     }
     _completingIntervalId = interval.id;
     try {
-      (await _focus.completeActiveInterval(now: now)).getOrThrow();
+      (await _focus.completeActiveInterval(
+        now: now,
+        expiredIntervalId: interval.id,
+      )).getOrThrow();
     } finally {
       if (_completingIntervalId == interval.id) {
         _completingIntervalId = null;

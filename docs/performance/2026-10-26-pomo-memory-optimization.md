@@ -79,19 +79,18 @@ At the final 60-second sample, footprint is 368.7 MiB and RSS 439.0 MiB; cold fo
 
 ## Reproduction and artifacts
 
-From `apps/flutter`, start a fresh process:
+From the repository root, start a fresh profiler and use the full Dart VM
+service URI printed by Flutter:
 
 ```sh
-../../.fvm/flutter_sdk/bin/flutter run --profile -d macos --flavor staging \
-  --target tool/pomo_resource_profile.dart --no-pub \
-  --host-vmservice-port 55294 --disable-service-auth-codes
+tool/macos/run-resource-profile.sh 55294
 ```
 
 From the repository root:
 
 ```sh
 python3 apps/flutter/tool/pomo_resource_profile.py \
-  http://127.0.0.1:55294/ build/resource-profile/reproduction \
+  HTTP_VM_SERVICE_URI build/resource-profile/reproduction \
   --seconds 10 --cycles 10
 ```
 
@@ -99,7 +98,7 @@ After collecting memory, restart into a fresh process before captures and failur
 
 ```sh
 python3 apps/flutter/tool/pomo/check_runtime.py \
-  http://127.0.0.1:55294/ build/resource-profile/runtime-checks
+  HTTP_VM_SERVICE_URI build/resource-profile/runtime-checks
 ```
 
 The optional `--reference` argument compares native captures with an earlier capture directory. The optional `--model-file` argument accepts only an explicitly selected generated app-bundle model for the temporary bad-asset fixture; do not point it at a source asset. The collector uses the Python standard library and macOS; captures use the packer's existing Pillow/NumPy dependencies.

@@ -194,6 +194,13 @@ class FocusViewModel extends Notifier<FocusState> {
       (await _repository.pauseActiveInterval()).getOrThrow();
   Future<void> resumeActiveInterval() async =>
       (await _repository.resumeActiveInterval()).getOrThrow();
+  Future<void> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds,
+  ) async => (await _repository.adjustActiveIntervalDuration(
+    intervalId,
+    deltaSeconds,
+  )).getOrThrow();
   Future<void> completeActiveInterval() async =>
       (await _repository.completeActiveInterval()).getOrThrow();
   Future<void> skipActiveInterval() async =>

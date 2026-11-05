@@ -76,7 +76,7 @@ void main() {
   });
 
   testWidgets(
-    'minimal idle centers its icon action and opens Full from the header',
+    'idle switches between Minimal and Full directly from the header',
     (tester) async {
       final semantics = tester.ensureSemantics();
       SharedPreferences.setMockInitialValues({
@@ -128,6 +128,15 @@ void main() {
         preferences.getString(focusViewModePreferenceKey),
         FocusViewMode.full.storageValue,
       );
+      final minimize = find.byKey(const Key('focus-header-minimize'));
+      expect(tester.getSize(minimize), const Size(48, 48));
+      await tester.tap(minimize);
+      await tester.pumpAndSettle();
+      expect(timer, findsOneWidget);
+      expect(
+        preferences.getString(focusViewModePreferenceKey),
+        FocusViewMode.minimal.storageValue,
+      );
       semantics.dispose();
     },
   );
@@ -170,6 +179,51 @@ void main() {
     expect(timer, findsOneWidget);
     expect(find.text('25:00'), findsOneWidget);
     expect(tester.getRect(dock).top, greaterThan(tester.getRect(timer).bottom));
+  });
+
+  testWidgets('full dial stays in place and offers five-minute adjustments', (
+    tester,
+  ) async {
+    const size = Size(390, 844);
+    final now = DateTime.utc(2026, 7, 10, 9);
+    final timer = find.byKey(const Key('focus-circular-timer'));
+    await _pumpFocusScreen(tester, repository: _FocusRepository(), size: size);
+    final idleDial = tester.getRect(timer);
+    await tester.pumpWidget(const SizedBox.shrink());
+    final interval = _interval(now, status: 'running');
+    final repository = _FocusRepository(
+      activeRun: _run(now),
+      activeInterval: interval,
+      intervals: [interval],
+    );
+    await _pumpFocusScreen(
+      tester,
+      repository: repository,
+      size: size,
+      now: now,
+    );
+
+    expect(tester.getRect(timer), idleDial);
+    expect(find.textContaining('Session 1'), findsNothing);
+    expect(find.textContaining('Next:'), findsNothing);
+    expect(find.text('Plan · 25 min'), findsOneWidget);
+    final pause = tester.getRect(find.widgetWithText(FilledButton, 'Pause'));
+    final finish = tester.getRect(
+      find.widgetWithText(OutlinedButton, 'Finish'),
+    );
+    expect(pause.top, finish.top);
+    expect(pause.size, finish.size);
+
+    await tester.tap(find.byKey(const ValueKey('focus-duration-300')));
+    await tester.tap(find.byKey(const ValueKey('focus-duration--300')));
+    expect(repository.adjustments, [(interval.id, 300), (interval.id, -300)]);
+
+    await tester.tap(find.byKey(const Key('focus-header-minimize')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('focus-minimal-timer')), findsOneWidget);
+    expect(tester.getSize(timer), idleDial.size);
+    expect(find.byKey(const Key('focus-state-active')), findsOneWidget);
+    expect(repository.pauseCount, 0);
   });
 
   testWidgets('idle rhythm preview keeps every step neutral', (tester) async {
@@ -299,7 +353,12 @@ void main() {
       final timerRect = tester.getRect(
         find.byKey(const Key('focus-circular-timer')),
       );
-      expect(primary.center.dx, moreOrLessEquals(timerRect.center.dx));
+      final finish = tester.getRect(
+        find.widgetWithText(OutlinedButton, 'Finish'),
+      );
+      expect(primary.top, finish.top);
+      expect(primary.size, finish.size);
+      expect(primary.expandToInclude(finish).center.dx, timerRect.center.dx);
       expect(repository.pauseCount, 0);
     },
   );
@@ -351,10 +410,7 @@ void main() {
     expect(find.text('Work interval'), findsOneWidget);
     expect(find.text('24:18'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Pause'), findsOneWidget);
-    expect(
-      find.widgetWithText(OutlinedButton, 'Complete interval'),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(OutlinedButton, 'Finish'), findsOneWidget);
     expect(find.byKey(const Key('focus-details-menu')), findsOneWidget);
     expect(find.text('Log distraction'), findsNothing);
     expect(find.byType(Card), findsNothing);
@@ -471,7 +527,7 @@ void main() {
     );
 
     expect(find.widgetWithText(FilledButton, 'Start interval'), findsOneWidget);
-    final complete = find.widgetWithText(OutlinedButton, 'Complete interval');
+    final complete = find.widgetWithText(OutlinedButton, 'Finish');
     expect(complete, findsOneWidget);
     expect(tester.widget<OutlinedButton>(complete).onPressed, isNull);
   });
@@ -511,9 +567,7 @@ void main() {
     );
     expect(
       tester
-          .widget<OutlinedButton>(
-            find.widgetWithText(OutlinedButton, 'Complete interval'),
-          )
+          .widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Finish'))
           .onPressed,
       isNull,
     );
@@ -610,6 +664,38 @@ void main() {
       expect(find.byType(Card), findsNothing);
     },
   );
+
+  testWidgets('minimal dial keeps its bounds when a session starts', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      focusViewModePreferenceKey: FocusViewMode.minimal.storageValue,
+    });
+    final now = DateTime.utc(2026, 7, 10, 9);
+    const size = Size(390, 844);
+    final dial = find.byKey(const Key('focus-circular-timer'));
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(),
+      size: size,
+      now: now,
+    );
+    final idleBounds = tester.getRect(dial);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    final interval = _interval(now, status: 'running');
+    await _pumpFocusScreen(
+      tester,
+      repository: _FocusRepository(
+        activeRun: _run(now),
+        activeInterval: interval,
+        intervals: [interval],
+      ),
+      size: size,
+      now: now,
+    );
+    expect(tester.getRect(dial), idleBounds);
+  });
 
   for (final active in [false, true]) {
     testWidgets('minimal honors Bar preference when active=$active', (
@@ -1284,8 +1370,7 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const Key('focus-rhythm-rail')), findsNothing);
-    await tester.pumpAndSettle();
-    expect(tester.binding.transientCallbackCount, 0);
+    expect(find.byKey(const Key('focus-minimal-timer')), findsOneWidget);
   });
 
   testWidgets('lagged history merges the authoritative active interval', (
@@ -2508,7 +2593,7 @@ Future<void> _pumpActiveStageHarness(
       ..resetPhysicalSize()
       ..resetDevicePixelRatio();
   });
-  await tester.pumpWidget(harness);
+  await tester.pumpWidget(ProviderScope(child: harness));
 }
 
 FocusStageActions _focusActions(FocusRepository repository) =>
@@ -2622,6 +2707,18 @@ class _FocusRepository implements FocusRepository {
   final List<FocusIntervalItem> intervals;
   final List<FocusPresetItem> presets;
   final bool failPause;
+  final adjustments = <(String, int)>[];
+
+  @override
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  }) async {
+    adjustments.add((intervalId, deltaSeconds));
+    return const Result.ok(null);
+  }
+
   int pauseCount = 0;
   int resumeCount = 0;
 

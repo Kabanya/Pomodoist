@@ -484,117 +484,184 @@ class DriftFocusRepository implements FocusRepository {
       });
 
   @override
-  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
-      Result.capture<void>(() async {
-        final interval = await _activeIntervalRow();
-        if (interval == null || interval.status == 'ready') {
-          return;
-        }
-        final run = await _focus.findRun(interval.runId);
-        if (run == null) {
-          return;
-        }
-        final timestamp = (now ?? DateTime.now()).toUtc();
-        final preset = await _presetForRun(run);
-        if (preset.strictMode &&
-            !isIntervalExpired(
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  }) => Result.capture<void>(() async {
+    final timestamp = (now ?? DateTime.now()).toUtc();
+    final interval = await ownerBoundTransaction(_db, _syncQueue, () async {
+      final interval = await _activeIntervalRow();
+      if (interval == null || interval.id != intervalId) {
+        throw StateError('Focus interval changed.');
+      }
+      final planned = interval.plannedSeconds + deltaSeconds;
+      final remaining = interval.status == 'ready'
+          ? Duration(seconds: interval.plannedSeconds)
+          : calculateRemaining(
               now: timestamp,
               startedAt: interval.startedAt,
               plannedSeconds: interval.plannedSeconds,
               pausedTotalSeconds: interval.pausedTotalSeconds,
               pausedAt: interval.pausedAt,
+            );
+      if (deltaSeconds.abs() != focusDurationStepSeconds ||
+          !isFocusDurationAllowed(planned) ||
+          remaining <= Duration.zero ||
+          remaining + Duration(seconds: deltaSeconds) <= Duration.zero ||
+          (deltaSeconds < 0 &&
+              (await _presetForInterval(interval))?.strictMode != false)) {
+        throw StateError('Focus duration cannot be adjusted.');
+      }
+      await (_db.update(
+        _db.focusIntervals,
+      )..where((row) => row.id.equals(intervalId))).write(
+        FocusIntervalsCompanion(
+          plannedSeconds: Value(planned),
+          updatedAt: Value(timestamp),
+        ),
+      );
+      return interval;
+    });
+    if (interval.status == 'running') {
+      await _scheduleIntervalNotification(
+        type: interval.type,
+        startedAt: interval.startedAt,
+        plannedSeconds: interval.plannedSeconds + deltaSeconds,
+        pausedTotalSeconds: interval.pausedTotalSeconds,
+      );
+    }
+  });
+
+  @override
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  }) => Result.capture<void>(() async {
+    final interval = await _activeIntervalRow();
+    if (interval == null ||
+        interval.status == 'ready' ||
+        (expiredIntervalId != null && interval.id != expiredIntervalId)) {
+      return;
+    }
+    final run = await _focus.findRun(interval.runId);
+    if (run == null) {
+      return;
+    }
+    final timestamp = (now ?? DateTime.now()).toUtc();
+    final preset = await _presetForRun(run);
+    if (preset.strictMode &&
+        !isIntervalExpired(
+          now: timestamp,
+          startedAt: interval.startedAt,
+          plannedSeconds: interval.plannedSeconds,
+          pausedTotalSeconds: interval.pausedTotalSeconds,
+          pausedAt: interval.pausedAt,
+        )) {
+      return;
+    }
+    final completedWorkIntervals =
+        run.completedWorkIntervals + (interval.type == 'work' ? 1 : 0);
+    final completesRun =
+        interval.type != 'work' &&
+        completedWorkIntervals >= run.targetWorkIntervals;
+
+    final completed = await ownerBoundTransaction(_db, _syncQueue, () async {
+      if (expiredIntervalId != null) {
+        final current = await _activeIntervalRow();
+        if (current == null ||
+            current.id != expiredIntervalId ||
+            current.status != 'running' ||
+            !isIntervalExpired(
+              now: timestamp,
+              startedAt: current.startedAt,
+              plannedSeconds: current.plannedSeconds,
+              pausedTotalSeconds: current.pausedTotalSeconds,
             )) {
-          return;
+          return false;
         }
-        final completedWorkIntervals =
-            run.completedWorkIntervals + (interval.type == 'work' ? 1 : 0);
-        final completesRun =
-            interval.type != 'work' &&
-            completedWorkIntervals >= run.targetWorkIntervals;
+      }
+      await _focus.completeInterval(interval.id, timestamp);
+      if (interval.type == 'work') {
+        afterLocalCommit(
+          () => onIntervalCompleted?.call(
+            LocalCompletionEvent(
+              operationId: 'interval:${interval.id}',
+              entityId: interval.id,
+              isTask: false,
+            ),
+          ),
+        );
+      }
+      await _insertEvent(
+        interval.runId,
+        interval.id,
+        'intervalCompleted',
+        timestamp,
+        {'type': interval.type},
+      );
+      if (interval.type == 'work' && interval.taskId != null) {
+        await _recalculateTaskFocusAggregates(interval.taskId!);
+      }
 
-        await ownerBoundTransaction(_db, _syncQueue, () async {
-          await _focus.completeInterval(interval.id, timestamp);
-          if (interval.type == 'work') {
-            afterLocalCommit(
-              () => onIntervalCompleted?.call(
-                LocalCompletionEvent(
-                  operationId: 'interval:${interval.id}',
-                  entityId: interval.id,
-                  isTask: false,
-                ),
-              ),
-            );
-          }
-          await _insertEvent(
-            interval.runId,
-            interval.id,
-            'intervalCompleted',
-            timestamp,
-            {'type': interval.type},
-          );
-          if (interval.type == 'work' && interval.taskId != null) {
-            await _recalculateTaskFocusAggregates(interval.taskId!);
-          }
-
-          if (completesRun) {
-            await _focus.completeRun(run.id, completedWorkIntervals, timestamp);
-            await _insertEvent(
-              run.id,
-              interval.id,
-              'runCompleted',
-              timestamp,
-              null,
-            );
-          } else {
-            await _focus.markRunInProgress(
-              run.id,
-              completedWorkIntervals,
-              timestamp,
-            );
-            final next = _nextIntervalSpec(
-              completed: interval.type,
-              completedWorkIntervals: completedWorkIntervals,
-              preset: preset,
-            );
-            await _createNextInterval(
-              run: run,
-              type: next.type,
-              status: _nextIntervalStatus(next.type, preset),
-              plannedSeconds: next.plannedSeconds,
-              startedAt: timestamp,
-              sequenceNumber: interval.sequenceNumber + 1,
-            );
-          }
-          if (completesRun) {
-            await _syncQueue.enqueue(
-              type: 'focus.run.complete',
-              clientId: run.id,
-              payload: {
-                'id': run.id,
-                'completedAt': timestamp.toIso8601String(),
-              },
-            );
-          }
-        });
-        await _cancelFocusNotificationBestEffort();
-        final nextInterval = await _activeIntervalRow();
-        if (nextInterval != null && nextInterval.status == 'running') {
-          await _scheduleIntervalNotification(
-            type: nextInterval.type,
-            startedAt: nextInterval.startedAt,
-            plannedSeconds: nextInterval.plannedSeconds,
-            pausedTotalSeconds: nextInterval.pausedTotalSeconds,
-          );
-        }
-        _playSound(FocusSoundCue.complete);
-        if (completesRun) {
-          await _publishRunCompletion(
-            run: run,
-            completedWorkIntervals: completedWorkIntervals,
-            completedAt: timestamp,
-          );
-        }
-      });
+      if (completesRun) {
+        await _focus.completeRun(run.id, completedWorkIntervals, timestamp);
+        await _insertEvent(
+          run.id,
+          interval.id,
+          'runCompleted',
+          timestamp,
+          null,
+        );
+      } else {
+        await _focus.markRunInProgress(
+          run.id,
+          completedWorkIntervals,
+          timestamp,
+        );
+        final next = _nextIntervalSpec(
+          completed: interval.type,
+          completedWorkIntervals: completedWorkIntervals,
+          preset: preset,
+        );
+        await _createNextInterval(
+          run: run,
+          type: next.type,
+          status: _nextIntervalStatus(next.type, preset),
+          plannedSeconds: next.plannedSeconds,
+          startedAt: timestamp,
+          sequenceNumber: interval.sequenceNumber + 1,
+        );
+      }
+      if (completesRun) {
+        await _syncQueue.enqueue(
+          type: 'focus.run.complete',
+          clientId: run.id,
+          payload: {'id': run.id, 'completedAt': timestamp.toIso8601String()},
+        );
+      }
+      return true;
+    });
+    if (!completed) return;
+    await _cancelFocusNotificationBestEffort();
+    final nextInterval = await _activeIntervalRow();
+    if (nextInterval != null && nextInterval.status == 'running') {
+      await _scheduleIntervalNotification(
+        type: nextInterval.type,
+        startedAt: nextInterval.startedAt,
+        plannedSeconds: nextInterval.plannedSeconds,
+        pausedTotalSeconds: nextInterval.pausedTotalSeconds,
+      );
+    }
+    _playSound(FocusSoundCue.complete);
+    if (completesRun) {
+      await _publishRunCompletion(
+        run: run,
+        completedWorkIntervals: completedWorkIntervals,
+        completedAt: timestamp,
+      );
+    }
+  });
 
   @override
   Future<Result<void>> skipActiveInterval({DateTime? now}) =>

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/settings/widgets/settings_components.dart';
 import 'package:pomodoist/ui/google_calendar/view_models/google_calendar_view_model.dart';
 import 'package:pomodoist/ui/core/localization/formatters.dart';
@@ -50,6 +51,7 @@ class _GoogleCalendarSettingsScreenState
           if (connection.isLoading) const LinearProgressIndicator(minHeight: 2),
           if (connection.hasError) _loadError(connection.error!),
           SettingsRow(
+            showTitle: widget.embedded || !CompactShellHeading.isShown(context),
             title: widget.provider == CalendarProvider.google
                 ? l10n.googleCalendarTitle
                 : l10n.outlookCalendarTitle,

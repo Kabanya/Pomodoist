@@ -41,6 +41,36 @@ Map<String, dynamic> session(DateTime time, {bool paused = false}) => {
 };
 void main() {
   test(
+    'duration uses the current revision and expiry defers to the server',
+    () async {
+      final commands = <Map<String, dynamic>>[];
+      final current = session(DateTime.utc(2026, 11, 3));
+      final repo = LiveFocusRepository(
+        local: Local(),
+        owner: 'u',
+        deviceId: 'd',
+        preferences: null,
+        remote: (command) async {
+          commands.add(command);
+          return {'session': current};
+        },
+      )..session = current;
+      addTearDown(repo.dispose);
+
+      (await repo.adjustActiveIntervalDuration('i', 300)).getOrThrow();
+      expect(commands.single['action'], 'adjustDuration');
+      expect(commands.single['expectedRevision'], 2);
+      expect(commands.single['payload'], {
+        'intervalId': 'i',
+        'deltaSeconds': 300,
+      });
+
+      (await repo.completeActiveInterval(expiredIntervalId: 'i')).getOrThrow();
+      expect(commands.last['action'], 'read');
+    },
+  );
+
+  test(
     'live work commands recheck blocking while current work and breaks can finish',
     () async {
       final sent = <String>[];

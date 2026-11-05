@@ -9,6 +9,7 @@ import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/ui/billing/view_models/billing_view_model.dart';
 import 'package:pomodoist/ui/billing/widgets/launch_offer_paywall.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/distractions/view_models/blocking_view_model.dart';
@@ -865,11 +866,13 @@ class BlockingScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    l.blockingTitle,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
+                  if (!CompactShellHeading.isShown(context)) ...[
+                    Text(
+                      l.blockingTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   Text(
                     l.blockingDescription,
                     style: TextStyle(color: context.appColors.secondaryText),

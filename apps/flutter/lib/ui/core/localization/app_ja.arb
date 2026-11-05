@@ -2254,5 +2254,10 @@
   "pickerTimeWheels": "時刻ホイール",
   "pickerMinuteOffset": "{offset}分",
   "pickerIncrease": "増やす",
-  "pickerDecrease": "減らす"
+  "pickerDecrease": "減らす",
+  "focusDuration": "時間",
+  "focusPlannedDuration": "予定 · {duration}",
+  "focusShortenDuration": "−5分",
+  "focusExtendDuration": "+5分",
+  "focusFinish": "完了"
 }

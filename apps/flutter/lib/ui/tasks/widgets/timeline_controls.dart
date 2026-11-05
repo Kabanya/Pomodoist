@@ -1,75 +1,137 @@
 part of 'timeline_screen.dart';
 
 class _TimelineHeader extends StatelessWidget {
-  const _TimelineHeader({required this.day, required this.today});
+  const _TimelineHeader({
+    required this.day,
+    required this.today,
+    required this.compact,
+    required this.presentation,
+  });
 
   final DateTime day;
   final DateTime today;
+  final bool compact;
+  final TimelineDayPresentation? presentation;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final dateControls = Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Tooltip(
           message: l10n.timelinePreviousDay,
           child: ShadIconButton.secondary(
             onPressed: () =>
-                _goToDate(context, day.subtract(const Duration(days: 1))),
-            icon: const Icon(LucideIcons.chevronLeft),
-            width: 40,
-            height: 40,
+                _goToDate(context, DateTime(day.year, day.month, day.day - 1)),
+            icon: Icon(
+              rtl ? LucideIcons.chevronRight : LucideIcons.chevronLeft,
+            ),
+            width: 44,
+            height: 44,
           ),
         ),
-        AppDateTimePicker(
-          builder: (context, picker) => ShadButton.secondary(
-            focusNode: picker.focusNode,
-            onPressed: () => _pickDate(context, day, picker),
-            leading: const Icon(LucideIcons.calendar),
-            child: Text(
-              MaterialLocalizations.of(context).formatMediumDate(day),
+        const SizedBox(width: 6),
+        Flexible(
+          fit: compact ? FlexFit.tight : FlexFit.loose,
+          child: AppDateTimePicker(
+            builder: (context, picker) => ShadButton.secondary(
+              focusNode: picker.focusNode,
+              height: 44,
+              width: compact ? null : 176,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: () => _pickDate(context, picker),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (MediaQuery.textScalerOf(context).scale(16) <= 20 &&
+                      (!compact ||
+                          MediaQuery.sizeOf(context).width >= 360)) ...[
+                    const Icon(LucideIcons.calendar, size: 20),
+                    const SizedBox(width: 8),
+                  ],
+                  Flexible(
+                    child: Text(
+                      MaterialLocalizations.of(context).formatMediumDate(day),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
+        const SizedBox(width: 6),
         Tooltip(
           message: l10n.timelineNextDay,
           child: ShadIconButton.secondary(
             onPressed: () =>
-                _goToDate(context, day.add(const Duration(days: 1))),
-            icon: const Icon(LucideIcons.chevronRight),
-            width: 40,
-            height: 40,
+                _goToDate(context, DateTime(day.year, day.month, day.day + 1)),
+            icon: Icon(
+              rtl ? LucideIcons.chevronLeft : LucideIcons.chevronRight,
+            ),
+            width: 44,
+            height: 44,
           ),
         ),
-        ShadButton.outline(
-          onPressed: isSameLocalDay(day, today)
-              ? null
-              : () => _goToDate(context, today),
-          enabled: !(isSameLocalDay(day, today)),
-          child: Text(l10n.today),
-        ),
       ],
+    );
+    final settings = _TimelineControlsPopover(
+      compact: compact,
+      onToday: isSameLocalDay(day, today)
+          ? null
+          : () => _goToDate(context, today),
+      presentation: presentation,
+    );
+    if (compact) {
+      return Row(
+        children: [
+          Expanded(child: dateControls),
+          const SizedBox(width: 12),
+          settings,
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) => Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        runSpacing: 8,
+        spacing: 12,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: math.min(320, constraints.maxWidth),
+            ),
+            child: dateControls,
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _TimelineControlsPopover(rangeOnly: true),
+              const SizedBox(width: 12),
+              settings,
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Future<void> _pickDate(
     BuildContext context,
-    DateTime initialDate,
     AppDateTimePickerState picker,
   ) async {
     final now = DateTime.now();
     final picked = await picker.pickDate(
-      initialDate: initialDate,
+      initialDate: day,
       firstDate: DateTime(now.year - 5),
       lastDate: DateTime(now.year + 10),
       helpText: context.l10n.timelinePickDate,
     );
-    if (picked != null && context.mounted) {
-      _goToDate(context, picked);
-    }
+    if (picked != null && context.mounted) _goToDate(context, picked);
   }
 
   void _goToDate(BuildContext context, DateTime date) {
@@ -77,173 +139,241 @@ class _TimelineHeader extends StatelessWidget {
   }
 }
 
-class _VisibleHoursControls extends ConsumerWidget {
-  const _VisibleHoursControls({required this.visibleHours});
+class _TimelineControlsPopover extends ConsumerStatefulWidget {
+  const _TimelineControlsPopover({
+    this.rangeOnly = false,
+    this.compact = false,
+    this.onToday,
+    this.presentation,
+  });
 
-  final TimelineVisibleHours visibleHours;
+  final bool rangeOnly;
+  final bool compact;
+  final VoidCallback? onToday;
+  final TimelineDayPresentation? presentation;
+
+  @override
+  ConsumerState<_TimelineControlsPopover> createState() =>
+      _TimelineControlsPopoverState();
+}
+
+class _TimelineControlsPopoverState
+    extends ConsumerState<_TimelineControlsPopover> {
+  final _popover = ShadPopoverController();
+  final _group = Object();
+
+  ({ShadAnchorAuto anchor, double maxHeight})? _placement;
+
+  void _toggle() {
+    if (!_popover.isOpen) {
+      final box = context.findRenderObject() as RenderBox?;
+      final overlay =
+          Overlay.of(context).context.findRenderObject() as RenderBox?;
+      if (box != null && overlay != null) {
+        final media = MediaQuery.of(context);
+        final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
+        setState(
+          () => _placement = actionMenuPlacement(
+            origin & box.size,
+            Rect.fromLTRB(
+              media.padding.left,
+              media.padding.top,
+              overlay.size.width - media.padding.right,
+              overlay.size.height -
+                  math.max(media.padding.bottom, media.viewInsets.bottom),
+            ),
+          ),
+        );
+      }
+    }
+    _popover.toggle();
+  }
+
+  @override
+  void dispose() {
+    _popover.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final visibleHours = ref.watch(
+      timelineViewModelProvider.select((state) => state.visibleHours),
+    );
+    final presentation = widget.presentation;
+    return ShadPopover(
+      controller: _popover,
+      groupId: _group,
+      anchor: _placement?.anchor,
+      popover: (context) => SizedBox(
+        width: math.min(256, MediaQuery.sizeOf(context).width - 64),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: math.min(
+              420,
+              _placement?.maxHeight ?? MediaQuery.sizeOf(context).height / 2,
+            ),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.rangeOnly || widget.compact)
+                  _VisibleHoursControls(group: _group),
+                if (!widget.rangeOnly) ...[
+                  if (widget.compact) const SizedBox(height: 12),
+                  const _TimelineZoomControls(),
+                  ShadButton.ghost(
+                    onPressed: widget.onToday == null
+                        ? null
+                        : () {
+                            _popover.hide();
+                            widget.onToday!();
+                          },
+                    child: Text(l10n.today),
+                  ),
+                  if (presentation != null)
+                    _TimelineProjectsButton(
+                      presentation: presentation,
+                      onOpen: _popover.hide,
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+      child: widget.rangeOnly
+          ? Tooltip(
+              message: l10n.timelineVisibleHours,
+              child: ShadButton.outline(
+                key: const Key('timeline-hours-menu'),
+                foregroundColor: context.appColors.primaryText,
+                height: 44,
+                onPressed: _toggle,
+                trailing: const Icon(LucideIcons.chevronDown, size: 18),
+                child: Text(
+                  '${_formatMinutes(visibleHours.startMinutes)} – '
+                  '${_formatMinutes(visibleHours.endMinutes)}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.merge(AppTheme.monoTextStyle),
+                ),
+              ),
+            )
+          : Tooltip(
+              message: MaterialLocalizations.of(context).moreButtonTooltip,
+              child: ShadIconButton.outline(
+                key: const Key('timeline-settings'),
+                foregroundColor: context.appColors.primaryText,
+                onPressed: _toggle,
+                icon: const Icon(LucideIcons.slidersHorizontal),
+                width: 44,
+                height: 44,
+              ),
+            ),
+    );
+  }
+}
+
+class _VisibleHoursControls extends ConsumerWidget {
+  const _VisibleHoursControls({required this.group});
+
+  final Object group;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final colors = context.appColors;
+    final visibleHours = ref.watch(
+      timelineViewModelProvider.select((state) => state.visibleHours),
+    );
+    final vm = ref.read(timelineViewModelProvider.notifier);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.timelineVisibleHours,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        for (final isStart in [true, false]) ...[
+          Text(isStart ? l10n.timelineStartHour : l10n.timelineEndHour),
+          const SizedBox(height: 4),
+          ShadSelect<int>(
+            groupId: group,
+            key: Key(
+              isStart ? 'timeline-start-minutes' : 'timeline-end-minutes',
+            ),
+            initialValue: isStart
+                ? visibleHours.startMinutes
+                : visibleHours.endMinutes,
+            onChanged: (value) {
+              if (value != null) {
+                unawaited(
+                  vm.setVisibleHours(
+                    isStart ? value : visibleHours.startMinutes,
+                    isStart ? visibleHours.endMinutes : value,
+                  ),
+                );
+              }
+            },
+            options: [
+              for (final value in _timeOptions)
+                if (isStart
+                    ? value < visibleHours.endMinutes
+                    : value > visibleHours.startMinutes)
+                  ShadOption(value: value, child: Text(_formatMinutes(value))),
+            ],
+            selectedOptionBuilder: (context, value) =>
+                Text(_formatMinutes(value)),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+}
+
+class _TimelineZoomControls extends ConsumerWidget {
+  const _TimelineZoomControls();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final hourWidth = ref.watch(
       timelineViewModelProvider.select((state) => state.hourWidth),
     );
-    final zoomIndex = timelineHourWidthLevels.indexOf(hourWidth);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.border),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.timelineVisibleHours,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: colors.secondaryText,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                SizedBox(
-                  width: 160,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.timelineStartHour,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      ShadSelect<int>(
-                        key: const Key('timeline-start-minutes'),
-                        initialValue: visibleHours.startMinutes,
-                        onChanged: (value) {
-                          if (value != null) {
-                            unawaited(
-                              ref
-                                  .read(timelineViewModelProvider.notifier)
-                                  .setVisibleHours(
-                                    value,
-                                    visibleHours.endMinutes,
-                                  ),
-                            );
-                          }
-                        },
-                        options: [
-                          for (final value in _timeOptions)
-                            if (value < visibleHours.endMinutes)
-                              ShadOption(
-                                value: value,
-                                child: Text(_formatMinutes(value)),
-                              ),
-                        ],
-                        selectedOptionBuilder: (context, value) =>
-                            Text(_formatMinutes(value)),
-                        placeholder: Text(l10n.timelineStartHour),
-                        minWidth: 160,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 160,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.timelineEndHour,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      ShadSelect<int>(
-                        key: const Key('timeline-end-minutes'),
-                        initialValue: visibleHours.endMinutes,
-                        onChanged: (value) {
-                          if (value != null) {
-                            unawaited(
-                              ref
-                                  .read(timelineViewModelProvider.notifier)
-                                  .setVisibleHours(
-                                    visibleHours.startMinutes,
-                                    value,
-                                  ),
-                            );
-                          }
-                        },
-                        options: [
-                          for (final value in _timeOptions)
-                            if (value > visibleHours.startMinutes)
-                              ShadOption(
-                                value: value,
-                                child: Text(_formatMinutes(value)),
-                              ),
-                        ],
-                        selectedOptionBuilder: (context, value) =>
-                            Text(_formatMinutes(value)),
-                        placeholder: Text(l10n.timelineEndHour),
-                        minWidth: 160,
-                      ),
-                    ],
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Tooltip(
-                      message: l10n.timelineZoomOut,
-                      child: ShadIconButton.outline(
-                        key: const Key('timeline-zoom-out'),
-                        onPressed: zoomIndex == 0
-                            ? null
-                            : () => unawaited(
-                                ref
-                                    .read(timelineViewModelProvider.notifier)
-                                    .zoomOut(),
-                              ),
-                        icon: const Icon(LucideIcons.zoomOut),
-                        enabled: !(zoomIndex == 0),
-                        width: 40,
-                        height: 40,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Tooltip(
-                      message: l10n.timelineZoomIn,
-                      child: ShadIconButton.outline(
-                        key: const Key('timeline-zoom-in'),
-                        onPressed:
-                            zoomIndex == timelineHourWidthLevels.length - 1
-                            ? null
-                            : () => unawaited(
-                                ref
-                                    .read(timelineViewModelProvider.notifier)
-                                    .zoomIn(),
-                              ),
-                        icon: const Icon(LucideIcons.zoomIn),
-                        enabled:
-                            !(zoomIndex == timelineHourWidthLevels.length - 1),
-                        width: 40,
-                        height: 40,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+    final vm = ref.read(timelineViewModelProvider.notifier);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Tooltip(
+          message: l10n.timelineZoomOut,
+          child: ShadIconButton.outline(
+            key: const Key('timeline-zoom-out'),
+            onPressed: hourWidth == timelineHourWidthLevels.first
+                ? null
+                : () => unawaited(vm.zoomOut()),
+            icon: const Icon(LucideIcons.zoomOut),
+            width: 44,
+            height: 44,
+          ),
         ),
-      ),
+        const SizedBox(width: 8),
+        Tooltip(
+          message: l10n.timelineZoomIn,
+          child: ShadIconButton.outline(
+            key: const Key('timeline-zoom-in'),
+            onPressed: hourWidth == timelineHourWidthLevels.last
+                ? null
+                : () => unawaited(vm.zoomIn()),
+            icon: const Icon(LucideIcons.zoomIn),
+            width: 44,
+            height: 44,
+          ),
+        ),
+      ],
     );
   }
 }

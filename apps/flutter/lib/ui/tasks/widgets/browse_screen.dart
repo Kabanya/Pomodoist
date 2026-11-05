@@ -16,6 +16,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadTabs;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
@@ -61,10 +62,11 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     spacing: 16,
                     runSpacing: 8,
                     children: [
-                      Text(
-                        l10n.browseTitle,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
+                      if (!CompactShellHeading.isShown(context))
+                        Text(
+                          l10n.browseTitle,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

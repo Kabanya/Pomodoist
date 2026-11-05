@@ -1643,5 +1643,10 @@
   "pickerTimeWheels": "时间滚轮",
   "pickerMinuteOffset": "{offset}分钟",
   "pickerIncrease": "增加",
-  "pickerDecrease": "减少"
+  "pickerDecrease": "减少",
+  "focusDuration": "时长",
+  "focusPlannedDuration": "计划 · {duration}",
+  "focusShortenDuration": "−5 分钟",
+  "focusExtendDuration": "+5 分钟",
+  "focusFinish": "结束"
 }

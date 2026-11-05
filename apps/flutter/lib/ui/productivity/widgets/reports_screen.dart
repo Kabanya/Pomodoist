@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadButton;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/localization/formatters.dart';
 import 'package:pomodoist/ui/productivity/view_models/productivity_view_models.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
@@ -41,11 +42,13 @@ class ReportsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.reportsTitle,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 4),
+                  if (!CompactShellHeading.isShown(context)) ...[
+                    Text(
+                      l10n.reportsTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                   Text(
                     MaterialLocalizations.of(context).formatFullDate(today),
                     style: Theme.of(context).textTheme.bodyMedium,

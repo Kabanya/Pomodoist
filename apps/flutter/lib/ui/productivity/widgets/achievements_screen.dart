@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/productivity/view_models/productivity_view_models.dart';
 import 'package:pomodoist/domain/models/productivity/achievement_models.dart';
 import 'package:pomodoist/ui/productivity/widgets/achievement_widgets.dart';
@@ -34,13 +35,15 @@ class AchievementsScreen extends ConsumerWidget {
                         onPressed: () => _goBack(context),
                         icon: const Icon(LucideIcons.arrowLeft),
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          l10n.achievementsTitle,
-                          style: Theme.of(context).textTheme.headlineMedium,
+                      if (!CompactShellHeading.isShown(context)) ...[
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            l10n.achievementsTitle,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 24),

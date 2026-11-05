@@ -26,7 +26,15 @@ abstract interface class FocusRepository {
   Future<Result<void>> pauseActiveInterval({DateTime? now});
   Future<Result<void>> resumeActiveInterval({DateTime? now});
   Future<Result<void>> restartActiveInterval({DateTime? now});
-  Future<Result<void>> completeActiveInterval({DateTime? now});
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  });
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  });
   Future<Result<void>> skipActiveInterval({DateTime? now});
   Future<Result<void>> stopActiveRun({
     required StopFocusReason reason,

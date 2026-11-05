@@ -1014,6 +1014,7 @@ class LiveFocusRepository implements FocusRepository {
     String action,
     Future<Result<void>> Function() fallback, {
     bool destructive = false,
+    Map<String, dynamic> payload = const {},
   }) => Result.capture(() async {
     if (localMode || remote == null) {
       if (destructive) await _guardLocal(action);
@@ -1024,7 +1025,7 @@ class LiveFocusRepository implements FocusRepository {
     } else if (sharedActive) {
       final previousSession = session, previousConfirmation = _lastConfirmedAt;
       try {
-        await command(destructive && strict ? 'requestStop' : action);
+        await command(destructive && strict ? 'requestStop' : action, payload);
       } on StateError catch (e) {
         // Expiry can advance the server before the completion command checks its revision.
         if (action != 'complete' ||
@@ -1054,10 +1055,30 @@ class LiveFocusRepository implements FocusRepository {
     destructive: true,
   );
   @override
-  Future<Result<void>> completeActiveInterval({DateTime? now}) => _act(
-    'complete',
-    () => local.completeActiveInterval(now: now),
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  }) => _act(
+    'adjustDuration',
+    () =>
+        local.adjustActiveIntervalDuration(intervalId, deltaSeconds, now: now),
+    payload: {'intervalId': intervalId, 'deltaSeconds': deltaSeconds},
+  );
+  @override
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  }) => _act(
+    // The server advances on read using its current deadline. An expired
+    // client snapshot must never force-complete an interval just extended.
+    expiredIntervalId == null ? 'complete' : 'read',
+    () => local.completeActiveInterval(
+      now: now,
+      expiredIntervalId: expiredIntervalId,
+    ),
     destructive:
+        expiredIntervalId == null &&
         activeInterval != null &&
         calculateRemaining(
               now: now ?? this.now(),

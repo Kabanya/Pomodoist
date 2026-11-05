@@ -229,7 +229,10 @@ class FakeFocusRepository extends StrictFake implements FocusRepository {
   }
 
   @override
-  Future<Result<void>> completeActiveInterval({DateTime? now}) async {
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  }) async {
     completeActiveIntervalCalls.add(now);
     return switch (completeActiveIntervalError) {
       final error? => Result.error(error, StackTrace.current),

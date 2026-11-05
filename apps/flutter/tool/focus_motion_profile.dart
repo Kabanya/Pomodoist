@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/ui/focus/widgets/focus_stage.dart';
 import 'package:pomodoist/domain/models/focus/focus_view_mode.dart';
@@ -12,7 +13,9 @@ import 'task_motion_profile_result_stub.dart'
 const _baseline = bool.fromEnvironment('FOCUS_MOTION_BASELINE');
 const _repetitions = 20;
 
-void main() => runApp(const MaterialApp(home: _FocusMotionProfile()));
+void main() => runApp(
+  const ProviderScope(child: MaterialApp(home: _FocusMotionProfile())),
+);
 
 class _FocusMotionProfile extends StatefulWidget {
   const _FocusMotionProfile();

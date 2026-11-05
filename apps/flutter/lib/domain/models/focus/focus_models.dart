@@ -89,6 +89,11 @@ class FocusIntervalItem {
   final DateTime updatedAt;
 }
 
+const focusDurationStepSeconds = 300;
+
+// Keep adjusted intervals within the range accepted by Focus history sync.
+bool isFocusDurationAllowed(int seconds) => seconds >= 60 && seconds <= 10800;
+
 class FocusPresetItem {
   const FocusPresetItem({
     required this.id,

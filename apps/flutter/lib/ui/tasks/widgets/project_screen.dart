@@ -8,6 +8,7 @@ import 'package:shadcn_ui/shadcn_ui.dart' show ShadTabs, ShadTab, LucideIcons;
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 import 'package:pomodoist/ui/tasks/view_models/project_view_model.dart';
 import 'package:pomodoist/ui/tasks/view_models/project_diagram_view_model.dart';
@@ -63,6 +64,8 @@ class _ProjectContentState extends ConsumerState<_ProjectContent> {
     _visited.add(mode);
     final l10n = context.l10n;
     final title = project?.displayName(l10n) ?? l10n.projectFallbackTitle;
+    final showTitle = !CompactShellHeading.isShown(context);
+    final showProjectMenu = project != null && project.id != inboxProjectId;
     final diagram = files || mode == ProjectViewMode.list
         ? null
         : ref.watch(projectDiagramViewModelProvider(widget.projectId));
@@ -79,21 +82,23 @@ class _ProjectContentState extends ConsumerState<_ProjectContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (project != null && project.id != inboxProjectId)
+                  if (showProjectMenu)
                     ProjectContextMenu(
                       project: project,
                       showMenuButton: true,
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
+                      child: showTitle
+                          ? Text(
+                              title,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            )
+                          : const SizedBox.shrink(),
                     )
-                  else
+                  else if (showTitle)
                     Text(
                       title,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                  const SizedBox(height: 12),
+                  if (showTitle || showProjectMenu) const SizedBox(height: 12),
                   ShadTabs<String>(
                     value: files ? 'files' : mode.name,
                     onChanged: (value) {

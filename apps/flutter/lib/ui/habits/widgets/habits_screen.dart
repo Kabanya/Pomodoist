@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pomodoist/domain/models/habits/habit_models.dart';
 import 'package:pomodoist/routing/habit_detail_navigation.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_icon.dart';
@@ -40,6 +41,7 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
     final l = context.l10n, colors = context.appColors;
     final layout = HabitPresentationScope.maybeOf(context);
     final progress = layout?.presentation == HabitPresentation.progress;
+    final showTitle = !CompactShellHeading.isShown(context);
     return SafeArea(
       bottom: false,
       child: LayoutBuilder(
@@ -60,23 +62,25 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
                   runSpacing: 12,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.navHabits,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        if (!progress) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            l.habitsSubtitle,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: colors.mutedText),
-                          ),
+                    if (showTitle || !progress)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (showTitle)
+                            Text(
+                              l.navHabits,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                          if (!progress) ...[
+                            if (showTitle) const SizedBox(height: 4),
+                            Text(
+                              l.habitsSubtitle,
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(color: colors.mutedText),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
+                      ),
                     Wrap(
                       spacing: 16,
                       runSpacing: 12,

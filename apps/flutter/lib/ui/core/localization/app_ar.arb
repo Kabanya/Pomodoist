@@ -1643,5 +1643,10 @@
   "pickerTimeWheels": "عجلات الوقت",
   "pickerMinuteOffset": "{offset} دقيقة",
   "pickerIncrease": "زيادة",
-  "pickerDecrease": "تقليل"
+  "pickerDecrease": "تقليل",
+  "focusDuration": "المدة",
+  "focusPlannedDuration": "المخطط · {duration}",
+  "focusShortenDuration": "−٥ د",
+  "focusExtendDuration": "+٥ د",
+  "focusFinish": "إنهاء"
 }

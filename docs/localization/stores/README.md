@@ -1,6 +1,8 @@
 # Store localization release material
 
-All files are drafts for the next localization release. No store has been updated.
+The legacy multi-store files record drafts prepared in September 2026. See the
+[Apple storefront release workflow](apple/README.md) for the current Apple copy
+and release commands.
 
 - Apple source: public [US listing](https://apps.apple.com/us/app/pomodoist/id6794391064), retrieved through Apple's lookup API on 2026-09-13, version 1.0.5. `source-apple-en.json` preserves the source. iOS and Mac share the applicable product description.
 - Google Play: adapted from the same verified product functionality and local Android implementation; no public Google Play listing was available as a source. Platform-specific Apple billing text is omitted. Do not treat this as a copy of a current Play listing.

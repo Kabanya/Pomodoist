@@ -258,11 +258,12 @@ class _LearningTourOverlayState extends ConsumerState<LearningTourOverlay> {
 
 Future<void> showLearningTourQuickAdd(
   BuildContext context,
-  WidgetRef ref,
-) async {
+  WidgetRef ref, {
+  DateTime? defaultDate,
+}) async {
   ref.read(learningTourProvider.notifier).quickAddOpened();
   try {
-    await showQuickAddDialog(context);
+    await showQuickAddDialog(context, defaultDate: defaultDate);
   } finally {
     if (context.mounted) {
       ref.read(learningTourProvider.notifier).quickAddClosed();

@@ -594,6 +594,8 @@
 			);
 			inputPaths = (
 				Flutter/ephemeral/tripwire,
+				Flutter/ephemeral/Flutter-Generated.xcconfig,
+				Flutter/check_profile_target.sh,
 			);
 			outputFileListPaths = (
 				Flutter/ephemeral/FlutterOutputs.xcfilelist,
@@ -602,7 +604,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
+			shellScript = "/bin/sh \"$PROJECT_DIR/Flutter/check_profile_target.sh\" && \"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
 		};
 		6B628E96DE8ED6D26FA2A063 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

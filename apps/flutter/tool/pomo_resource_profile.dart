@@ -1,4 +1,4 @@
-// Run with flutter run --profile -d macos --flavor staging -t tool/pomo_resource_profile.dart.
+// Run from the repository root with tool/macos/run-resource-profile.sh.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';

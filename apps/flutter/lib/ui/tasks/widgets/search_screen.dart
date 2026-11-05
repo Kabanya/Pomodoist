@@ -7,6 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart'
     show showQuickAddDialog;
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -87,11 +88,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.navSearch,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 16),
+                    if (!CompactShellHeading.isShown(context)) ...[
+                      Text(
+                        l10n.navSearch,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     ShadInput(
                       controller: _controller,
                       autofocus: true,

@@ -5185,6 +5185,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get blockingSyncConflict => 'Sync conflict';
+
+  @override
+  String get focusDuration => 'Duração';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return 'Plano · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−5 min';
+
+  @override
+  String get focusExtendDuration => '+5 min';
+
+  @override
+  String get focusFinish => 'Concluir';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -6690,4 +6707,21 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get pickerDecrease => 'Diminuir';
+
+  @override
+  String get focusDuration => 'Duração';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return 'Plano · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−5 min';
+
+  @override
+  String get focusExtendDuration => '+5 min';
+
+  @override
+  String get focusFinish => 'Concluir';
 }

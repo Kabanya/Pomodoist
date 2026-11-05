@@ -4,23 +4,40 @@ const _defaultTimedTaskDuration = Duration(minutes: 30);
 
 const _timeRulerHeight = 32.0;
 
-const _laneHeight = 64.0;
+const _laneHeight = 100.0;
+const _mobileGutter = 60.0;
+
+double _timelineProjectColumnWidth(BuildContext context, double width) =>
+    math.min(
+      width * 0.32,
+      MediaQuery.textScalerOf(context).scale(width < 600 ? 112 : 128),
+    );
+
+double _timelineRulerTail(BuildContext context) =>
+    math.max(38, MediaQuery.textScalerOf(context).scale(38));
 
 const _inlineAddWidth = 280.0;
 
 const _blockGap = 4.0;
 
-List<_TimedTaskLayout> _layoutTimedTasks(List<TaskItem> tasks) {
+List<_TimedTaskLayout> _layoutTimedTasks(
+  List<TaskItem> tasks, {
+  required int minimumMinutes,
+}) {
+  int layoutEnd(TaskItem task) => math.max(
+    timelineEndMinutes(task.schedule!),
+    timelineStartMinutes(task.schedule!) + minimumMinutes,
+  );
   final sorted = [...tasks]..sort(compareTimedTaskOrder);
   final layouts = <_TimedTaskLayout>[];
   var index = 0;
   while (index < sorted.length) {
     final cluster = <TaskItem>[];
-    var clusterEnd = timelineEndMinutes(sorted[index].schedule!);
+    var clusterEnd = layoutEnd(sorted[index]);
     do {
       final task = sorted[index];
       cluster.add(task);
-      clusterEnd = math.max(clusterEnd, timelineEndMinutes(task.schedule!));
+      clusterEnd = math.max(clusterEnd, layoutEnd(task));
       index++;
     } while (index < sorted.length &&
         timelineStartMinutes(sorted[index].schedule!) < clusterEnd);
@@ -34,7 +51,7 @@ List<_TimedTaskLayout> _layoutTimedTasks(List<TaskItem> tasks) {
         lane = laneEnds.length;
         laneEnds.add(0);
       }
-      laneEnds[lane] = timelineEndMinutes(task.schedule!);
+      laneEnds[lane] = layoutEnd(task);
       assigned[task] = lane;
     }
     final laneCount = math.max(1, laneEnds.length);
@@ -87,7 +104,7 @@ Color _priorityColor(int priority, AppThemePalette colors) {
     1 => colors.overdue,
     2 => colors.warning,
     3 => colors.info,
-    _ => colors.border,
+    _ => colors.mutedText.withValues(alpha: 0.72),
   };
 }
 

@@ -19,6 +19,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadIconButton,
         ShadContextMenuItem,
         ShadInput,
+        ShadOption,
         LucideIcons;
 import 'support/test_app.dart';
 import 'dart:async';
@@ -51,6 +52,8 @@ import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
+import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart'
+    show QuickAddComposer;
 import 'package:pomodoist/ui/tasks/view_models/task_selection_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
@@ -1796,6 +1799,58 @@ void main() {
     expect(find.text('Timeline other day'), findsNothing);
   });
 
+  testWidgets('timeline all-day completion offers undo', (tester) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday();
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [
+        _task(
+          'all-day-undo',
+          'All-day action',
+          schedule: TaskSchedule.allDay(day),
+        ),
+      ],
+    );
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+    await tester.tap(
+      find.byKey(const Key('task-completion-control-all-day-undo')),
+    );
+    await _pumpFrames(tester);
+    expect(harness.taskRepository.completedTaskIds, ['all-day-undo']);
+    expect(find.text('Undo'), findsOneWidget);
+    await tester.tap(find.text('Undo'));
+    await _pumpFrames(tester);
+    expect(harness.taskRepository.uncompletedTaskIds, ['all-day-undo']);
+  });
+
+  testWidgets('timeline desktop quick add uses the selected day', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday().add(const Duration(days: 2));
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+      tasks: const [],
+    );
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+    await tester.tap(find.byKey(const Key('timeline-add-task')));
+    await _pumpFrames(tester);
+    expect(
+      tester
+          .widget<QuickAddComposer>(find.byType(QuickAddComposer))
+          .defaultDate,
+      day,
+    );
+  });
+
   testWidgets('timeline live task replaces an older retained snapshot', (
     tester,
   ) async {
@@ -1835,8 +1890,8 @@ void main() {
     updates.add([freshTask]);
     await _pumpFrames(tester);
 
-    expect(find.text('11:00-12:00'), findsOneWidget);
-    expect(find.text('09:00-10:00'), findsNothing);
+    expect(find.text('11:00 – 12:00'), findsOneWidget);
+    expect(find.text('09:00 – 10:00'), findsNothing);
     expect(tester.getTopLeft(block).dx, greaterThan(oldLeft));
   });
 
@@ -1951,11 +2006,8 @@ void main() {
         .element(find.byKey(const Key('timeline-task-violet-task')))
         .appColors;
 
-    expect(violet.color, isNot(colors.surface));
-    expect(green.color, isNot(colors.surface));
-    expect(violet.color, isNot(green.color));
-    expect((violet.border! as Border).top.color, colors.border);
-    expect((green.border! as Border).top.color, colors.border);
+    expect(violet.color, colors.accentTint);
+    expect(green.color, colors.accentTint);
 
     final violetBlock = find.byKey(const Key('timeline-task-violet-task'));
     final projectRail = find
@@ -1967,7 +2019,9 @@ void main() {
               return false;
             }
             return (widget.decoration as BoxDecoration).borderRadius ==
-                const BorderRadius.horizontal(left: Radius.circular(8));
+                const BorderRadiusDirectional.horizontal(
+                  start: Radius.circular(8),
+                );
           }),
         )
         .first;
@@ -2061,6 +2115,38 @@ void main() {
         lessThan(tester.getTopLeft(child).dy),
       );
 
+      final labelStart = tester
+          .getTopLeft(find.descendant(of: inbox, matching: find.text('Inbox')))
+          .dx;
+      double dotCenter(String id) => tester
+          .getCenter(
+            find.descendant(
+              of: find.byKey(Key('timeline-project-color-$id')),
+              matching: find.byWidgetPredicate(
+                (widget) =>
+                    widget is DecoratedBox &&
+                    widget.decoration is BoxDecoration &&
+                    (widget.decoration as BoxDecoration).shape ==
+                        BoxShape.circle,
+              ),
+            ),
+          )
+          .dx;
+      for (final (id, label, row) in [
+        ('favorite', 'Favorite', favorite),
+        ('parent', 'Parent', parent),
+        ('child', 'Child', child),
+        ('favorite-child', 'Favorite child', favoriteChild),
+      ]) {
+        expect(
+          tester
+              .getTopLeft(find.descendant(of: row, matching: find.text(label)))
+              .dx,
+          labelStart,
+        );
+        expect(dotCenter(id), dotCenter(inboxProjectId));
+      }
+
       await tester.tap(
         find.byKey(const Key('timeline-project-collapse-parent')),
       );
@@ -2104,7 +2190,7 @@ void main() {
     expect(bRect.left, lessThan(aRect.right));
   });
 
-  testWidgets('timeline grid uses horizontal scroll on desktop and mobile', (
+  testWidgets('timeline switches between horizontal and vertical time axes', (
     tester,
   ) async {
     _setTimelineVisibleHourPrefs();
@@ -2136,30 +2222,147 @@ void main() {
     router.go('/timeline?date=${_routeDate(day)}');
     await _pumpFrames(tester);
 
-    final mobileScroll = tester.widget<SingleChildScrollView>(
-      find.byKey(const Key('timeline-horizontal-scroll')),
-    );
-    expect(mobileScroll.scrollDirection, Axis.horizontal);
-    expect(find.byKey(const Key('timeline-slot-inbox-600')), findsOneWidget);
-    expect(
-      tester.getSize(find.byKey(const Key('timeline-project-column'))).width,
-      lessThanOrEqualTo(120),
-    );
+    final track = find.byKey(const Key('timeline-vertical-track'));
+    final slot = find.byKey(const Key('timeline-slot-inbox-600'));
+    final laterSlot = find.byKey(const Key('timeline-slot-inbox-660'));
+    expect(track, findsOneWidget);
+    expect(find.byKey(const Key('timeline-horizontal-scroll')), findsNothing);
+    expect(find.byKey(const Key('timeline-project-column')), findsNothing);
+    expect(tester.getTopLeft(laterSlot).dy - tester.getTopLeft(slot).dy, 48);
+    await _openTimelineSettings(tester);
+    expect(find.byKey(const Key('timeline-start-minutes')), findsOneWidget);
     expect(find.byKey(const Key('timeline-zoom-out')), findsOneWidget);
     expect(find.byKey(const Key('timeline-zoom-in')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('timeline mobile moves and resizes within the same project', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    final day = _testToday();
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      projects: [
+        _project(inboxProjectId, 'Inbox', orderKey: '0'),
+        _project('study', 'Study', orderKey: '1'),
+      ],
+      tasks: [
+        _task(
+          'mobile-timed',
+          'Study session',
+          projectId: 'study',
+          schedule: _scheduleAt(day, 9),
+        ),
+        _task(
+          'mobile-all-day',
+          'Read notes',
+          projectId: 'study',
+          schedule: TaskSchedule.allDay(day),
+        ),
+      ],
+    );
+
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+    await _dragTimelineTaskToSlot(tester, 'Study session', 660);
+    final move = harness.taskRepository.updatePatches.single.schedule!;
+    expect(move.start!.toLocal(), _dateAt(day, 11));
+    expect(move.duration, const Duration(hours: 1));
+
+    final handle = find.byKey(const Key('timeline-resize-mobile-timed'));
+    await tester.drag(handle, const Offset(0, 42));
+    await _pumpFrames(tester);
+    final resize = harness.taskRepository.updatePatches.last.schedule!;
+    expect(resize.start!.toLocal(), _dateAt(day, 9));
+    expect(resize.end!.toLocal(), _dateAt(day, 10, 30));
+
+    await _dragTimelineTaskToSlot(tester, 'Read notes', 600);
+    expect(harness.taskRepository.updatePatches.last.schedule!.isTimed, isTrue);
+    await tester.tap(find.byKey(const Key('timeline-all-day-toggle')));
+    await _pumpFrames(tester);
+    await _dragTimelineTaskToAllDay(tester, 'Study session');
+    expect(
+      harness.taskRepository.updatePatches.last.schedule!.isAllDay,
+      isTrue,
+    );
+    expect(harness.taskRepository.placedTaskIds, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('timeline mobile pinch keeps the time at the focal point', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs(endMinutes: 24 * 60);
+    late GoRouter router;
+    final day = _testToday();
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: const [],
+    );
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+    final slot = find.byKey(const Key('timeline-slot-inbox-720'));
+    final position = Scrollable.of(
+      tester.element(slot),
+      axis: Axis.vertical,
+    ).position;
+    position.jumpTo(140);
+    await tester.pump();
+    final focal = tester.getCenter(slot);
+    final first = TestPointer(41, PointerDeviceKind.touch);
+    final second = TestPointer(42, PointerDeviceKind.touch);
+    await tester.sendEventToBinding(first.down(focal - const Offset(50, 0)));
+    await tester.sendEventToBinding(second.down(focal + const Offset(50, 0)));
+    await tester.sendEventToBinding(first.move(focal - const Offset(75, 0)));
+    await tester.sendEventToBinding(second.move(focal + const Offset(75, 0)));
+    await _pumpFrames(tester);
+
+    expect(tester.getSize(slot).height, 18);
+    expect(tester.getCenter(slot).dy, closeTo(focal.dy, 0.1));
+    await tester.sendEventToBinding(first.up());
+    await tester.sendEventToBinding(second.up());
+  });
+
+  testWidgets('timeline mobile sets visible hours in the settings popover', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs();
+    late GoRouter router;
+    await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: const [],
+    );
+    router.go('/timeline');
+    await _pumpFrames(tester);
+    await _openTimelineSettings(tester);
+
+    final start = find.byKey(const Key('timeline-start-minutes'));
+    await tester.tap(start);
+    await _pumpFrames(tester);
+    final option = find.widgetWithText(ShadOption<int>, '09:00');
+    await tester.ensureVisible(option);
+    await tester.tap(option);
+    await _pumpFrames(tester);
+    expect(start, findsOneWidget);
+    expect(find.byKey(const Key('timeline-slot-inbox-480')), findsNothing);
+    expect(find.byKey(const Key('timeline-slot-inbox-540')), findsOneWidget);
+  });
+
   testWidgets(
     'timeline mouse wheel scrolls horizontally and releases at edge',
     (tester) async {
-      _setTimelineVisibleHourPrefs();
+      _setTimelineVisibleHourPrefs(endMinutes: 24 * 60);
       late GoRouter router;
       final day = _testToday();
       await _pumpApp(
         tester,
         onRouter: (value) => router = value,
-        size: const Size(800, 500),
+        size: const Size(1200, 500),
         projects: [
           _project(inboxProjectId, 'Inbox', orderKey: '0'),
           for (var index = 1; index <= 6; index++)
@@ -2223,7 +2426,7 @@ void main() {
   testWidgets('timeline arrows scroll only while the grid has focus', (
     tester,
   ) async {
-    _setTimelineVisibleHourPrefs();
+    _setTimelineVisibleHourPrefs(endMinutes: 24 * 60);
     late GoRouter router;
     final day = _testToday();
     await _pumpApp(
@@ -2285,8 +2488,10 @@ void main() {
     expect(controller.offset, greaterThan(afterKeyDown));
     await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
 
-    controller.jumpTo(300);
-    await tester.tap(find.byKey(const Key('timeline-slot-inbox-600')));
+    final slot = find.byKey(const Key('timeline-slot-inbox-600'));
+    await tester.ensureVisible(slot);
+    final slotScrollOffset = controller.offset;
+    await tester.tap(slot);
     await tester.pump();
     final inlineAdd = find.byKey(const Key('timeline-inline-add-timed'));
     expect(inlineAdd, findsOneWidget);
@@ -2302,11 +2507,11 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
 
-    expect(controller.offset, 300);
+    expect(controller.offset, slotScrollOffset);
   });
 
   testWidgets('timeline arrows follow RTL visual direction', (tester) async {
-    _setTimelineVisibleHourPrefs();
+    _setTimelineVisibleHourPrefs(endMinutes: 24 * 60);
     late GoRouter router;
     final day = _testToday();
     await _pumpApp(
@@ -2357,21 +2562,22 @@ void main() {
     await _pumpFrames(tester);
 
     final slot = find.byKey(const Key('timeline-slot-inbox-600'));
-    expect(tester.getSize(slot).width, 48);
+    final initialSlotWidth = tester.getSize(slot).width;
     final scroll = tester.widget<SingleChildScrollView>(
       find.byKey(const Key('timeline-horizontal-scroll')),
     );
     final controller = scroll.controller!;
 
+    await _openTimelineSettings(tester);
     await tester.tap(find.byKey(const Key('timeline-zoom-in')));
     await _pumpFrames(tester);
-    expect(tester.getSize(slot).width, 72);
+    expect(tester.getSize(slot).width, closeTo(initialSlotWidth * 1.5, 0.01));
     expect(controller.offset, 0);
 
     controller.jumpTo(300);
     final oldCenterMinutes =
         (controller.offset + controller.position.viewportDimension / 2) /
-        (72 / timelineSnapMinutes);
+        (initialSlotWidth * 1.5 / timelineSnapMinutes);
     await tester.tap(find.byKey(const Key('timeline-zoom-in')));
     await _pumpFrames(tester);
     final newCenterMinutes =
@@ -2390,7 +2596,7 @@ void main() {
       await tester.tap(find.byKey(const Key('timeline-zoom-out')));
       await _pumpFrames(tester);
     }
-    expect(tester.getSize(slot).width, 24);
+    expect(tester.getSize(slot).width, closeTo(initialSlotWidth / 2, 0.01));
     expect(
       tester
           .widget<ShadIconButton>(find.byKey(const Key('timeline-zoom-out')))
@@ -2420,12 +2626,14 @@ void main() {
     final controller = tester
         .widget<SingleChildScrollView>(scrollFinder)
         .controller!;
-    controller.jumpTo(300);
+    controller.jumpTo(30);
     await tester.pump();
     final scrollRect = tester.getRect(scrollFinder);
     final focalPoint = Offset(scrollRect.left + 300, scrollRect.center.dy);
     const focalX = 300.0;
-    final timeAtFocalPoint = (controller.offset + focalX) / (192 / 60);
+    final initialSlotWidth = tester.getSize(slot).width;
+    final timeAtFocalPoint =
+        (controller.offset + focalX) / (initialSlotWidth / timelineSnapMinutes);
     final first = TestPointer(41, PointerDeviceKind.touch);
     final second = TestPointer(42, PointerDeviceKind.touch);
 
@@ -2443,9 +2651,10 @@ void main() {
     );
     await _pumpFrames(tester);
 
-    expect(tester.getSize(slot).width, 72);
+    expect(tester.getSize(slot).width, closeTo(initialSlotWidth * 1.5, 0.01));
     expect(
-      (controller.offset + focalX) / (288 / 60),
+      (controller.offset + focalX) /
+          (tester.getSize(slot).width / timelineSnapMinutes),
       moreOrLessEquals(timeAtFocalPoint, epsilon: 0.1),
     );
 
@@ -2457,9 +2666,9 @@ void main() {
     );
     await _pumpFrames(tester);
 
-    expect(tester.getSize(slot).width, 48);
+    expect(tester.getSize(slot).width, closeTo(initialSlotWidth, 0.01));
     expect(
-      (controller.offset + focalX) / (192 / 60),
+      (controller.offset + focalX) / (initialSlotWidth / timelineSnapMinutes),
       moreOrLessEquals(timeAtFocalPoint, epsilon: 0.1),
     );
 
@@ -2486,7 +2695,7 @@ void main() {
     final controller = tester
         .widget<SingleChildScrollView>(scrollFinder)
         .controller!;
-    controller.jumpTo(300);
+    controller.jumpTo(30);
     await tester.pump();
     final scrollRect = tester.getRect(scrollFinder);
     final focalPoint = Offset(scrollRect.left + 300, scrollRect.center.dy);
@@ -2502,9 +2711,10 @@ void main() {
     );
     await tester.pump();
 
-    expect(controller.offset, isNot(300));
-    expect(tester.getSize(slot).width, 48);
-    final timeAtFocalPoint = (controller.offset + focalX) / (192 / 60);
+    expect(controller.offset, isNot(30));
+    final initialSlotWidth = tester.getSize(slot).width;
+    final timeAtFocalPoint =
+        (controller.offset + focalX) / (initialSlotWidth / timelineSnapMinutes);
 
     await tester.sendEventToBinding(
       trackpad.panZoomUpdate(
@@ -2515,9 +2725,10 @@ void main() {
     );
     await _pumpFrames(tester);
 
-    expect(tester.getSize(slot).width, 72);
+    expect(tester.getSize(slot).width, closeTo(initialSlotWidth * 1.5, 0.01));
     expect(
-      (controller.offset + focalX) / (288 / 60),
+      (controller.offset + focalX) /
+          (tester.getSize(slot).width / timelineSnapMinutes),
       moreOrLessEquals(timeAtFocalPoint, epsilon: 0.1),
     );
 
@@ -2545,6 +2756,7 @@ void main() {
     await _pumpFrames(tester);
     expect(find.byKey(const Key('timeline-project-row-hidden')), findsNothing);
 
+    await _openTimelineSettings(tester);
     await tester.tap(find.byKey(const Key('timeline-project-menu')));
     await tester.pumpAndSettle();
     await tester.tap(
@@ -2567,6 +2779,7 @@ void main() {
       projectColorPalette[5],
     );
 
+    await _openTimelineSettings(tester);
     await tester.tap(find.byKey(const Key('timeline-project-menu')));
     await tester.pumpAndSettle();
     await tester.tap(
@@ -2615,41 +2828,46 @@ void main() {
     );
   });
 
-  testWidgets('timeline slot inline add creates timed task', (tester) async {
-    _setTimelineVisibleHourPrefs();
-    late GoRouter router;
-    final day = _testToday();
-    final harness = await _pumpApp(
-      tester,
-      onRouter: (value) => router = value,
-      size: const Size(1200, 900),
-      tasks: const <TaskItem>[],
-    );
+  for (final size in [const Size(390, 844), const Size(1200, 900)]) {
+    testWidgets(
+      'timeline slot inline add creates timed task at ${size.width}px',
+      (tester) async {
+        _setTimelineVisibleHourPrefs();
+        late GoRouter router;
+        final day = _testToday();
+        final harness = await _pumpApp(
+          tester,
+          onRouter: (value) => router = value,
+          size: size,
+          tasks: const <TaskItem>[],
+        );
 
-    router.go('/timeline?date=${_routeDate(day)}');
-    await _pumpFrames(tester);
-    await tester.ensureVisible(
-      find.byKey(const Key('timeline-slot-inbox-600')),
-    );
-    await tester.tap(find.byKey(const Key('timeline-slot-inbox-600')));
-    await tester.pump();
-    final inline = find.byKey(const Key('timeline-inline-add-timed'));
-    await tester.enterText(
-      find.descendant(of: inline, matching: find.byType(TextField)),
-      'Created from slot',
-    );
-    await tester.tap(
-      find.descendant(of: inline, matching: find.byTooltip('Add')),
-    );
-    await _pumpFrames(tester);
+        router.go('/timeline?date=${_routeDate(day)}');
+        await _pumpFrames(tester);
+        await tester.ensureVisible(
+          find.byKey(const Key('timeline-slot-inbox-600')),
+        );
+        await tester.tap(find.byKey(const Key('timeline-slot-inbox-600')));
+        await tester.pump();
+        final inline = find.byKey(const Key('timeline-inline-add-timed'));
+        await tester.enterText(
+          find.descendant(of: inline, matching: find.byType(TextField)),
+          'Created from slot',
+        );
+        await tester.tap(
+          find.descendant(of: inline, matching: find.byTooltip('Add')),
+        );
+        await _pumpFrames(tester);
 
-    final input = harness.taskRepository.createdInputs.single;
-    expect(input.content, 'Created from slot');
-    expect(input.projectId, inboxProjectId);
-    expect(input.dueDate, isNull);
-    expect(input.schedule!.start!.toLocal(), _dateAt(day, 10));
-    expect(input.schedule!.duration, const Duration(minutes: 30));
-  });
+        final input = harness.taskRepository.createdInputs.single;
+        expect(input.content, 'Created from slot');
+        expect(input.projectId, inboxProjectId);
+        expect(input.dueDate, isNull);
+        expect(input.schedule!.start!.toLocal(), _dateAt(day, 10));
+        expect(input.schedule!.duration, const Duration(minutes: 30));
+      },
+    );
+  }
 
   testWidgets('timeline slot explicit project overrides the row project', (
     tester,
@@ -2705,7 +2923,7 @@ void main() {
 
     router.go('/timeline?date=${_routeDate(day)}');
     await _pumpFrames(tester);
-    await tester.tap(find.byKey(const Key('timeline-all-day-section')));
+    await tester.tap(find.text('No all-day tasks'));
     await tester.pump();
     final inline = find.byKey(const Key('timeline-inline-add-all-day'));
     await tester.enterText(
@@ -2746,6 +2964,43 @@ void main() {
     expect(patch.schedule!.duration, const Duration(hours: 1));
     expect(harness.taskRepository.movedParentIds, isEmpty);
     expect(harness.taskRepository.movedProjectIds, isEmpty);
+  });
+
+  testWidgets('timeline ignores drops past the last visible hour', (
+    tester,
+  ) async {
+    _setTimelineVisibleHourPrefs(endMinutes: 10 * 60);
+    late GoRouter router;
+    final day = _testToday();
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      size: const Size(1200, 900),
+      tasks: [
+        _task(
+          'drag-boundary',
+          'Drag to boundary',
+          schedule: _scheduleAt(day, 8),
+        ),
+      ],
+    );
+    router.go('/timeline?date=${_routeDate(day)}');
+    await _pumpFrames(tester);
+    final edge = tester.getTopLeft(
+      find.byKey(const Key('timeline-hour-line-600')),
+    );
+    final source = tester.getCenter(
+      _timelineTaskBlockForTitle('Drag to boundary'),
+    );
+    final gesture = await tester.startGesture(source);
+    await tester.pump(const Duration(milliseconds: 600));
+    await gesture.moveTo(Offset(edge.dx + 16, source.dy));
+    await tester.pump();
+    await gesture.up();
+    await _pumpFrames(tester);
+
+    expect(harness.taskRepository.updatePatches, isEmpty);
+    expect(harness.taskRepository.placedTaskIds, isEmpty);
   });
 
   testWidgets('timeline drag across project zones places task atomically', (
@@ -2853,13 +3108,11 @@ void main() {
 
     router.go('/timeline?date=${_routeDate(day)}');
     await _pumpFrames(tester);
-    expect(
-      tester.getSize(find.byKey(const Key('timeline-slot-inbox-600'))).width,
-      24,
-    );
+    final slot = find.byKey(const Key('timeline-slot-inbox-600'));
+    final width = tester.getSize(slot).width;
     final handle = find.byKey(const Key('timeline-resize-resize-1'));
     await tester.ensureVisible(handle);
-    await tester.drag(handle, const Offset(66, 0));
+    await tester.drag(handle, Offset(width * 2 + 18, 0));
     await tester.pumpAndSettle();
 
     final schedule = harness.taskRepository.updatePatches.single.schedule!;
@@ -3021,7 +3274,7 @@ void main() {
       find.descendant(of: bottomNavigation, matching: find.text('Focus')),
     );
     await _pumpFrames(tester);
-    expect(find.text('No active session'), findsOneWidget);
+    expect(find.byKey(const Key('focus-state-idle')), findsOneWidget);
   });
 
   testWidgets('task list scrolls last row above compact bottom chrome', (
@@ -3174,7 +3427,7 @@ void main() {
     await tester.tap(find.text('Pause'));
     await tester.pump();
     expect(find.text('Log distraction'), findsNothing);
-    await tester.tap(find.text('Complete interval'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Finish'));
     await tester.pump();
     await _tapFullFocusMenuItem(tester, 'Skip');
     await _tapFullFocusMenuItem(tester, 'Stop');
@@ -3950,6 +4203,11 @@ bool? _taskCheckboxValue(WidgetTester tester, String title) {
       .value;
 }
 
+Future<void> _openTimelineSettings(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('timeline-settings')));
+  await _pumpFrames(tester);
+}
+
 Future<void> _dragTimelineTaskToSlot(
   WidgetTester tester,
   String draggedTitle,
@@ -4530,6 +4788,13 @@ Iterable<MethodCall> _hapticCalls(Iterable<MethodCall> calls) =>
 
 class _FakeFocusRepository implements FocusRepository {
   @override
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  }) async => throw UnimplementedError();
+
+  @override
   Future<Result<void>> setPresetDistractionProfile(
     String presetId,
     String? profileId,
@@ -4652,10 +4917,12 @@ class _FakeFocusRepository implements FocusRepository {
       Result.capture<void>(() async {});
 
   @override
-  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
-      Result.capture<void>(() async {
-        completeCount++;
-      });
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  }) => Result.capture<void>(() async {
+    completeCount++;
+  });
 
   @override
   Future<Result<void>> skipActiveInterval({DateTime? now}) =>

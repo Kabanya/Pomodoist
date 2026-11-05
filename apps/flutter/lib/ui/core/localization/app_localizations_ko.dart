@@ -5010,4 +5010,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get blockingSyncConflict => 'Sync conflict';
+
+  @override
+  String get focusDuration => '시간';
+
+  @override
+  String focusPlannedDuration(String duration) {
+    return '계획 · $duration';
+  }
+
+  @override
+  String get focusShortenDuration => '−5분';
+
+  @override
+  String get focusExtendDuration => '+5분';
+
+  @override
+  String get focusFinish => '완료';
 }

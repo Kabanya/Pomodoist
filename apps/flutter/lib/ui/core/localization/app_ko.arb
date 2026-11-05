@@ -2254,5 +2254,10 @@
   "pickerTimeWheels": "시간 휠",
   "pickerMinuteOffset": "{offset}분",
   "pickerIncrease": "늘리기",
-  "pickerDecrease": "줄이기"
+  "pickerDecrease": "줄이기",
+  "focusDuration": "시간",
+  "focusPlannedDuration": "계획 · {duration}",
+  "focusShortenDuration": "−5분",
+  "focusExtendDuration": "+5분",
+  "focusFinish": "완료"
 }

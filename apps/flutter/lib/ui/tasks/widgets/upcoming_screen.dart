@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/tasks/view_models/upcoming_view_model.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
@@ -117,11 +118,15 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
                           key: _headerKey,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              context.l10n.navUpcoming,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: 16),
+                            if (!CompactShellHeading.isShown(context)) ...[
+                              Text(
+                                context.l10n.navUpcoming,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             UpcomingCalendar(
                               today: today,
                               selectedDate: selectedDay,

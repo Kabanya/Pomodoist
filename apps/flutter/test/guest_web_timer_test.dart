@@ -154,7 +154,8 @@ void main() {
     expect(find.text('Sign in to Pomodoist'), findsNothing);
     expect(find.byKey(const Key('guest-timer-close')), findsOneWidget);
     expect(find.byType(FocusScreen), findsOneWidget);
-    expect(find.text('No active session'), findsOneWidget);
+    expect(find.byKey(const Key('focus-circular-timer')), findsOneWidget);
+    expect(find.byKey(const Key('focus-header-minimize')), findsNothing);
     expect(find.byKey(const Key('focus-details-menu')), findsNothing);
     expect(find.byType(AdaptiveShell), findsNothing);
     expect(find.byType(Scaffold), findsOneWidget);
@@ -279,7 +280,7 @@ void main() {
       expect(find.text('Sign in to Pomodoist'), findsNothing);
       expect(find.byKey(const Key('guest-timer-close')), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.text('No active session'),
+        find.byKey(const Key('focus-circular-timer')),
         100,
         scrollable: find.descendant(
           of: find.byKey(const Key('guest-timer-scroll')),
@@ -291,7 +292,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final status = tester.getRect(find.text('No active session'));
+      final status = tester.getRect(
+        find.byKey(const Key('focus-circular-timer')),
+      );
       expect(status.top, greaterThanOrEqualTo(0));
       expect(status.bottom, lessThanOrEqualTo(size.height));
       expect(tester.takeException(), isNull);
@@ -346,6 +349,13 @@ class _GuestAccount implements AccountClient {
 }
 
 class _GuestFocusRepository implements FocusRepository {
+  @override
+  Future<Result<void>> adjustActiveIntervalDuration(
+    String intervalId,
+    int deltaSeconds, {
+    DateTime? now,
+  }) async => throw UnimplementedError();
+
   @override
   Future<Result<void>> setPresetDistractionProfile(
     String presetId,
@@ -425,8 +435,10 @@ class _GuestFocusRepository implements FocusRepository {
       Result.capture<void>(() async {});
 
   @override
-  Future<Result<void>> completeActiveInterval({DateTime? now}) =>
-      Result.capture<void>(() async {});
+  Future<Result<void>> completeActiveInterval({
+    DateTime? now,
+    String? expiredIntervalId,
+  }) => Result.capture<void>(() async {});
 
   @override
   Future<Result<void>> skipActiveInterval({DateTime? now}) =>

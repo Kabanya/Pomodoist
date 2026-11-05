@@ -19,18 +19,22 @@ class FocusHeader extends StatelessWidget {
 class _FocusFullHeader extends StatelessWidget {
   const _FocusFullHeader({
     required this.preset,
+    required this.menu,
     required this.onMinimize,
-    this.menu,
   });
   final Widget preset;
-  final Widget? menu;
+  final Widget menu;
   final VoidCallback? onMinimize;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) => Row(
       children: [
-        const Expanded(child: FocusHeader()),
+        Expanded(
+          child: CompactShellHeading.isShown(context)
+              ? const SizedBox.shrink()
+              : const FocusHeader(),
+        ),
         ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: math.min(220, constraints.maxWidth / 3),
@@ -51,149 +55,142 @@ class _FocusFullHeader extends StatelessWidget {
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
             ),
           ),
-        ?menu,
+        menu,
       ],
     ),
   );
 }
 
-class _FocusSessionOverview extends StatelessWidget {
-  const _FocusSessionOverview({
-    required this.rhythm,
-    required this.label,
-    required this.presetName,
-    required this.semanticsLabel,
-    required this.compact,
-    required this.display,
-    this.activeSequence,
-    this.activeProgress = 0,
-    this.recenterToken,
+class _FocusControlDock extends StatelessWidget {
+  const _FocusControlDock({
+    required this.primary,
+    this.secondary,
+    this.duration,
   });
-  final FocusRhythm rhythm;
-  final String label;
-  final String presetName;
-  final String semanticsLabel;
-  final bool compact;
-  final FocusSessionDisplay display;
-  final int? activeSequence;
-  final double activeProgress;
-  final Object? recenterToken;
+
+  final Widget primary;
+  final Widget? secondary;
+  final Widget? duration;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 16,
-        runSpacing: 8,
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 560),
+      child: Column(
+        key: const Key('focus-control-dock'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            label,
-            style: AppTheme.monoTextStyle.copyWith(
-              fontSize: Theme.of(context).textTheme.bodySmall?.fontSize,
-              color: context.appColors.secondaryText,
+          if (secondary == null)
+            primary
+          else
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: primary),
+                  const SizedBox(width: 16),
+                  Expanded(child: secondary!),
+                ],
+              ),
             ),
-          ),
-          Text(
-            presetName,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.appColors.secondaryText,
-            ),
-          ),
+          if (duration != null) ...[const SizedBox(height: 16), duration!],
         ],
       ),
-      const SizedBox(height: 12),
-      FocusRhythmRail(
-        rhythm: rhythm,
-        semanticsLabel: semanticsLabel,
-        compact: compact,
-        display: display,
-        activeSequence: activeSequence,
-        activeProgress: activeProgress,
-        recenterToken: recenterToken,
-      ),
-    ],
+    ),
   );
 }
 
-class _FocusControlDock extends StatelessWidget {
-  const _FocusControlDock({
-    required this.summary,
-    required this.primary,
-    this.secondary,
-    this.menu,
+class _FocusDurationControls extends StatelessWidget {
+  const _FocusDurationControls({
+    required this.interval,
+    required this.remaining,
+    required this.strict,
+    required this.onAdjust,
   });
-  final String summary;
-  final Widget primary;
-  final Widget? secondary;
-  final Widget? menu;
+
+  final FocusIntervalItem interval;
+  final Duration remaining;
+  final bool strict;
+  final Future<void> Function(String, int) onAdjust;
 
   @override
   Widget build(BuildContext context) {
-    final copy = Text(
-      summary,
-      style: Theme.of(
-        context,
-      ).textTheme.bodySmall?.copyWith(color: context.appColors.secondaryText),
+    final l10n = context.l10n;
+    final plan = Duration(seconds: interval.plannedSeconds);
+    final planLabel = plan.inHours == 0
+        ? l10n.pickerMinuteOffset(plan.inMinutes.toString())
+        : l10n.durationHoursMinutes(plan.inHours, plan.inMinutes % 60);
+    final title = Row(
+      children: [
+        Icon(
+          LucideIcons.clock,
+          color: context.appColors.secondaryText,
+          size: 20,
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.focusDuration,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              Text(
+                l10n.focusPlannedDuration(planLabel),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.appColors.secondaryText,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    final step = focusDurationStepSeconds;
+    final buttons = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final delta in [-step, step]) ...[
+          if (delta > 0) const SizedBox(width: 8),
+          OutlinedButton(
+            key: ValueKey('focus-duration-$delta'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(56, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
+            onPressed:
+                remaining <= Duration.zero ||
+                    (delta < 0 && (strict || remaining.inSeconds <= step)) ||
+                    !isFocusDurationAllowed(interval.plannedSeconds + delta)
+                ? null
+                : () => unawaited(
+                    _performFocusAction(
+                      context,
+                      () => onAdjust(interval.id, delta),
+                    ),
+                  ),
+            child: Text(
+              delta < 0 ? l10n.focusShortenDuration : l10n.focusExtendDuration,
+            ),
+          ),
+        ],
+      ],
     );
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 680;
-        final summaryMenu = narrow && menu != null;
-        return Container(
-          key: const Key('focus-control-dock'),
-          padding: EdgeInsets.only(top: summaryMenu ? 16 : 20),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: context.appColors.border)),
-          ),
-          child: narrow
-              ? Column(
-                  children: [
-                    if (summaryMenu)
-                      Row(
-                        children: [
-                          const SizedBox(width: 56),
-                          Expanded(child: Center(child: copy)),
-                          const SizedBox(width: 8),
-                          menu!,
-                        ],
-                      )
-                    else
-                      copy,
-                    SizedBox(height: summaryMenu ? 4 : 16),
-                    primary,
-                    if (secondary != null) ...[
-                      const SizedBox(height: 12),
-                      secondary!,
-                    ],
-                  ],
-                )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 16),
-                        child: copy,
-                      ),
-                    ),
-                    primary,
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ?secondary,
-                          if (menu != null) ...[
-                            const SizedBox(width: 8),
-                            menu!,
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-        );
-      },
+      builder: (context, constraints) =>
+          constraints.maxWidth < MediaQuery.textScalerOf(context).scale(305)
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [title, const SizedBox(height: 6), buttons],
+            )
+          : Row(
+              children: [
+                Expanded(child: title),
+                const SizedBox(width: 8),
+                buttons,
+              ],
+            ),
     );
   }
 }
@@ -234,17 +231,4 @@ List<Widget> _sessionDisplayMenuItems(
       ),
     Divider(height: 8, color: context.appColors.border),
   ];
-}
-
-String? _nextIntervalLabel(BuildContext context, FocusRhythmStep? step) {
-  if (step == null) return null;
-  final phase = switch (step.phase) {
-    FocusRhythmPhase.work => context.l10n.workInterval,
-    FocusRhythmPhase.shortBreak => context.l10n.shortBreak,
-    FocusRhythmPhase.longBreak => context.l10n.longBreak,
-  };
-  return context.l10n.focusNextInterval(
-    phase,
-    formatDurationCompact(Duration(seconds: step.plannedSeconds)),
-  );
 }
