@@ -302,6 +302,9 @@ Keep the close/back and overflow actions pinned at the top of task details,
 inside the safe area, with task content scrolling below them.
 When compact details replace the shell header, preserve the inherited top
 MediaQuery padding so their SafeArea still clears the system status bar.
+Global achievement banners also respect the top safe area when the shell header
+is hidden, including compact Focus and fullscreen views. When the header is
+visible, it already provides top clearance; do not add that inset a second time.
 Command-Option-B and Command-Shift-B (Control-Alt-B and Control-Shift-B on
 Windows and Linux) both toggle the last opened task details. Both bindings are
 configurable. Before any task is opened, or after that task is deleted, they
@@ -617,6 +620,28 @@ and label names. Omit the duplicate body heading while keeping its controls
 and supporting text. Standalone screens keep their own headings. Fullscreen
 task and habit details and the fullscreen map keep their own chrome.
 
+The Projects catalog owns its compact shell header, reusing the shell's drawer
+callback. Keep the Projects title geometrically centered between equal 144 px
+wings: drawer plus icon-only Projects / Labels tabs on the leading side, and
+icon-only List / Map tabs plus the accent Add action on the trailing side.
+A centered secondary line identifies the selected section and project view.
+Labels hide the project view switch and use Add label. Use the existing Shadcn
+tabs with localized tooltips, selected semantics, and at least 44 px touch
+targets. Below 390 px or above 110% text scaling, move both tab groups into a
+second header row; preserve the centered title and drawer/Add positions. Keep
+search, archive and map-specific filters below the header without repeating
+its controls. Wide layouts and fullscreen maps retain their existing chrome.
+
+Today keeps the title itself centered, with the localized abbreviated weekday
+on the leading side and the day number above the abbreviated month on the
+trailing side. Keep the standard drawer and overflow buttons unchanged.
+Use a 20 px bold title, `titleMedium` semibold day number and `bodySmall`
+secondary weekday/month. Equal flexible columns beside the title preserve its
+center. The date stack uses single-height text and a 4 px gap to fit the existing
+52 px minimum header without extra vertical padding. Preserve text scaling and
+the title's two-line allowance, with the full date available to assistive
+technology and in a tooltip.
+
 ### Compact task creation
 
 In the inline Quick Add bar, center the microphone and Add buttons vertically
@@ -781,8 +806,9 @@ Missing parents and cycles from synchronization must never hide projects.
 
 ### Today
 
-Center the list within 1200 px of content width. Keep the date below the title
-and use the shared connected task rows with the existing inline Quick Add.
+Center the list within 1200 px of content width. In wide layouts, keep the date
+below the title and use the shared connected task rows with the existing inline
+Quick Add.
 
 Keep daily context to one text summary, without an inline Focus card. The global
 mini player follows the same visibility rules as other task lists, appearing
@@ -790,9 +816,10 @@ above bottom navigation on compact layouts and below content on wide layouts.
 Completed-today rows form a collapsed group with independent selection, using
 the local completion day.
 
-Below the 820 px shell breakpoint on iOS, Android, and web, show a short
-localized date at the top of the list. Open the daily summary and priority
-order control from the overflow button in the shell header. Use the
+Below the 820 px shell breakpoint on iOS, Android, and web, show the localized
+weekday and stacked day/month beside the centered shell title, omitting the
+duplicate date from the list. Standalone compact lists retain their date. Open the daily summary
+and priority order control from the overflow button in the shell header. Use the
 shell's floating Add task button as the single visible entry point, including
 empty states. Both the button and the Quick Add shortcut default to the current
 local day. Reserve enough scroll clearance for the button.
@@ -812,7 +839,7 @@ Render the agenda as one lazy sliver list across all days, with variable row
 heights and stable task keys. Day headings retain the narrow stacked and wide
 date-column layouts. Selection uses the complete logical projection, including
 rows outside the viewport; collapsed descendants remain excluded. Keep Quick
-Add state mounted through ordinary updates. A selected date scrolls after
+Add state mounted through ordinary updates wherever the inline bar is shown. A selected date scrolls after
 layout using the measured header, without repeating on task refreshes. Observe
 row structure in list parents and current task, progress and ancestor snapshots
 in individual cards; content-only updates must not rebuild unrelated cards.
@@ -823,15 +850,29 @@ threshold, place it above the day's tasks. Keep the calendar rail, local-day
 grouping, Quick Add, route selection and scrolling anchors. A task remains in its
 own scheduled day even when its parent belongs to another day.
 
-For calendar rails below 760 px, a period spanning two months uses localized
-abbreviations with one shared year, such as `Sep–Oct 2026`. A year boundary
-keeps both years, such as `Dec 2026–Jan 2027`; preserve the locale's year
-placement and month markers. Omit the calendar icon in all narrow headers,
-including single-month periods; compact ranges use 4 px horizontal button
-padding. Keep normal text sizing and a minimum 48 px target; let longer labels
-wrap and the header grow. Accessibility
-announces the full month names. Single-month headers keep their existing
-labels, and wide headers retain their labels and calendar icon.
+Below 760 px of available calendar width, use a flat seven-day strip without
+an enclosing card or task-count dots. Place the month at the leading edge,
+followed by Today and the previous/next week buttons. Keep the month picker,
+swipe paging and keyboard navigation. Use a subtle bottom divider and a short
+accent underline for the selected date (Today when no date is selected).
+Today retains accent text independently of selection; screen readers retain
+full dates, Today, selected state and uncapped task counts. Keep a visible
+keyboard focus outline. Day targets remain at least 48 px wide and 64 px tall,
+scrolling horizontally when necessary; text scaling may increase their height.
+Wide calendars retain the existing card, fourteen-day rail and count dots.
+
+Narrow month ranges use localized abbreviations with one shared year, such as
+`Sep–Oct 2026`. A year boundary keeps both years, such as `Dec 2026–Jan 2027`;
+preserve the locale's year placement and month markers. Omit the calendar icon
+in narrow headers and use 4 px horizontal month-button padding. Keep normal
+text sizing and a minimum 48 px target; let longer labels wrap and the header
+grow. Accessibility announces the full month names. Single-month headers keep
+their localized labels; wide headers retain their calendar icon.
+
+Below the 820 px mobile shell breakpoint on iOS, Android and web, omit the
+inline Quick Add bar and its preceding gap from Upcoming. Use the existing
+floating Add task action. Desktop layouts retain inline creation, including
+narrow desktop windows where the mobile floating action is unavailable.
 
 ### Browse
 
@@ -877,11 +918,26 @@ schedule stays overdue, and finishing the review shows a quiet empty state.
 
 ### Quick Add
 
+The in-app Quick Add dialog inherits an all-day date from its opening context:
+Today uses the current local day; Upcoming uses the selected route date, or today
+when no valid date is selected. Apply this across the floating add button,
+sidebar and keyboard shortcut at every width. An explicit caller default takes
+precedence over the screen context; a date in the task phrase overrides either.
+Other destinations and the separate Quick Add window keep their existing defaults.
+
 Every empty Quick Add input uses the same permanent, localized syntax example:
 `Task name tomorrow p2 #Project @label 2p`. Keep it independent of task history,
 subscription status and saved suggestions; it never triggers AI generation or
 changes to a generic prompt after task creation. The separate window's native
-hint bridge uses the same localized copy.
+hint bridge uses the same localized copy. Show local priority/estimate aliases in
+Russian (`п2` / `2п`), Arabic (`أ2` / `2ب`), Chinese (`优2` / `2番`), Japanese
+(`優2` / `2ポ`) and Korean (`우2` / `2뽀`); Latin-script locales retain `p2` / `2p`.
+All aliases work independently of interface language, alongside `!!1`–`!!4`.
+Commands occupy whitespace-delimited tokens; priorities accept 1–4 and estimates
+1–999, with the last valid command of each kind winning. ASCII, Arabic-Indic,
+Eastern Arabic-Indic and fullwidth digits share the existing normalization.
+Parsing, highlighting and metadata edits must agree on the original source ranges,
+including localized digits. Menus continue to insert canonical `pN` / `Np` tokens.
 
 Parsed date/time, project and priority chips edit recognized spans in the source
 phrase. Both `#` and `№` introduce project names, including quoted names, in
@@ -1021,9 +1077,24 @@ unknown values mean Automatic. Share reactive state across the main interface
 and the separate Quick Add window. Apply explicit formats to absolute dates in
 task metadata, Quick Add, habit date fields, file and billing metadata, and dated
 information. Keep Today / Tomorrow / Yesterday, period headings and ranges,
-weekday/month labels, time formatting, stored dates and natural-language parsing
-unchanged. The shared calendar's field, hint, validation and calendar selection
-use the same format; explicit input never falls back to another date order.
+weekday/month labels, time formatting and stored dates unchanged.
+Quick Add and the shared calendar field use one numeric-date parser. Accept
+dot, slash and hyphen separators, one- or two-digit days/months, and two- or
+four-digit years. Two-digit years mean 2000–2099. Component order follows the
+selected numeric format; Automatic and Month in words use the app locale's
+numeric order. Never retry an invalid date with a different order. Full ISO
+`yyyy-MM-dd` is accepted in every mode. Without a year, use the next valid
+occurrence including today; year-first formats omit the year as month/day.
+Leap days advance to the next leap year. Existing named dates and time syntax
+remain supported.
+
+Consume numeric date commands whole: malformed years or impossible dates stay
+visible and suppress Quick Add scheduling, including inherited schedules.
+Metadata and ordinary hyphenated numbers such as `4-5` remain literal. Apply
+format/language changes to preview, highlighting and saving without replacing
+an active draft, cursor or composing range, including the separate Quick Add
+window, voice drafts and calendar input. The calendar hint and selected date
+follow the same rules; invalid drafts remain editable.
 Preserve date bounds and cancellation. No account sync, native-widget change,
 new dependency or database migration is introduced.
 
@@ -1360,6 +1431,19 @@ Resume, or Start interval. Keep the details open and honor preset pause rules.
 Clicking the mini Focus player's non-control surface opens the Focus screen;
 its pause and stop controls keep their own actions.
 
+### Compact Focus header
+
+On compact mobile/web layouts below 820 px, Focus owns a pinned, safe-area-aware
+header in place of the generic shell heading. Keep the drawer and a ghost
+preset button (timer icon and chevron) on the left, and the accent overflow and
+direct Full / Minimal toggle on the right. Use equal 96 px side groups and
+48 px touch targets so the title stays centered in the viewport and the toggle
+stays in the same far-right slot in both modes. Preserve the full preset name in
+the tooltip and accessible label. Allow the title two lines with scaled text.
+Reuse preset editing, active-session restrictions and action menus. Remove the
+duplicate stage header and idle Minimal preset picker only on this surface;
+embedded, fixed-mode and wide layouts retain their own controls.
+
 ### Minimal Focus timer
 
 The Focus keyboard shortcuts are Cmd/Ctrl+5 and Cmd/Ctrl+F by default; both
@@ -1461,9 +1545,11 @@ Local preparation failures retain the existing error/retry screen, and retry
 cannot start a second preparation while the first is pending. A real account
 change still gates access until its ownership transition completes.
 
-Inbox, Today and project empty states explain the current context and offer a
-relevant Quick Add action. Today distinguishes no planned tasks from a clear list
-with completed work. Loading and errors retain available rows and offer retry.
+Inbox, Today and project empty states explain the current context. Inbox uses
+the shell's Quick Add controls, without a subtitle or inline composer. Today and
+project empty states offer a relevant Quick Add action. Today distinguishes no
+planned tasks from a clear list with completed work. Loading and errors retain
+available rows and offer retry.
 Search supports project and Open / Completed / All status filters. It starts with
 all projects and open tasks; Clear filters selects all projects and all statuses
 without changing the query. Completed results follow the existing history policy.
@@ -2161,6 +2247,14 @@ week navigation and a Today action, and scrolls horizontally rather than
 shrinking 44 px targets. Below it, show the selected date and fully completed /
 planned habit summary.
 
+On compact mobile/web shells below 820 px, keep Habits centered in the shared
+header and move New habit to a trailing accent plus icon with its localized
+tooltip. Omit the body title, subtitle and creation button. Put Today and both
+week arrows in one trailing toolbar above the full-width seven-day strip, with
+no week-range caption. Compact day tiles show only the weekday and day number;
+keep full dates in semantics and preserve 44 px targets and horizontal scrolling
+for larger text. Habit summaries, filters and rhythm rows remain unchanged.
+
 On web and native macOS, Windows and Linux, offer Day rhythm / Progress circle
 when the main area is at least 960 px wide. Native iOS and Android never offer
 this switch. Measure the area before any contextual panel reserves its 440 px;
@@ -2424,12 +2518,26 @@ tests, plus static and architecture checks; visual acceptance remains manual.
 
 ### Inline task blocking controls
 
-Task dependencies, personal urgency, recurrence carry-over and blocking reasons
-expand inside the existing task row or task detail content. Keep the collapsed
-row compact: use an accessible icon button with a localized tooltip. Blocked
+Task list rows show a localized status directly below the title, before the
+description and schedule, plus a separate 44 px trailing tile with an 8 px radius.
+Blocked rows use a lock, `secondaryText`, and `surfaceTint`; personally urgent
+rows use a flame and `warning`, with a 16% warning tint over `canvas` for the tile.
+Keep the title, completion circle, priority color, and overdue color unchanged.
+Blocking reasons or sync conflicts take precedence over urgency; completed and
+deleted tasks have no status decoration. These are passive status indicators:
+the tile adds no separate action or accessibility announcement. The visible
+label conveys the state; existing task details and menus retain their actions.
+Reserve space for the tile in narrow layouts, keep branch disclosure accessible,
+and use the same status in classic, modern, agenda, and compact list rows.
+This treatment is static; it adds no looping animation or full-row fill.
+
+Task rows expose personal urgency as a checked action in the existing long-press
+and secondary-click context menu, without a trailing blocking-controls icon.
+Task dependencies, recurrence carry-over and blocking reasons remain available
+in task details through an accessible disclosure with a localized label. Blocked
 tasks remain visible and retain editing and planning controls. Show predecessor
-links and dependency deletion warnings in the expanded row. The priority cascade
-switch belongs in the existing Today panel. Do not add a graph editor, separate
-screen or modal for these controls. Use semantic theme colors and retain keyboard
-activation and focus indicators in both themes. Validation is automated; no
-manual visual or device checks are required for this feature.
+links in task details and dependency deletion warnings in the expanded row. The
+priority cascade switch belongs in the existing Today panel. Do not add a graph
+editor, separate screen or modal for these controls. Use semantic theme colors
+and retain keyboard activation and focus indicators in both themes. Validation
+is automated; no manual visual or device checks are required for this feature.

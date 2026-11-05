@@ -1,4 +1,5 @@
 import 'package:pomodoist/ui/tasks/widgets/task_list_view.dart';
+import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/projects/project_repository.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
@@ -490,7 +491,36 @@ void main() {
     },
   );
 
+  testWidgets(
+    'mobile Upcoming hides inline creation only below the shell breakpoint',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(820, 900);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpUpcomingForTest(
+        tester,
+        today: today,
+        tasks: const <TaskItem>[],
+      );
+      expect(find.byType(QuickAddBar), findsOneWidget);
+
+      tester.view.physicalSize = const Size(390, 844);
+      await tester.pumpAndSettle();
+      expect(find.byType(QuickAddBar), findsNothing);
+      expect(find.byKey(const ValueKey('upcoming-calendar')), findsOneWidget);
+
+      tester.view.physicalSize = const Size(820, 900);
+      await tester.pumpAndSettle();
+      expect(find.byType(QuickAddBar), findsOneWidget);
+    },
+  );
+
   testWidgets('quick add defaults to the selected day', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1000, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
     final harness = await pumpUpcomingForTest(
       tester,
       today: today,

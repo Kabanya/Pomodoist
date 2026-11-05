@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_selection_view_model.dart';
 import 'package:pomodoist/ui/core/widgets/action_feedback.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
@@ -875,11 +876,9 @@ class _TaskDuePanelState extends State<_TaskDuePanel> {
       setState(() => _error = null);
       return TaskSchedule.allDay(defaultDate);
     }
-    final parsed = const QuickAddParser().parse(
-      input,
-      now: widget.now,
-      defaultDate: defaultDate,
-    );
+    final parsed = QuickAddParser(
+      dateOrder: AppDateFormatter.of(context).inputOrder,
+    ).parse(input, now: widget.now, defaultDate: defaultDate);
     final valid =
         parsed.schedule != null &&
         parsed.content.isEmpty &&

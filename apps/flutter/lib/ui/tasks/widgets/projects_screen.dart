@@ -88,16 +88,14 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final savedMode = ref.watch(projectCatalogViewModeProvider);
     final catalogMode = fullscreen ? ProjectViewMode.map : savedMode;
     final diagram = ref.watch(projectDiagramViewModelProvider(null));
-    final tabHeight = (MediaQuery.textScalerOf(context).scale(16) + 16).clamp(
-      44.0,
-      double.infinity,
-    );
+    final compactHeader = CompactShellHeading.menuActionOf(context) != null;
     if (projectMode) _visitedViews.add(catalogMode);
 
     return SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) => Column(
           children: [
+            if (compactHeader && !fullscreen) _compactHeader(catalogMode),
             Visibility(
               visible: !fullscreen,
               maintainState: true,
@@ -107,103 +105,36 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 ),
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      compactHeader ? 12 : 22,
+                      20,
+                      10,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            if (!CompactShellHeading.isShown(context))
+                        if (!compactHeader)
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
                               Text(
                                 l10n.navProjects,
                                 style: Theme.of(
                                   context,
                                 ).textTheme.headlineMedium,
                               ),
-                            IntrinsicWidth(
-                              child: ShadTabs<_ProjectsMode>(
-                                key: const Key(
-                                  'projects-mode-segmented-button',
-                                ),
-                                value: _mode,
-                                tabs: [
-                                  ShadTab(
-                                    value: _ProjectsMode.projects,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(LucideIcons.folder),
-                                        const SizedBox(width: 8),
-                                        Text(l10n.navProjects),
-                                      ],
-                                    ),
-                                  ),
-                                  ShadTab(
-                                    value: _ProjectsMode.labels,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(LucideIcons.tag),
-                                        const SizedBox(width: 8),
-                                        Text(l10n.labelsTitle),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (mode) =>
-                                    setState(() => _mode = mode),
-                                gap: 0,
-                              ),
-                            ),
-                            LearningTourAnchor(
-                              id: LearningTourAnchorId.projectsAdd,
-                              child: Tooltip(
-                                message: projectMode
-                                    ? l10n.addProject
-                                    : l10n.addLabel,
-                                child: ShadIconButton(
-                                  key: Key(
-                                    projectMode
-                                        ? 'projects-add-button'
-                                        : 'labels-add-button',
-                                  ),
-                                  onPressed: projectMode
-                                      ? () => showCreateProjectDialog(context)
-                                      : () => showCreateLabelDialog(context),
-                                  icon: const Icon(LucideIcons.plus),
-                                  foregroundColor: colors.accent,
-                                  backgroundColor: colors.accentTint,
-                                  height: 42,
-                                  width: 42,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (projectMode) ...[
-                          const SizedBox(height: 12),
-                          ShadTabs<ProjectViewMode>(
-                            value: catalogMode,
-                            scrollable: true,
-                            gap: 0,
-                            onChanged: (value) =>
-                                unawaited(_setViewMode(value)),
-                            tabs: [
-                              ShadTab(
-                                value: ProjectViewMode.list,
-                                height: tabHeight,
-                                child: Text(l10n.projectViewList),
-                              ),
-                              ShadTab(
-                                value: ProjectViewMode.map,
-                                height: tabHeight,
-                                child: Text(l10n.projectViewMap),
-                              ),
+                              _modeTabs(),
+                              _addButton(projectMode),
                             ],
                           ),
+                        if (projectMode) ...[
+                          if (!compactHeader) ...[
+                            const SizedBox(height: 12),
+                            _viewTabs(catalogMode),
+                          ],
                           if (catalogMode != ProjectViewMode.list)
                             Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
@@ -238,7 +169,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                               ],
                             ),
                         ],
-                        const SizedBox(height: 18),
+                        if (!compactHeader ||
+                            (projectMode &&
+                                catalogMode != ProjectViewMode.list))
+                          const SizedBox(height: 18),
                         ShadInput(
                           key: const Key('projects-search-field'),
                           controller: _searchController,
@@ -460,6 +394,221 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _modeTabs({bool iconOnly = false}) => SizedBox(
+    width: iconOnly ? 88 : null,
+    child: IntrinsicWidth(
+      child: ShadTabs<_ProjectsMode>(
+        key: const Key('projects-mode-segmented-button'),
+        value: _mode,
+        gap: 0,
+        onChanged: (mode) => setState(() => _mode = mode),
+        tabs: [
+          _tab(
+            _ProjectsMode.projects,
+            LucideIcons.folder,
+            context.l10n.navProjects,
+            iconOnly: iconOnly,
+            selected: _mode == _ProjectsMode.projects,
+          ),
+          _tab(
+            _ProjectsMode.labels,
+            LucideIcons.tag,
+            context.l10n.labelsTitle,
+            iconOnly: iconOnly,
+            selected: _mode == _ProjectsMode.labels,
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _viewTabs(ProjectViewMode mode, {bool iconOnly = false}) => SizedBox(
+    width: iconOnly ? 88 : null,
+    child: ShadTabs<ProjectViewMode>(
+      key: const Key('projects-view-segmented-button'),
+      value: mode,
+      scrollable: !iconOnly,
+      gap: 0,
+      onChanged: (value) => unawaited(_setViewMode(value)),
+      tabs: [
+        _tab(
+          ProjectViewMode.list,
+          LucideIcons.list,
+          context.l10n.projectViewList,
+          iconOnly: iconOnly,
+          selected: mode == ProjectViewMode.list,
+        ),
+        _tab(
+          ProjectViewMode.map,
+          LucideIcons.map,
+          context.l10n.projectViewMap,
+          iconOnly: iconOnly,
+          selected: mode == ProjectViewMode.map,
+        ),
+      ],
+    ),
+  );
+
+  ShadTab<T> _tab<T>(
+    T value,
+    IconData icon,
+    String label, {
+    required bool iconOnly,
+    required bool selected,
+  }) => ShadTab<T>(
+    value: value,
+    height: iconOnly
+        ? 44
+        : value is _ProjectsMode
+        ? null
+        : (MediaQuery.textScalerOf(context).scale(16) + 16).clamp(
+            44.0,
+            double.infinity,
+          ),
+    padding: iconOnly ? EdgeInsets.zero : null,
+    child: iconOnly
+        ? Semantics(
+            label: label,
+            selected: selected,
+            child: Tooltip(
+              message: label,
+              excludeFromSemantics: true,
+              child: Icon(icon, size: 20),
+            ),
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (value is _ProjectsMode) ...[
+                Icon(icon),
+                const SizedBox(width: 8),
+              ],
+              Text(label),
+            ],
+          ),
+  );
+
+  Widget _addButton(bool projectMode) => LearningTourAnchor(
+    id: LearningTourAnchorId.projectsAdd,
+    child: Tooltip(
+      message: projectMode ? context.l10n.addProject : context.l10n.addLabel,
+      child: ShadIconButton(
+        key: Key(projectMode ? 'projects-add-button' : 'labels-add-button'),
+        onPressed: projectMode
+            ? () => showCreateProjectDialog(context)
+            : () => showCreateLabelDialog(context),
+        icon: const Icon(LucideIcons.plus, size: 20),
+        foregroundColor: context.appColors.accent,
+        backgroundColor: context.appColors.accentTint,
+        height: 44,
+        width: 44,
+      ),
+    ),
+  );
+
+  Widget _compactHeader(ProjectViewMode mode) {
+    final l10n = context.l10n;
+    final projectMode = _mode == _ProjectsMode.projects;
+    final menu = SizedBox.square(
+      dimension: 48,
+      child: IconButton(
+        key: const Key('shell-menu-button'),
+        tooltip: l10n.menuTooltip,
+        onPressed: CompactShellHeading.menuActionOf(context),
+        icon: const Icon(LucideIcons.panelLeft, size: 20),
+      ),
+    );
+    final title = Semantics(
+      header: true,
+      label: l10n.navProjects,
+      excludeSemantics: true,
+      child: Text(
+        l10n.navProjects,
+        key: const Key('shell-page-title'),
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+    return DecoratedBox(
+      key: const Key('projects-compact-header'),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.appColors.border)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked =
+              constraints.maxWidth < 390 ||
+              MediaQuery.textScalerOf(context).scale(20) > 22;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: stacked ? 48 : 144,
+                      child: Row(
+                        children: [
+                          menu,
+                          if (!stacked) ...[
+                            const SizedBox(width: 8),
+                            _modeTabs(iconOnly: true),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Expanded(child: title),
+                    SizedBox(
+                      width: stacked ? 48 : 144,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (!stacked && projectMode) ...[
+                            _viewTabs(mode, iconOnly: true),
+                            const SizedBox(width: 8),
+                          ],
+                          _addButton(projectMode),
+                          const SizedBox(width: 4),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (stacked)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 48),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _modeTabs(iconOnly: true),
+                        if (projectMode) _viewTabs(mode, iconOnly: true),
+                      ],
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: Text(
+                    projectMode
+                        ? '${l10n.navProjects} · ${mode == ProjectViewMode.list ? l10n.projectViewList : l10n.projectViewMap}'
+                        : l10n.labelsTitle,
+                    key: const Key('projects-header-context'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

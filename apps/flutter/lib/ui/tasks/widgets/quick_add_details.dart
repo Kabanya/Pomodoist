@@ -83,7 +83,9 @@ class QuickAddDetails extends ConsumerWidget {
         final colors = context.appColors;
         final schedule =
             parsed.schedule ??
-            (parsed.dueDate == null ? defaultSchedule : null);
+            (parsed.dueDate == null && !parsed.hasInvalidExplicitDate
+                ? defaultSchedule
+                : null);
         final canEdit =
             enabled &&
             (value.composing.isCollapsed || !value.composing.isValid);
@@ -141,7 +143,9 @@ class QuickAddDetails extends ConsumerWidget {
               )
               .parsed;
           return current.schedule ??
-              (current.dueDate == null ? defaultSchedule : null);
+              (current.dueDate == null && !current.hasInvalidExplicitDate
+                  ? defaultSchedule
+                  : null);
         }
 
         Future<void> changeDate(AppDateTimePickerState picker) async {

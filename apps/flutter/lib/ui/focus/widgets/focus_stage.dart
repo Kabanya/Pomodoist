@@ -64,6 +64,7 @@ class FocusIdleStage extends StatelessWidget {
     this.sessionDisplay = FocusSessionDisplay.compact,
     this.onSessionDisplayChanged,
     this.minHeight = 0,
+    this.showHeader = true,
     this.showViewModeMenu = true,
     required this.onPresetSelected,
     required this.onViewModeChanged,
@@ -81,6 +82,7 @@ class FocusIdleStage extends StatelessWidget {
   final FocusSessionDisplay sessionDisplay;
   final ValueChanged<FocusSessionDisplay>? onSessionDisplayChanged;
   final double minHeight;
+  final bool showHeader;
   final bool showViewModeMenu;
   final ValueChanged<String> onPresetSelected;
   final ValueChanged<FocusViewMode> onViewModeChanged;
@@ -129,19 +131,20 @@ class FocusIdleStage extends StatelessWidget {
               if (full)
                 Column(
                   children: [
-                    _FocusFullHeader(
-                      preset: presetMenu,
-                      onMinimize: showViewModeMenu
-                          ? () => onViewModeChanged(FocusViewMode.minimal)
-                          : null,
-                      menu: _FocusViewModeMenu(
-                        viewMode: viewMode,
-                        onChanged: onViewModeChanged,
-                        showViewModeMenu: showViewModeMenu,
-                        sessionDisplay: sessionDisplay,
-                        onSessionDisplayChanged: onSessionDisplayChanged,
+                    if (showHeader)
+                      _FocusFullHeader(
+                        preset: presetMenu,
+                        onMinimize: showViewModeMenu
+                            ? () => onViewModeChanged(FocusViewMode.minimal)
+                            : null,
+                        menu: _FocusViewModeMenu(
+                          viewMode: viewMode,
+                          onChanged: onViewModeChanged,
+                          showViewModeMenu: showViewModeMenu,
+                          sessionDisplay: sessionDisplay,
+                          onSessionDisplayChanged: onSessionDisplayChanged,
+                        ),
                       ),
-                    ),
                     if (rhythm != null) ...[
                       SizedBox(height: compact ? 12 : 24),
                       FocusRhythmRail(
@@ -164,7 +167,10 @@ class FocusIdleStage extends StatelessWidget {
                 child: Column(
                   key: const Key('focus-primary-stage'),
                   children: [
-                    if (!full) ...[presetMenu, const SizedBox(height: 28)],
+                    if (!full && showHeader) ...[
+                      presetMenu,
+                      const SizedBox(height: 28),
+                    ],
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final remaining = preset == null
@@ -210,6 +216,7 @@ class _MinimalPresetMenu extends StatelessWidget {
     required this.onSelected,
     required this.onCustomize,
     required this.onCreate,
+    this.iconOnly = false,
   });
 
   final List<FocusPresetItem> presets;
@@ -217,6 +224,7 @@ class _MinimalPresetMenu extends StatelessWidget {
   final ValueChanged<String> onSelected;
   final VoidCallback? onCustomize;
   final VoidCallback onCreate;
+  final bool iconOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -265,14 +273,17 @@ class _MinimalPresetMenu extends StatelessWidget {
       ],
       builder: (context, controller, child) {
         return Tooltip(
-          message: l10n.preset,
+          message: iconOnly ? '${l10n.preset}: $title' : l10n.preset,
           child: TextButton(
             key: const Key('minimal-preset-menu'),
             onPressed: controller.isOpen ? controller.close : controller.open,
             style: ButtonStyle(
               minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
-              padding: const WidgetStatePropertyAll(
-                EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: WidgetStatePropertyAll(
+                EdgeInsets.symmetric(
+                  horizontal: iconOnly ? 2 : 10,
+                  vertical: 6,
+                ),
               ),
               foregroundColor: WidgetStatePropertyAll(colors.secondaryText),
               backgroundColor: WidgetStateProperty.resolveWith((states) {
@@ -291,20 +302,23 @@ class _MinimalPresetMenu extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: colors.secondaryText,
+                if (iconOnly)
+                  Icon(LucideIcons.timer, size: 20, semanticLabel: title)
+                else
+                  Flexible(
+                    child: Text(
+                      title,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colors.secondaryText,
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(width: 4),
                 Icon(
                   LucideIcons.chevronDown,
-                  size: 20,
+                  size: iconOnly ? 14 : 20,
                   color: colors.mutedText,
                 ),
               ],
@@ -365,6 +379,12 @@ class _FocusViewModeMenu extends StatelessWidget {
         child: AppActionMenu(
           tooltip: context.l10n.moreFocusActions,
           items: items,
+          child: Icon(
+            LucideIcons.ellipsis,
+            color: CompactShellHeading.menuActionOf(context) != null
+                ? context.appColors.accent
+                : null,
+          ),
         ),
       ),
     );
@@ -386,6 +406,7 @@ class FocusActiveStage extends StatelessWidget {
     this.sessionDisplay = FocusSessionDisplay.compact,
     this.onSessionDisplayChanged,
     this.minHeight = 0,
+    this.showHeader = true,
     required this.actions,
     required this.onViewModeChanged,
     required this.onPresetChanged,
@@ -407,6 +428,7 @@ class FocusActiveStage extends StatelessWidget {
   final FocusSessionDisplay sessionDisplay;
   final ValueChanged<FocusSessionDisplay>? onSessionDisplayChanged;
   final double minHeight;
+  final bool showHeader;
   final FocusStageActions actions;
   final ValueChanged<FocusViewMode> onViewModeChanged;
   final ValueChanged<String> onPresetChanged;
@@ -472,21 +494,22 @@ class FocusActiveStage extends StatelessWidget {
                 visible: full,
                 child: Column(
                   children: [
-                    _FocusFullHeader(
-                      preset: _MinimalPresetMenu(
-                        presets: presets,
-                        selectedPreset: preset,
-                        onSelected: onPresetChanged,
-                        onCustomize: preset == null
-                            ? null
-                            : () => onCustomizePreset(preset),
-                        onCreate: onCreatePreset,
+                    if (showHeader)
+                      _FocusFullHeader(
+                        preset: _MinimalPresetMenu(
+                          presets: presets,
+                          selectedPreset: preset,
+                          onSelected: onPresetChanged,
+                          onCustomize: preset == null
+                              ? null
+                              : () => onCustomizePreset(preset),
+                          onCreate: onCreatePreset,
+                        ),
+                        onMinimize: showViewModeMenu
+                            ? () => onViewModeChanged(FocusViewMode.minimal)
+                            : null,
+                        menu: menu,
                       ),
-                      onMinimize: showViewModeMenu
-                          ? () => onViewModeChanged(FocusViewMode.minimal)
-                          : null,
-                      menu: menu,
-                    ),
                     if (rhythm != null) ...[
                       SizedBox(height: compact ? 12 : 24),
                       FocusRhythmRail(

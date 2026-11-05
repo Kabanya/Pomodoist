@@ -115,74 +115,87 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
           (index) => _addCalendarDays(pageStart, index),
         );
 
-        return Card(
-          key: const ValueKey('upcoming-calendar'),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(context, isWide: isWide, pageSize: pageSize),
-              const Divider(),
-              ShortcutHintsScope(
-                hints: [
-                  ShortcutHint(
-                    context.l10n.shortcutHintsNavigate,
-                    '← ↑ ↓ → · Home · End · PageUp · PageDown',
-                  ),
-                  ShortcutHint(context.l10n.taskSelect, 'Enter / Space'),
-                ],
-                child: Focus(
-                  key: const ValueKey('upcoming-calendar-focus'),
-                  focusNode: _railFocusNode,
-                  onKeyEvent: _handleRailKey,
-                  child: AnimatedBuilder(
-                    animation: _railFocusNode,
-                    builder: (context, child) {
-                      return Listener(
-                        key: const ValueKey('upcoming-calendar-days'),
-                        behavior: HitTestBehavior.opaque,
-                        onPointerDown: isWide
-                            ? null
-                            : (_) => _horizontalDragDistance = 0,
-                        onPointerMove: isWide
-                            ? null
-                            : (details) {
-                                _horizontalDragDistance += details.delta.dx;
-                              },
-                        onPointerUp: isWide
-                            ? null
-                            : (_) => _finishSwipe(Directionality.of(context)),
-                        child: SingleChildScrollView(
-                          controller: _railScrollController,
-                          scrollDirection: Axis.horizontal,
-                          child: SizedBox(
-                            width: railWidth,
-                            child: Row(
-                              children: [
-                                for (final date in dates)
-                                  Expanded(
-                                    child: _DayCell(
-                                      date: date,
-                                      today: today,
-                                      selected: selectedDate == date,
-                                      count: scheduledCounts[date] ?? 0,
-                                      roving: _rovingDate == date,
-                                      railFocused: _railFocusNode.hasFocus,
-                                      onActivate: () => _activateDate(date),
-                                    ),
+        final content = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(context, isWide: isWide, pageSize: pageSize),
+            if (isWide) const Divider(),
+            ShortcutHintsScope(
+              hints: [
+                ShortcutHint(
+                  context.l10n.shortcutHintsNavigate,
+                  '← ↑ ↓ → · Home · End · PageUp · PageDown',
+                ),
+                ShortcutHint(context.l10n.taskSelect, 'Enter / Space'),
+              ],
+              child: Focus(
+                key: const ValueKey('upcoming-calendar-focus'),
+                focusNode: _railFocusNode,
+                onKeyEvent: _handleRailKey,
+                child: AnimatedBuilder(
+                  animation: _railFocusNode,
+                  builder: (context, child) {
+                    return Listener(
+                      key: const ValueKey('upcoming-calendar-days'),
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: isWide
+                          ? null
+                          : (_) => _horizontalDragDistance = 0,
+                      onPointerMove: isWide
+                          ? null
+                          : (details) {
+                              _horizontalDragDistance += details.delta.dx;
+                            },
+                      onPointerUp: isWide
+                          ? null
+                          : (_) => _finishSwipe(Directionality.of(context)),
+                      child: SingleChildScrollView(
+                        controller: _railScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: railWidth,
+                          child: Row(
+                            children: [
+                              for (final date in dates)
+                                Expanded(
+                                  child: _DayCell(
+                                    compact: !isWide,
+                                    highlightToday: selectedDate == null,
+                                    date: date,
+                                    today: today,
+                                    selected: selectedDate == date,
+                                    count: scheduledCounts[date] ?? 0,
+                                    roving: _rovingDate == date,
+                                    railFocused: _railFocusNode.hasFocus,
+                                    onActivate: () => _activateDate(date),
                                   ),
-                              ],
-                            ),
+                                ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         );
+        return isWide
+            ? Card(
+                key: const ValueKey('upcoming-calendar'),
+                clipBehavior: Clip.antiAlias,
+                child: content,
+              )
+            : DecoratedBox(
+                key: const ValueKey('upcoming-calendar'),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: context.appColors.border),
+                  ),
+                ),
+                child: content,
+              );
       },
     );
   }
@@ -220,20 +233,19 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
               }
             : _showMonthSheet,
         foregroundColor: colors.primaryText,
-        height: compactMonthRange ? 0 : 48,
+        height: !isWide ? 0 : 48,
         expands: true,
-        padding: compactMonthRange
-            ? const EdgeInsets.symmetric(horizontal: 4)
-            : null,
+        padding: !isWide ? const EdgeInsets.symmetric(horizontal: 4) : null,
         leading: isWide ? const Icon(LucideIcons.calendarDays, size: 20) : null,
-        child: compactMonthRange
+        child: !isWide
             ? ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Align(
                   heightFactor: 1,
+                  alignment: AlignmentDirectional.centerStart,
                   child: Text(
                     monthLabel,
-                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.start,
                     semanticsLabel: fullMonthLabel,
                   ),
                 ),
@@ -245,36 +257,41 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
       ),
     );
 
+    final previousButton = Tooltip(
+      message: context.l10n.upcomingPreviousPeriod,
+      child: ShadIconButton.ghost(
+        key: const ValueKey('upcoming-calendar-previous'),
+        onPressed: () => _movePage(-pageSize),
+        icon: Icon(
+          direction == TextDirection.rtl
+              ? LucideIcons.chevronRight
+              : LucideIcons.chevronLeft,
+        ),
+        width: 48,
+        height: 48,
+      ),
+    );
+
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 8, 6),
+      padding: isWide
+          ? const EdgeInsetsDirectional.fromSTEB(8, 6, 8, 6)
+          : EdgeInsets.zero,
       child: Row(
         children: [
-          Tooltip(
-            message: context.l10n.upcomingPreviousPeriod,
-            child: ShadIconButton.ghost(
-              key: const ValueKey('upcoming-calendar-previous'),
-              onPressed: () => _movePage(-pageSize),
-              icon: Icon(
-                direction == TextDirection.rtl
-                    ? LucideIcons.chevronRight
-                    : LucideIcons.chevronLeft,
-              ),
-              width: 48,
-              height: 48,
+          if (isWide) previousButton,
+          if (isWide || widget.loading)
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: widget.loading
+                  ? const SizedBox(
+                      key: ValueKey('upcoming-calendar-loading'),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
             ),
-          ),
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: widget.loading
-                ? const SizedBox(
-                    key: ValueKey('upcoming-calendar-loading'),
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : null,
-          ),
           Expanded(
             child: isWide
                 ? MenuAnchor(
@@ -308,6 +325,7 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
               child: Text(context.l10n.today),
             ),
           ),
+          if (!isWide) previousButton,
           Tooltip(
             message: context.l10n.upcomingNextPeriod,
             child: ShadIconButton.ghost(
@@ -494,6 +512,8 @@ class _UpcomingCalendarState extends State<UpcomingCalendar> {
 
 class _DayCell extends StatelessWidget {
   const _DayCell({
+    required this.compact,
+    required this.highlightToday,
     required this.date,
     required this.today,
     required this.selected,
@@ -503,6 +523,8 @@ class _DayCell extends StatelessWidget {
     required this.onActivate,
   });
 
+  final bool compact;
+  final bool highlightToday;
   final DateTime date;
   final DateTime today;
   final bool selected;
@@ -553,100 +575,156 @@ class _DayCell extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onActivate,
-        child: SizedBox(
-          height: 88,
-          child: AnimatedContainer(
-            duration: AppMotion.duration(context, AppMotion.state),
-            curve: AppMotion.curve,
-            key: selected
-                ? ValueKey('upcoming-calendar-selected-marker-$key')
-                : null,
-            margin: const EdgeInsets.all(3),
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-            decoration: BoxDecoration(
-              color: selected ? colors.accentTint : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? colors.accent
-                    : roving && railFocused
-                    ? colors.info
-                    : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 16,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
+        child: compact
+            ? Container(
+                key: selected
+                    ? ValueKey('upcoming-calendar-selected-marker-$key')
+                    : null,
+                constraints: const BoxConstraints(minHeight: 64),
+                decoration: BoxDecoration(
+                  border: roving && railFocused
+                      ? Border.all(color: colors.info, width: 2)
+                      : null,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(height: 4),
+                    Text(
                       _weekdayLabel(context, date.weekday),
                       style: Theme.of(
                         context,
                       ).textTheme.labelMedium?.copyWith(color: weekdayColor),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Container(
-                  key: isToday
-                      ? ValueKey('upcoming-calendar-today-marker-$key')
-                      : null,
-                  width: 34,
-                  height: 34,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: isToday
-                        ? Border.all(color: colors.accent, width: 1.5)
-                        : null,
-                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Text(
-                        materialL10n.formatDecimal(date.day),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: isPast
-                                  ? colors.mutedText
-                                  : selected
-                                  ? colors.accent
-                                  : textColor,
-                              fontWeight: FontWeight.w700,
-                            ),
+                    const SizedBox(height: 4),
+                    Text(
+                      key: isToday
+                          ? ValueKey('upcoming-calendar-today-marker-$key')
+                          : null,
+                      materialL10n.formatDecimal(date.day),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: selected || isToday ? colors.accent : textColor,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 32,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: selected || (highlightToday && isToday)
+                            ? colors.accent
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                SizedBox(
-                  height: 12,
-                  child: Row(
+              )
+            : SizedBox(
+                height: 88,
+                child: AnimatedContainer(
+                  duration: AppMotion.duration(context, AppMotion.state),
+                  curve: AppMotion.curve,
+                  key: selected
+                      ? ValueKey('upcoming-calendar-selected-marker-$key')
+                      : null,
+                  margin: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected ? colors.accentTint : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: selected
+                          ? colors.accent
+                          : roving && railFocused
+                          ? colors.info
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      for (var index = 0; index < visibleCount; index++) ...[
-                        if (index > 0) const SizedBox(width: 3),
-                        DecoratedBox(
-                          key: ValueKey('upcoming-calendar-dot-$key-$index'),
-                          decoration: BoxDecoration(
-                            color: dotColor,
-                            shape: BoxShape.circle,
+                      SizedBox(
+                        height: 16,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _weekdayLabel(context, date.weekday),
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(color: weekdayColor),
                           ),
-                          child: SizedBox.square(dimension: dotSize),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        key: isToday
+                            ? ValueKey('upcoming-calendar-today-marker-$key')
+                            : null,
+                        width: 34,
+                        height: 34,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: isToday
+                              ? Border.all(color: colors.accent, width: 1.5)
+                              : null,
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Text(
+                              materialL10n.formatDecimal(date.day),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: isPast
+                                        ? colors.mutedText
+                                        : selected
+                                        ? colors.accent
+                                        : textColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      SizedBox(
+                        height: 12,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (
+                              var index = 0;
+                              index < visibleCount;
+                              index++
+                            ) ...[
+                              if (index > 0) const SizedBox(width: 3),
+                              DecoratedBox(
+                                key: ValueKey(
+                                  'upcoming-calendar-dot-$key-$index',
+                                ),
+                                decoration: BoxDecoration(
+                                  color: dotColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: SizedBox.square(dimension: dotSize),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }

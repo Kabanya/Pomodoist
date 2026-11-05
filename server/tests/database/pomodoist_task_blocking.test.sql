@@ -1,5 +1,6 @@
 -- Standalone assertions also run on a disposable PostgreSQL fixture without pgTAP.
 begin;
+set local timezone='UTC';
 select '1..1';
 create function pg_temp.assert_true(value boolean,label text) returns void language plpgsql as $$begin if value is distinct from true then raise exception 'Assertion failed: %',label; end if; end$$;
 create function pg_temp.task(id text,needs jsonb default '[]',priority integer default 4,day date default null,scope text default null,project text default 'inbox',assignees jsonb default '[]') returns jsonb language sql as $$
@@ -22,7 +23,7 @@ do $$declare g jsonb; prefs jsonb; answer jsonb; begin
  g:=jsonb_build_object('a',pg_temp.task('a'),'b',pg_temp.task('b'));
  prefs:='{"settings":{"timeZone":"UTC"},"personal":{"taskId":"a","repeatWithSeries":true}}';
  perform pg_temp.assert_true(private.pomodoist_task_availability(g,prefs,'me','b')->>'allowed'='false','personal urgent blocks other tasks');
- perform pg_temp.assert_true(private.pomodoist_task_availability(g,prefs,'me',null)->>'allowed'='false','personal urgent blocks taskless Focus');
+ perform pg_temp.assert_true(private.pomodoist_task_availability(g,prefs,'me',null)->>'allowed'='false','completion policy reports personal urgency');
  g:=jsonb_set(g,'{a,dueJson}',to_jsonb(jsonb_build_object('date',current_date+1)::text));
  perform pg_temp.assert_true(private.pomodoist_task_availability(g,prefs,'me','b')->>'allowed'='true','future urgent stays dormant');
  g:=jsonb_build_object('p1',pg_temp.task('p1','["step"]',1,current_date),'step',pg_temp.task('step'),'p2',pg_temp.task('p2','[]',2,current_date));
@@ -64,14 +65,10 @@ do $$declare actor uuid:='bb000000-0000-4000-8000-000000000001'; now_value times
  (actor,'pomodoist','task_blocking','personal','{"id":"personal","taskId":"block-a","repeatWithSeries":true}',4,now_value);
  set constraints all immediate;
  set constraints all deferred;
- begin
-  insert into public.sync_entities(user_id,app_id,entity_type,entity_id,data,server_revision,client_updated_at) values
-   (actor,'pomodoist','focus_interval','blocked-focus','{"type":"work","status":"running"}',5,now_value);
-  set constraints all immediate;
-  raise exception 'legacy taskless Focus accepted';
- exception when sqlstate '22023' then
-  perform pg_temp.assert_true(sqlerrm='task_blocked','legacy clients enforce urgency');
- end;
+ insert into public.sync_entities(user_id,app_id,entity_type,entity_id,data,server_revision,client_updated_at) values
+  (actor,'pomodoist','focus_interval','free-focus','{"type":"work","status":"running"}',5,now_value);
+ set constraints all immediate;
+ perform pg_temp.assert_true((select data->>'status'='running' from public.sync_entities where user_id=actor and entity_id='free-focus'),'offline taskless Focus ignores urgency');
  set constraints all deferred;
  -- Finishing an urgent occurrence must not be blocked by the next overdue one.
  insert into public.sync_entities(user_id,app_id,entity_type,entity_id,data,server_revision,client_updated_at) values
@@ -87,6 +84,51 @@ do $$declare actor uuid:='bb000000-0000-4000-8000-000000000001'; now_value times
  set constraints all immediate;
  perform pg_temp.assert_true(private.pomodoist_blocking_selected(private.pomodoist_blocking_graph(actor),private.pomodoist_blocking_preferences(actor),actor::text,'personal')='repeat-next','urgency follows the next occurrence after atomic completion');
  set constraints all deferred;
+end$$;
+do $$declare
+ actor uuid:='bb000000-0000-4000-8000-000000000002';
+ session_id uuid:='bb000000-0000-4000-8000-000000000012';
+ response jsonb; target text; action text; revision bigint:=0; request integer:=0;
+ preset jsonb:='{"id":"classic","workSeconds":1500,"shortBreakSeconds":300,"longBreakSeconds":900,"intervalsBeforeLongBreak":4,"allowPause":true,"strictMode":false}';
+begin
+ insert into auth.users(id,email) values(actor,'free-focus@example.test');
+ insert into auth.sessions(id,user_id,created_at,updated_at) values(session_id,actor,now(),now());
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',actor,'session_id',session_id,'role','authenticated')::text,true);
+ insert into public.sync_entities(user_id,app_id,entity_type,entity_id,data,server_revision,client_updated_at) values
+  (actor,'pomodoist','task','hot',pg_temp.task('hot'),1,now()),
+  (actor,'pomodoist','task','waiting',pg_temp.task('waiting','["hot"]'),2,now()),
+  (actor,'pomodoist','task_blocking','personal','{"taskId":"hot","repeatWithSeries":true}',3,now());
+ set constraints all immediate;
+ foreach target in array array[null,'waiting']::text[] loop
+  request:=request+1;
+  response:=public.pomodoist_focus(jsonb_build_object('action','start','requestId',request::text,'deviceId','test','expectedRevision',revision,
+   'payload',jsonb_build_object('taskId',target,'preset',preset)));
+  perform pg_temp.assert_true(response#>>'{session,interval,status}'='running','Focus starts despite urgency and dependencies');
+  perform pg_temp.assert_true((response#>>'{session,run,taskId}') is not distinct from target,'Focus keeps requested task');
+  revision:=(response#>>'{session,revision}')::bigint;
+  foreach action in array array['pause','resume','restart','complete','startReady','complete','startReady','requestStop'] loop
+   request:=request+1;
+   response:=public.pomodoist_focus(jsonb_build_object('action',action,'requestId',request::text,'deviceId','test','expectedRevision',revision));
+   perform pg_temp.assert_true(response->>'code' is null,'Focus transition succeeds: '||action);
+   if action in ('resume','restart','startReady') then
+    perform pg_temp.assert_true(response#>>'{session,interval,status}'='running','work and break transitions remain available');
+   end if;
+   revision:=(response#>>'{session,revision}')::bigint;
+  end loop;
+ end loop;
+ perform pg_temp.assert_true((select data->>'status'='open' from public.sync_entities where user_id=actor and entity_id='waiting'),'Focus never completes the blocked task');
+ begin
+  perform public.pomodoist_focus(jsonb_build_object('action','start','requestId','missing-task','deviceId','test','expectedRevision',revision,'payload',jsonb_build_object('taskId','missing','preset',preset)));
+  raise exception 'missing task accepted';
+ exception when sqlstate '22023' then
+  perform pg_temp.assert_true(sqlerrm='Focus task not found','task access validation remains');
+ end;
+ delete from auth.sessions where id=session_id;
+ begin
+  perform public.pomodoist_focus('{"action":"read","deviceId":"test"}');
+  raise exception 'revoked session accepted';
+ exception when sqlstate 'PT401' then null;
+ end;
 end$$;
 select 'ok 1 - task blocking policy';
 rollback;

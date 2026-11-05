@@ -1,5 +1,151 @@
 part of 'focus_stage.dart';
 
+class FocusCompactHeader extends StatelessWidget {
+  const FocusCompactHeader({
+    required this.state,
+    required this.actions,
+    required this.onMenuPressed,
+    required this.onViewModeChanged,
+    required this.onSessionDisplayChanged,
+    required this.onPresetSelected,
+    required this.onCustomize,
+    required this.onCreate,
+    super.key,
+  });
+
+  final FocusState state;
+  final FocusStageActions actions;
+  final VoidCallback onMenuPressed;
+  final ValueChanged<FocusViewMode> onViewModeChanged;
+  final ValueChanged<FocusSessionDisplay> onSessionDisplayChanged;
+  final ValueChanged<String> onPresetSelected;
+  final ValueChanged<FocusPresetItem> onCustomize;
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final full = state.viewMode == FocusViewMode.full;
+    final run = state.run;
+    final interval = state.interval;
+    final remaining = state.remaining;
+    final preset = run == null ? state.effectivePreset : state.activePreset;
+    final ready = !state.loading && state.loadError == null;
+    final active =
+        ready &&
+        run != null &&
+        interval != null &&
+        interval.runId == run.id &&
+        remaining != null;
+    final idle = ready && run == null && interval == null;
+    final switchLabel = full
+        ? l10n.focusSwitchToMinimalView
+        : l10n.focusSwitchToFullView;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.appColors.border)),
+      ),
+      child: ConstrainedBox(
+        key: const Key('focus-compact-header'),
+        constraints: const BoxConstraints(minHeight: 52),
+        child: Row(
+          children: [
+            SizedBox.square(
+              dimension: 48,
+              child: IconButton(
+                key: const Key('shell-menu-button'),
+                tooltip: l10n.menuTooltip,
+                onPressed: onMenuPressed,
+                icon: const Icon(LucideIcons.panelLeft),
+              ),
+            ),
+            SizedBox(
+              width: 48,
+              child: active || idle
+                  ? _MinimalPresetMenu(
+                      iconOnly: true,
+                      presets: state.presets,
+                      selectedPreset: preset,
+                      onSelected: onPresetSelected,
+                      onCustomize: preset == null
+                          ? null
+                          : () => onCustomize(preset),
+                      onCreate: onCreate,
+                    )
+                  : null,
+            ),
+            // Equal 96 px wings keep the title at the viewport's center.
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: Semantics(
+                  header: true,
+                  label: l10n.focusTitle,
+                  excludeSemantics: true,
+                  child: Text(
+                    l10n.focusTitle,
+                    key: const Key('shell-page-title'),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox.square(
+              dimension: 48,
+              child: active
+                  ? _buildFocusMoreActionsMenu(
+                      context,
+                      interval: interval,
+                      remaining: remaining,
+                      presets: state.presets,
+                      selectedPreset: preset,
+                      minimal: !full,
+                      viewMode: state.viewMode,
+                      showViewModeMenu: false,
+                      sessionDisplay: state.sessionDisplay,
+                      onSessionDisplayChanged: onSessionDisplayChanged,
+                      actions: actions,
+                      onViewModeChanged: onViewModeChanged,
+                      onPresetChanged: onPresetSelected,
+                      onCustomizePreset: onCustomize,
+                      onCreatePreset: onCreate,
+                    )
+                  : _FocusViewModeMenu(
+                      viewMode: state.viewMode,
+                      onChanged: onViewModeChanged,
+                      sessionDisplay: state.sessionDisplay,
+                      onSessionDisplayChanged: onSessionDisplayChanged,
+                      showViewModeMenu: false,
+                    ),
+            ),
+            SizedBox.square(
+              dimension: 48,
+              child: IconButton(
+                key: const Key('focus-compact-switch-view'),
+                tooltip: switchLabel,
+                onPressed: () => onViewModeChanged(
+                  full ? FocusViewMode.minimal : FocusViewMode.full,
+                ),
+                color: context.appColors.secondaryText,
+                icon: Icon(
+                  full ? LucideIcons.minimize : LucideIcons.maximize,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class FocusHeader extends StatelessWidget {
   const FocusHeader({super.key});
 

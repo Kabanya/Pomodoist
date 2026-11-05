@@ -12,8 +12,8 @@ class InboxScreen extends StatelessWidget {
     final l10n = context.l10n;
     return TaskListView(
       title: l10n.navInbox,
-      subtitle: l10n.screenInboxSubtitle,
       query: const TaskQuery.inbox(),
+      showQuickAdd: false,
     );
   }
 }

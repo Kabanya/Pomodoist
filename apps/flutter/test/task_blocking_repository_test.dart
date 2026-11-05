@@ -114,59 +114,47 @@ void main() {
     },
   );
   test(
-    'Focus start, resume and restart check blocking while a running interval keeps credit',
+    'Focus starts and resumes despite task blocking without completing tasks',
     () async {
       final a = await create('a');
-      final b = await create('b');
+      final b = await create('b', needs: [a]);
       final focus = DriftFocusRepository(db, queue, _Notifications());
       final blocking = DriftTaskBlockingRepository(db, queue);
       final now = DateTime.now().toUtc();
-      (await focus.startRun(
-        StartFocusRunInput(taskId: b, targetWorkIntervals: 2),
-        now: now,
-      )).getOrThrow();
       (await blocking.setUrgent(
         (await tasks.watchTask(a).first)!,
         urgent: true,
       )).getOrThrow();
-      await expectLater(
-        () async =>
-            (await focus.startRun(StartFocusRunInput(taskId: b))).getOrThrow(),
-        throwsA(isA<TaskBlockedException>()),
-      );
-      await expectLater(
-        () async =>
-            (await focus.startRun(const StartFocusRunInput())).getOrThrow(),
-        throwsA(isA<TaskBlockedException>()),
-      );
-      await expectLater(
-        () async => (await focus.restartActiveInterval()).getOrThrow(),
-        throwsA(isA<TaskBlockedException>()),
-      );
+      (await focus.startRun(const StartFocusRunInput())).getOrThrow();
+      expect((await focus.watchActiveRun().first)!.taskId, isNull);
+      (await focus.startRun(
+        StartFocusRunInput(taskId: b, targetWorkIntervals: 2),
+        now: now,
+      )).getOrThrow();
+      (await focus.restartActiveInterval(now: now)).getOrThrow();
       (await focus.pauseActiveInterval(
         now: now.add(const Duration(seconds: 20)),
       )).getOrThrow();
-      await expectLater(
-        () async => (await focus.resumeActiveInterval()).getOrThrow(),
-        throwsA(isA<TaskBlockedException>()),
-      );
+      (await focus.resumeActiveInterval(
+        now: now.add(const Duration(seconds: 40)),
+      )).getOrThrow();
       (await focus.completeActiveInterval(
         now: now.add(const Duration(seconds: 60)),
       )).getOrThrow();
-      expect((await tasks.watchTask(b).first)!.totalFocusSeconds, 20);
+      expect((await tasks.watchTask(b).first)!.totalFocusSeconds, 40);
+      expect((await tasks.watchTask(b).first)!.isCompleted, isFalse);
+      expect((await blocking.policy()).availability(b).canComplete, isFalse);
       (await focus.startReadyInterval()).getOrThrow();
       (await focus.completeActiveInterval()).getOrThrow();
-      expect((await focus.watchActiveInterval().first)!.type, 'work');
-      expect((await focus.watchActiveInterval().first)!.status, 'ready');
-      await expectLater(
-        () async => (await focus.startReadyInterval()).getOrThrow(),
-        throwsA(isA<TaskBlockedException>()),
-      );
+      (await focus.startReadyInterval()).getOrThrow();
+      final interval = (await focus.watchActiveInterval().first)!;
+      expect(interval.type, 'work');
+      expect(interval.status, 'running');
     },
   );
 
   test(
-    'automatic work waits when urgent changes during an existing work interval',
+    'automatic work continues when urgent changes during an existing work interval',
     () async {
       final a = await create('a');
       final b = await create('b');
@@ -189,7 +177,7 @@ void main() {
       (await focus.completeActiveInterval()).getOrThrow();
       expect((await focus.watchActiveInterval().first)!.status, 'running');
       (await focus.completeActiveInterval()).getOrThrow();
-      expect((await focus.watchActiveInterval().first)!.status, 'ready');
+      expect((await focus.watchActiveInterval().first)!.status, 'running');
     },
   );
 

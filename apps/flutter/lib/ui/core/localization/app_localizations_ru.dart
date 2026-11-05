@@ -1252,7 +1252,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addTask => 'Добавить задачу';
 
   @override
-  String get quickAddHint => 'Название задачи завтра p2 #Проект @метка 2p';
+  String get quickAddHint => 'Название задачи завтра п2 #Проект @метка 2п';
 
   @override
   String couldNotAddTask(Object error) {
@@ -5124,6 +5124,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pickerDecrease => 'Уменьшить';
+
+  @override
+  String get taskStatusBlocked => 'Заблокирована';
+
+  @override
+  String get taskStatusUrgent => 'Горящая';
 
   @override
   String get blockingControls => 'Зависимости и срочность';

@@ -1,4 +1,5 @@
 -- Dependencies are task data; urgency and cascade settings belong to the actor.
+-- These rules restrict task completion only; Focus remains independently available.
 create function private.pomodoist_blocking_queue(d jsonb) returns text language sql immutable set search_path='' as $$
  select case when d->>'scopeId' is null then 'personal' else 'project:'||(d->>'projectId') end
 $$;
@@ -126,7 +127,7 @@ create function private.pomodoist_blocking_lock() returns trigger language plpgs
 declare actor uuid; g jsonb; prefs jsonb; queue text; key text; urgent text; snapshot jsonb; completed jsonb;
 begin
  if tg_table_schema='public' then
-  if new.app_id<>'pomodoist' or new.entity_type not in ('task','task_blocking','focus_interval') then return new; end if;
+  if new.app_id<>'pomodoist' or new.entity_type not in ('task','task_blocking') then return new; end if;
   perform pg_advisory_xact_lock(hashtextextended('pomodoist-blocking:actor:'||new.user_id::text,0));
  else
   if new.entity_type<>'task' then return new; end if;
@@ -160,7 +161,7 @@ create function private.pomodoist_blocking_check() returns trigger language plpg
 declare actor uuid; g jsonb; prefs jsonb; d jsonb; result jsonb; id text; zone text; queue text; snapshot jsonb; completed text[];
 begin
  if tg_table_schema='public' then
-  if new.app_id<>'pomodoist' or new.entity_type not in ('task','task_blocking','focus_interval') then return null; end if;
+  if new.app_id<>'pomodoist' or new.entity_type not in ('task','task_blocking') then return null; end if;
   actor:=new.user_id;
  else
   if new.entity_type<>'task' then return null; end if;
@@ -168,14 +169,6 @@ begin
   if actor is null then select owner_id into actor from private.pomodoist_scopes where id=new.scope_id; end if;
  end if;
  g:=private.pomodoist_blocking_graph(actor); prefs:=private.pomodoist_blocking_preferences(actor);
- if new.entity_type='focus_interval' then
-  if new.deleted_at is null and new.data->>'type'='work' and new.data->>'status'='running'
-   and (tg_op='INSERT' or old.data->>'status' is distinct from 'running' or old.data->'startedAt' is distinct from new.data->'startedAt') then
-   result:=private.pomodoist_task_availability(g,prefs,actor::text,new.data->>'taskId');
-   if result->>'allowed'<>'true' then raise exception using errcode='22023',message='task_blocked',detail=result::text; end if;
-  end if;
-  return null;
- end if;
  if new.entity_type='task_blocking' then
   if new.deleted_at is not null then return null; end if;
   d:=prefs->new.entity_id;
@@ -234,32 +227,6 @@ begin
  execute replace(definition,needle,E'        ''habit_check_in'',\n        ''task_blocking''\n      )');
 end$$;
 
--- Guard before Focus creates/replaces a session; never discard a running interval.
-alter function private.pomodoist_focus(jsonb) rename to pomodoist_focus_without_task_blocking;
-revoke all on function private.pomodoist_focus_without_task_blocking(jsonb) from public,anon,authenticated,service_role;
-create function private.pomodoist_focus(p_command jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
-declare actor uuid:=auth.uid(); action text:=p_command->>'action'; session jsonb; task_id text; g jsonb; result jsonb; queue text; scope uuid;
-begin
- if actor is not null and not private.pomodoist_session_is_active() then return private.pomodoist_focus_without_task_blocking(p_command); end if;
- if actor is not null and action in ('start','resume','restart','startReady') and not exists(select 1 from private.pomodoist_focus_requests where user_id=actor and request_id=p_command->>'requestId') then
-  perform pg_advisory_xact_lock_shared(hashtextextended('pomodoist-file-lifecycle',0));
-  perform pg_advisory_xact_lock(hashtextextended('pomodoist-google-calendar:'||actor::text,0));
-  perform pg_advisory_xact_lock(hashtextextended(actor::text||':pomodoist:focus',0));
-  select a.session into session from private.pomodoist_focus_accounts a where user_id=actor;
-  if (action='start' and coalesce(p_command#>>'{payload,adopt,interval,type}','work')='work') or (action<>'start' and session#>>'{interval,type}'='work') then
-   task_id:=case when action='start' then coalesce(p_command#>>'{payload,taskId}',p_command#>>'{payload,adopt,run,taskId}') else session#>>'{run,taskId}' end;
-   select e.scope_id into scope from private.pomodoist_shared_entities e where e.entity_type='task' and e.entity_id=task_id and exists(select 1 from private.pomodoist_members m where m.scope_id=e.scope_id and m.user_id=actor);
-   if scope is not null then perform pg_advisory_xact_lock(hashtextextended('pomodoist-blocking:scope:'||scope::text,0)); end if;
-   perform pg_advisory_xact_lock(hashtextextended('pomodoist-blocking:actor:'||actor::text,0));
-   g:=private.pomodoist_blocking_graph(actor);
-   result:=private.pomodoist_task_availability(g,private.pomodoist_blocking_preferences(actor),actor::text,task_id);
-   if result->>'allowed'<>'true' then raise exception using errcode='22023',message='task_blocked',detail=result::text; end if;
-  end if;
- end if;
- return private.pomodoist_focus_without_task_blocking(p_command);
-end$$;
-revoke all on function private.pomodoist_focus(jsonb) from public,anon;
-grant execute on function private.pomodoist_focus(jsonb) to authenticated,service_role;
 do $$declare f record; begin
  for f in select oid::regprocedure name from pg_proc where pronamespace='private'::regnamespace and (proname like 'pomodoist_blocking_%' or proname='pomodoist_task_availability') loop
   execute format('revoke all on function %s from public,anon,authenticated,service_role',f.name);

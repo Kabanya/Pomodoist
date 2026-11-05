@@ -1169,7 +1169,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addTask => '添加任务';
 
   @override
-  String get quickAddHint => '任务名称 明天 p2 #项目 @标签 2p';
+  String get quickAddHint => '任务名称 明天 优2 #项目 @标签 2番';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4858,6 +4858,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pickerDecrease => '减少';
+
+  @override
+  String get taskStatusBlocked => '已阻塞';
+
+  @override
+  String get taskStatusUrgent => '紧急';
 
   @override
   String get blockingControls => 'Dependencies and urgency';

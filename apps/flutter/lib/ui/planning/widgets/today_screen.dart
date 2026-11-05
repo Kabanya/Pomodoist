@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
@@ -27,13 +28,16 @@ class TodayScreen extends ConsumerWidget {
     final query = TaskQuery(kind: TaskQueryKind.today, now: today);
     final hasCompleted = viewState.hasCompleted;
     final compact = usesCompactMobileLayout(context);
+    final shellHeading = compact && CompactShellHeading.isShown(context);
     final dates = MaterialLocalizations.of(context);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: TaskListView(
           title: l10n.navToday,
-          subtitle: compact
+          subtitle: shellHeading
+              ? null
+              : compact
               ? dates.formatMediumDate(today)
               : dates.formatFullDate(today),
           subtitleSemanticsLabel: compact ? dates.formatFullDate(today) : null,
@@ -50,6 +54,96 @@ class TodayScreen extends ConsumerWidget {
           headerAddon: compact ? null : _TodayContext(query: query),
           footerAddon: _CompletedToday(day: today, quiet: compact),
         ),
+      ),
+    );
+  }
+}
+
+class TodayShellTitle extends ConsumerWidget {
+  const TodayShellTitle({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final day = ref.watch(todayViewModelProvider.select((state) => state.day));
+    final dates = MaterialLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final locale = context.l10n.localeName;
+    final dateStyle = textTheme.bodySmall?.copyWith(
+      color: context.appColors.secondaryText,
+      height: 1,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: 4),
+              child: ExcludeSemantics(
+                child: Text(
+                  intl.DateFormat.E(locale).format(day),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: dateStyle,
+                ),
+              ),
+            ),
+          ),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth * .6),
+            child: Semantics(
+              header: true,
+              label: context.l10n.navToday,
+              excludeSemantics: true,
+              child: Text(
+                context.l10n.navToday,
+                key: const Key('shell-page-title'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: textTheme.titleLarge?.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 4),
+              child: Tooltip(
+                message: dates.formatFullDate(day),
+                excludeFromSemantics: true,
+                child: Semantics(
+                  label: dates.formatFullDate(day),
+                  excludeSemantics: true,
+                  child: Column(
+                    key: const Key('today-shell-date'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        dates.formatDecimal(day.day),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          height: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        intl.DateFormat.MMM(locale).format(day),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: dateStyle,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

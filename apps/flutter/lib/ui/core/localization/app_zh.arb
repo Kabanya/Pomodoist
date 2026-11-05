@@ -445,7 +445,7 @@
   "menuTooltip": "菜单",
   "localUser": "本地用户",
   "addTask": "添加任务",
-  "quickAddHint": "任务名称 明天 p2 #项目 @标签 2p",
+  "quickAddHint": "任务名称 明天 优2 #项目 @标签 2番",
   "couldNotAddTask": "无法添加任务：{error}",
   "taskCreateFailed": "无法创建任务。请重试。",
   "couldNotAddProject": "无法添加项目：{error}",
@@ -1648,5 +1648,7 @@
   "focusPlannedDuration": "计划 · {duration}",
   "focusShortenDuration": "−5 分钟",
   "focusExtendDuration": "+5 分钟",
-  "focusFinish": "结束"
+  "focusFinish": "结束",
+  "taskStatusBlocked": "已阻塞",
+  "taskStatusUrgent": "紧急"
 }

@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
+import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/app_language.dart';
+import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/data/repositories/settings/preferences_repository.dart';
 import 'package:pomodoist/domain/models/settings/app_date_format.dart';
 import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
@@ -47,6 +50,79 @@ void main() {
   });
 
   test(
+    'numeric input accepts separators and expands short years in the chosen order',
+    () async {
+      for (final (mode, text, expected) in [
+        (AppDateFormat.dayMonthYear, '25.11.27', DateTime(2027, 11, 25)),
+        (AppDateFormat.monthDayYear, '11/25/27', DateTime(2027, 11, 25)),
+        (AppDateFormat.yearMonthDay, '25.11.27', DateTime(2025, 11, 27)),
+      ]) {
+        final f = await formatter(mode, 'ru');
+        for (final separator in ['.', '/', '-']) {
+          expect(
+            f.parse(text.replaceAll(RegExp(r'[./-]'), separator)),
+            expected,
+          );
+        }
+        expect(f.parse('2027-11-25'), DateTime(2027, 11, 25));
+        expect(f.parse('25.11.20277'), isNull);
+      }
+      expect(
+        (await formatter(AppDateFormat.automatic, 'en')).parse('04/05/27'),
+        DateTime(2027, 4, 5),
+      );
+      expect(
+        (await formatter(AppDateFormat.longDate, 'ru')).parse('04/05/27'),
+        DateTime(2027, 5, 4),
+      );
+    },
+  );
+
+  test(
+    'quick-add follows format and language changes without reopening',
+    () async {
+      var language = AppLanguage.ru;
+      final container = ProviderContainer(
+        overrides: [
+          preferencesRepositoryProvider.overrideWithValue(_Preferences()),
+          appLanguageProvider.overrideWith((ref) => language),
+          quickAddDefaultTimedBlockMinutesProvider.overrideWithValue(30),
+        ],
+      );
+      addTearDown(container.dispose);
+      final settings = container.read(appDateFormatProvider.notifier);
+      await settings.ready;
+      DateTime? parse() =>
+          container.read(quickAddParserProvider).parse('Task 04/05/27').dueDate;
+      expect(parse(), DateTime(2027, 5, 4));
+      language = AppLanguage.en;
+      container.invalidate(appLanguageProvider);
+      expect(parse(), DateTime(2027, 4, 5));
+      await settings.setFormat(AppDateFormat.dayMonthYear);
+      expect(parse(), DateTime(2027, 5, 4));
+      await settings.setFormat(AppDateFormat.yearMonthDay);
+      expect(parse(), DateTime(2004, 5, 27));
+      await settings.setFormat(AppDateFormat.longDate);
+      expect(parse(), DateTime(2027, 4, 5));
+    },
+  );
+
+  test('picker shares yearless date resolution and strict bounds', () async {
+    final f = await formatter(AppDateFormat.dayMonthYear, 'ru');
+    expect(f.parse('29.02', now: DateTime(2097)), DateTime(2104, 2, 29));
+    DateTime? parse(String text) => parsePickerDate(
+      text,
+      f.material,
+      formatter: f,
+      firstDate: DateTime(2027, 11, 1),
+      lastDate: DateTime(2027, 11, 30),
+    );
+    expect(parse('25.11.27'), DateTime(2027, 11, 25));
+    expect(parse('25.12.27'), isNull);
+    expect(parse('25.11.2'), isNull);
+  });
+
+  test(
     'explicit numeric formats keep their order independently of language',
     () async {
       for (final locale in ['en', 'ru']) {
@@ -58,10 +134,11 @@ void main() {
           final f = await formatter(mode, locale);
           expect(f.format(DateTime(2026, 11, 2)), text);
           expect(f.parse(text), DateTime(2026, 11, 2));
-          expect(
-            f.parse('02/11/2026'),
-            mode == AppDateFormat.monthDayYear ? DateTime(2026, 2, 11) : isNull,
-          );
+          expect(f.parse('02/11/2026'), switch (mode) {
+            AppDateFormat.monthDayYear => DateTime(2026, 2, 11),
+            AppDateFormat.dayMonthYear => DateTime(2026, 11, 2),
+            _ => isNull,
+          });
         }
       }
     },

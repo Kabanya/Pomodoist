@@ -434,8 +434,13 @@ class _DatePanelState extends State<_DatePanel> {
       if (previous != null &&
           (previous.mode != formatter.mode ||
               previous.locale != formatter.locale)) {
-        final date = previous.parse(_input.text);
-        if (date != null) _input.text = formatter.format(date);
+        _selected = parsePickerDate(
+          _input.text,
+          MaterialLocalizations.of(context),
+          firstDate: widget.firstDate,
+          lastDate: widget.lastDate,
+          formatter: formatter,
+        );
       }
       return;
     }

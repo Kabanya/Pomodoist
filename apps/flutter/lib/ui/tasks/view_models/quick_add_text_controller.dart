@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 
 class QuickAddTextController extends TextEditingController {
   QuickAddTextController({
     super.text,
-    QuickAddParser parser = const QuickAddParser(),
+    QuickAddParser? parser,
     DateTime Function()? now,
   }) : _parser = parser,
        _now = now ?? DateTime.now;
 
-  final QuickAddParser _parser;
+  final QuickAddParser? _parser;
   final DateTime Function() _now;
 
   @override
@@ -24,7 +25,10 @@ class QuickAddTextController extends TextEditingController {
     if (input.isEmpty) {
       return TextSpan(style: style, text: input);
     }
-    final analysis = _parser.analyze(input, now: _now());
+    final parser =
+        _parser ??
+        QuickAddParser(dateOrder: AppDateFormatter.of(context).inputOrder);
+    final analysis = parser.analyze(input, now: _now());
     final matches = analysis.matches;
     final colors = context.appColors;
     final composing = value.composing;

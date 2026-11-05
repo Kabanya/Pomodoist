@@ -6,9 +6,8 @@ import 'package:pomodoist/ui/distractions/view_models/distraction_view_model.dar
 import 'package:pomodoist/ui/core/widgets/compact_task_button_location.dart';
 import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/core/widgets/compact_shell_title.dart';
-import 'package:pomodoist/ui/planning/view_models/today_view_model.dart';
 import 'package:pomodoist/ui/planning/widgets/today_screen.dart'
-    show TodayOptionsButton;
+    show TodayOptionsButton, TodayShellTitle;
 
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
 import 'dart:async';
@@ -61,6 +60,7 @@ import 'package:pomodoist/ui/pomo/widgets/pomo_toggle_button.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_editor.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
+import 'package:pomodoist/routing/habit_detail_navigation.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
 
@@ -335,6 +335,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
             habitOverviewOpen ||
             widget.location.startsWith('/task/'));
     final focusLocation = _isFocusLocation(widget.location);
+    final pageOwnsCompactHeader =
+        pageTitle != null && (focusLocation || widget.location == '/projects');
+    final showShellTopBar =
+        !compactDetailsOpen && !mapFullscreen && !pageOwnsCompactHeader;
     final navigation =
         ref.watch(bottomNavigationProvider).value ??
         BottomNavigationPreferences();
@@ -357,7 +361,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     Widget content = Column(
       children: [
         if (widget.dataReady) const AchievementAnnouncementBridge(),
-        if (!compactDetailsOpen && !mapFullscreen)
+        if (showShellTopBar)
           _ShellTopBar(
             dataReady: widget.dataReady,
             location: widget.location,
@@ -372,20 +376,25 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
             children: [
               MediaQuery.removePadding(
                 context: context,
-                removeTop: !compactDetailsOpen && !mapFullscreen,
+                removeTop: showShellTopBar,
                 removeBottom: !wide && !mapFullscreen,
                 child: CompactShellHeading(
                   shown: pageTitle != null,
+                  onMenuPressed: pageOwnsCompactHeader ? _toggleSidebar : null,
                   child: widget.child,
                 ),
               ),
               if (widget.dataReady)
-                const Positioned(
+                Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: AchievementAnnouncementSlot(
-                    presentation: AchievementPresentation.globalBanner,
+                  child: SafeArea(
+                    top: !showShellTopBar,
+                    bottom: false,
+                    child: const AchievementAnnouncementSlot(
+                      presentation: AchievementPresentation.globalBanner,
+                    ),
                   ),
                 ),
               if (widget.dataReady)
@@ -586,11 +595,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                                   elevation: 3,
                                   shape: const CircleBorder(),
                                   onPressed: () => unawaited(
-                                    showLearningTourQuickAdd(
-                                      context,
-                                      ref,
-                                      defaultDate: _quietTodayQuickAddDate(),
-                                    ),
+                                    showLearningTourQuickAdd(context, ref),
                                   ),
                                   child: const Icon(LucideIcons.plus, size: 24),
                                 ),
@@ -803,11 +808,6 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     }
   }
 
-  DateTime? _quietTodayQuickAddDate() =>
-      widget.location == '/today' && usesCompactMobileLayout(context)
-      ? ref.read(todayViewModelProvider).day
-      : null;
-
   void _openQuickAddFromShortcut() {
     if (!widget.dataReady || _quickAddShortcutDialogOpen) return;
     _quickAddShortcutDialogOpen = true;
@@ -815,7 +815,6 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       showLearningTourQuickAdd(
         context,
         ref,
-        defaultDate: _quietTodayQuickAddDate(),
       ).whenComplete(() => _quickAddShortcutDialogOpen = false),
     );
   }
@@ -1085,7 +1084,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   }
 }
 
-class _ShellTopBar extends StatelessWidget {
+class _ShellTopBar extends ConsumerWidget {
   const _ShellTopBar({
     required this.location,
     required this.onMenuPressed,
@@ -1099,7 +1098,7 @@ class _ShellTopBar extends StatelessWidget {
   final String? pageTitle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final compactKanban =
         location == '/kanban' &&
         MediaQuery.sizeOf(context).width < compactShellBreakpoint;
@@ -1128,6 +1127,8 @@ class _ShellTopBar extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: sideSpace, vertical: 8),
               child: title == null
                   ? null
+                  : location == '/today'
+                  ? const TodayShellTitle()
                   : Semantics(
                       header: true,
                       label: title,
@@ -1151,6 +1152,25 @@ class _ShellTopBar extends StatelessWidget {
               top: 0,
               bottom: 0,
               child: Center(child: TodayOptionsButton()),
+            ),
+          if (pageTitle != null && location.startsWith('/habits'))
+            PositionedDirectional(
+              end: 0,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: IconButton(
+                  tooltip: context.l10n.habitNew,
+                  onPressed:
+                      ref.watch(
+                        habitsViewModelProvider.select((view) => view.saving),
+                      )
+                      ? null
+                      : () => openHabitDetails(context, null),
+                  icon: const Icon(LucideIcons.plus),
+                  color: context.appColors.accent,
+                ),
+              ),
             ),
           if (compactKanban)
             PositionedDirectional(

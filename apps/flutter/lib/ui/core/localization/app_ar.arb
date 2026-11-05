@@ -445,7 +445,7 @@
   "menuTooltip": "القائمة",
   "localUser": "مستخدم محلي",
   "addTask": "إضافة مهمة",
-  "quickAddHint": "اسم المهمة غدا p2 #مشروع @وسم 2p",
+  "quickAddHint": "اسم المهمة غدا أ2 #مشروع @وسم 2ب",
   "couldNotAddTask": "تعذرت إضافة المهمة: {error}",
   "taskCreateFailed": "تعذر إنشاء المهمة. حاول مرة أخرى.",
   "couldNotAddProject": "تعذرت إضافة المشروع: {error}",
@@ -1648,5 +1648,7 @@
   "focusPlannedDuration": "المخطط · {duration}",
   "focusShortenDuration": "−٥ د",
   "focusExtendDuration": "+٥ د",
-  "focusFinish": "إنهاء"
+  "focusFinish": "إنهاء",
+  "taskStatusBlocked": "محظورة",
+  "taskStatusUrgent": "عاجلة"
 }

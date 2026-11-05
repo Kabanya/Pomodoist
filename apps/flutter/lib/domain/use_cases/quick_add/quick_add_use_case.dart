@@ -126,7 +126,10 @@ class QuickAddUseCase {
     final taskProjectId = explicitProjectId ?? projectId;
     final taskSectionId = explicitProjectId == null ? sectionId : null;
     final effectiveSchedule =
-        parsed.schedule ?? (parsed.dueDate == null ? defaultSchedule : null);
+        parsed.schedule ??
+        (parsed.dueDate == null && !parsed.hasInvalidExplicitDate
+            ? defaultSchedule
+            : null);
     final focusRepository = _focusRepository;
     final focusPreset =
         _focusPreset ??

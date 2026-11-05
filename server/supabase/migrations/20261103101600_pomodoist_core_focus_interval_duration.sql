@@ -2,7 +2,7 @@
 do $focus_duration$
 declare definition text; original text;
 begin
- definition:=pg_get_functiondef('private.pomodoist_focus_without_task_blocking(jsonb)'::regprocedure);
+ definition:=pg_get_functiondef('private.pomodoist_focus(jsonb)'::regprocedure);
  original:=$old$'startReady','pause','resume','restart','changePreset'$old$;
  if strpos(definition,original)=0 then raise exception 'Unexpected Focus action allowlist'; end if;
  definition:=replace(definition,original,$new$'startReady','pause','resume','restart','adjustDuration','changePreset'$new$);

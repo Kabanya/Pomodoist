@@ -5145,6 +5145,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pickerDecrease => 'Diminuir';
 
   @override
+  String get taskStatusBlocked => 'Bloqueada';
+
+  @override
+  String get taskStatusUrgent => 'Urgente';
+
+  @override
   String get blockingControls => 'Dependencies and urgency';
 
   @override
@@ -6707,6 +6713,12 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get pickerDecrease => 'Diminuir';
+
+  @override
+  String get taskStatusBlocked => 'Bloqueada';
+
+  @override
+  String get taskStatusUrgent => 'Urgente';
 
   @override
   String get focusDuration => 'Duração';

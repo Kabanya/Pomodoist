@@ -87,10 +87,13 @@ Reverse dependencies are computed from task data.
 
 Deferred checks validate the final transaction graph. Advisory locks serialize
 dependency changes within personal accounts and shared scopes, preventing cycles
-from concurrent devices. Completion and Focus failures use SQLSTATE `22023`,
-message `task_blocked`, and structured availability details. Running work may
-finish; every new or resumed work interval is checked again. Existing integration
-writers pass through the same checks.
+from concurrent devices. Completion failures use SQLSTATE `22023`, message
+`task_blocked`, and structured availability details. Existing integration writers pass through the same checks.
+
+Focus is independent of dependencies, urgency and priority cascade. Starting, resuming,
+restarting and advancing Focus remain available with or without a task; offline
+interval sync follows the same rule. Task access, active-session validation and
+strict-exit rules still apply.
 
 The collaboration `completeBranch` action accepts one branch and its operations
 in one transaction; transport chunks never commit separately. Flutter retains
@@ -103,6 +106,22 @@ Automated coverage includes pure policy, repository/Focus transitions, migration
 offline rejection, inline widgets, database triggers, and concurrent cycle races.
 Visual, physical-device, and production checks are outside this change's
 validation scope.
+
+### Unreleased migrations after v1.1.7
+
+The `20261030132756` API schema exposure migration is already applied to the
+hosted production database and remains immutable. The task-blocking
+(`20261102100145`) and Focus-duration (`20261103101600`) migrations were verified
+absent from both production and staging on 2026-11-06. Before their first rollout,
+the task-blocking migration was consolidated to exclude Focus restrictions; the
+separate local undo migration was removed. Focus duration now modifies
+`private.pomodoist_focus(jsonb)` directly, without a task-blocking wrapper.
+
+Keep task blocking and duration adjustment as separate changes. Apply them in
+filename order, then release the matching client. Do not rewrite these files once
+applied: the self-hosted migration runner verifies names and SHA-256 checksums.
+Disposable databases with the earlier development versions must be rebuilt; do
+not silently repair migration receipts on a database that needs to retain data.
 
 ## Account deletion
 

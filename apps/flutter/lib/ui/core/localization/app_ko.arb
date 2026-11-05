@@ -522,7 +522,7 @@
   "menuTooltip": "메뉴",
   "localUser": "로컬 사용자",
   "addTask": "작업 추가",
-  "quickAddHint": "작업 이름 내일 p2 #프로젝트 @라벨 2p",
+  "quickAddHint": "작업 이름 내일 우2 #프로젝트 @라벨 2뽀",
   "couldNotAddTask": "작업을 추가하지 못했습니다: {error}",
   "@couldNotAddTask": {
     "placeholders": {
@@ -2259,5 +2259,7 @@
   "focusPlannedDuration": "계획 · {duration}",
   "focusShortenDuration": "−5분",
   "focusExtendDuration": "+5분",
-  "focusFinish": "완료"
+  "focusFinish": "완료",
+  "taskStatusBlocked": "차단됨",
+  "taskStatusUrgent": "긴급"
 }

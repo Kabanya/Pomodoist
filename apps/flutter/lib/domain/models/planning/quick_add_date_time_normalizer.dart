@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/planning/numeric_date_parser.dart';
+
 // Shared by normalization and source-span highlighting; metadata is excluded by callers.
 final localizedQuickAddPattern = RegExp(
   r'(?:(?:[0-9０-９]{4})年)?[0-9０-９]{1,2}月[0-9０-９]{1,2}日'
@@ -19,7 +21,12 @@ class NormalizedQuickAddDateTimeInput {
 }
 
 class QuickAddDateTimeNormalizer {
-  QuickAddDateTimeNormalizer(this.today);
+  QuickAddDateTimeNormalizer(
+    this.today, {
+    this.dateOrder = NumericDateOrder.dayMonthYear,
+  });
+
+  final NumericDateOrder dateOrder;
 
   final DateTime today;
   bool _hasInvalidExplicitDate = false;
@@ -158,7 +165,7 @@ class QuickAddDateTimeNormalizer {
       },
     );
     _hasInvalidExplicitDate = false;
-    var value = _normalizeDigits(
+    var value = normalizeDateDigits(
       protected,
     ).replaceAll('\u00a0', ' ').replaceAll('\u202f', ' ');
     value = _replaceChineseTimes(value);
@@ -251,45 +258,6 @@ class QuickAddDateTimeNormalizer {
     },
   );
 
-  String _normalizeDigits(String value) {
-    const digits = <String, String>{
-      '٠': '0',
-      '١': '1',
-      '٢': '2',
-      '٣': '3',
-      '٤': '4',
-      '٥': '5',
-      '٦': '6',
-      '٧': '7',
-      '٨': '8',
-      '٩': '9',
-      '۰': '0',
-      '۱': '1',
-      '۲': '2',
-      '۳': '3',
-      '۴': '4',
-      '۵': '5',
-      '۶': '6',
-      '۷': '7',
-      '۸': '8',
-      '۹': '9',
-      '０': '0',
-      '１': '1',
-      '２': '2',
-      '３': '3',
-      '４': '4',
-      '５': '5',
-      '６': '6',
-      '７': '7',
-      '８': '8',
-      '９': '9',
-    };
-    for (final entry in digits.entries) {
-      value = value.replaceAll(entry.key, entry.value);
-    }
-    return value;
-  }
-
   String _replaceSharedMeridiemRanges(String value) => value.replaceAllMapped(
     RegExp(
       r'(^|\s)(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*[-–]\s*'
@@ -362,30 +330,28 @@ class QuickAddDateTimeNormalizer {
 
   String _replaceNumericDates(String value) => value.replaceAllMapped(
     RegExp(
-      r'(^|\s)((?:on|le|am|el|на)\s+)?(\d{1,2})([./-])(\d{1,2})'
-      r'(?:[./-](\d{4}))?(?=$|[\s,.;!؟،])',
+      r'(^|\s)((?:on|le|am|el|на)\s+)?'
+      r'(\d+(?:[./-]\d+)+(?:[/-])?)'
+      r'(?:[.,;!?؟،](?=$|\s))?(?=$|\s)',
       caseSensitive: false,
     ),
     (match) {
-      final day = int.parse(match.group(3)!);
-      final month = int.parse(match.group(5)!);
-      final year = match.group(6) == null ? null : int.parse(match.group(6)!);
-      final isAmbiguousHyphen =
-          match.group(4) == '-' &&
-          year == null &&
-          match.group(2) == null &&
-          day <= 12 &&
-          month <= 12;
-      if (isAmbiguousHyphen) {
-        return match.group(0)!;
+      final token = match[3]!;
+      final range = RegExp(r'^(\d{1,2})-(\d{1,2})$').firstMatch(token);
+      if (range != null &&
+          match[2] == null &&
+          int.parse(range[1]!) <= 12 &&
+          int.parse(range[2]!) <= 12) {
+        return match[0]!;
       }
-      return _dateReplacement(
-        match,
-        day: day,
-        month: month,
-        year: year,
-        prefix: match.group(1),
-      );
+      final date = parseNumericDate(token, order: dateOrder, today: today);
+      if (date == null) {
+        _hasInvalidExplicitDate = true;
+        return _invalidDateReplacement == null
+            ? match[0]!
+            : '${match[1]}$_invalidDateReplacement';
+      }
+      return '${match[1]}${date.toIso8601String().split('T').first}';
     },
   );
 
@@ -615,20 +581,13 @@ class QuickAddDateTimeNormalizer {
     required int month,
     required int? year,
   }) {
-    if (year != null && year < 1) {
-      return null;
-    }
-    var targetYear = year ?? today.year;
-    var candidate = DateTime(targetYear, month, day);
-    if (candidate.year != targetYear ||
-        candidate.month != month ||
-        candidate.day != day) {
-      return null;
-    }
-    if (year == null && candidate.isBefore(today)) {
-      targetYear++;
-      candidate = DateTime(targetYear, month, day);
-    }
+    final candidate = resolveCalendarDate(
+      day: day,
+      month: month,
+      year: year,
+      today: today,
+    );
+    if (candidate == null) return null;
     return '${candidate.year.toString().padLeft(4, '0')}-'
         '${candidate.month.toString().padLeft(2, '0')}-'
         '${candidate.day.toString().padLeft(2, '0')}';

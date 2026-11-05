@@ -292,6 +292,49 @@ class TaskListItem extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final taskTimeState = viewState.timeState;
+    final blockingStatus = viewState.blockingStatus;
+    final statusText = switch (blockingStatus) {
+      TaskRowBlockingStatus.blocked => l10n.taskStatusBlocked,
+      TaskRowBlockingStatus.urgent => l10n.taskStatusUrgent,
+      null => null,
+    };
+    final statusColor = blockingStatus == TaskRowBlockingStatus.urgent
+        ? colors.warning
+        : colors.secondaryText;
+    final statusLabel = statusText == null
+        ? null
+        : Text(
+            statusText,
+            key: ValueKey('task-status-label-${task.id}'),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: statusColor),
+          );
+    final statusBadge = statusText == null
+        ? null
+        : ExcludeSemantics(
+            child: Container(
+              key: ValueKey('task-status-badge-${task.id}'),
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: blockingStatus == TaskRowBlockingStatus.urgent
+                    ? Color.alphaBlend(
+                        colors.warning.withValues(alpha: .16),
+                        colors.canvas,
+                      )
+                    : colors.surfaceTint,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                blockingStatus == TaskRowBlockingStatus.blocked
+                    ? LucideIcons.lockKeyhole
+                    : LucideIcons.flame,
+                size: 24,
+                color: statusColor,
+              ),
+            ),
+          );
     final timeDisplayMode = viewState.timeDisplayMode;
     final defaultTimedBlockMinutes = viewState.timedMinutes;
     final description = task.description?.trim();
@@ -637,19 +680,31 @@ class TaskListItem extends ConsumerWidget {
                             child: _TaskTextDragSource(
                               task: task,
                               enabled: !(selection?.active ?? false),
-                              child: Text(
-                                task.content,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: task.isCompleted
-                                          ? colors.secondaryText
-                                          : colors.primaryText,
-                                      decoration: task.isCompleted
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                    ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    task.content,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: task.isCompleted
+                                              ? colors.secondaryText
+                                              : colors.primaryText,
+                                          decoration: task.isCompleted
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                        ),
+                                  ),
+                                  if (statusLabel != null) ...[
+                                    const SizedBox(height: 2),
+                                    statusLabel,
+                                  ],
+                                ],
                               ),
                             ),
                           ),
@@ -659,6 +714,10 @@ class TaskListItem extends ConsumerWidget {
                               height: 44,
                               child: branchDisclosure(),
                             ),
+                          if (statusBadge != null) ...[
+                            const SizedBox(width: 8),
+                            statusBadge,
+                          ],
                           overflowAction(),
                         ],
                       )
@@ -685,7 +744,11 @@ class TaskListItem extends ConsumerWidget {
                               )
                             : null,
                         completion: completionControl(true),
-                        disclosure: trailingAction,
+                        statusLabel: statusLabel,
+                        statusBadge: statusBadge,
+                        disclosure: statusBadge == null
+                            ? trailingAction
+                            : branchDisclosure(),
                       )
                     : Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -705,6 +768,7 @@ class TaskListItem extends ConsumerWidget {
                                 if (isAgenda || isModern || quietDay != null)
                                   _AgendaTaskContent(
                                     rowSpacing: viewState.rowSpacing,
+                                    statusLabel: statusLabel,
                                     task: task,
                                     project: rowProject,
                                     modern: isModern,
@@ -730,6 +794,7 @@ class TaskListItem extends ConsumerWidget {
                                               !(selection?.active ?? false),
                                           child: _TaskContent(
                                             rowSpacing: viewState.rowSpacing,
+                                            statusLabel: statusLabel,
                                             task: task,
                                             description: description,
                                             hasDescription: hasDescription,
@@ -761,6 +826,10 @@ class TaskListItem extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
+                          if (statusBadge != null) ...[
+                            statusBadge,
+                            const SizedBox(width: 8),
+                          ],
                           trailingAction,
                         ],
                       ),
@@ -770,6 +839,13 @@ class TaskListItem extends ConsumerWidget {
         );
         final rowWithDisclosure = TaskBlockingControls(
           task: task,
+          menuItems: selection?.active ?? false
+              ? null
+              : _quickActionItems(
+                  context,
+                  ref,
+                  includeFocus: usesTouchTaskInteraction,
+                ),
           child: Row(
             children: [
               if (hierarchy != null && !usesTouchTaskInteraction)
@@ -797,19 +873,8 @@ class TaskListItem extends ConsumerWidget {
                     : null,
                 child: rowWithDisclosure,
               );
-        final contextualContent = selection?.active ?? false
-            ? content
-            : AppContextMenuRegion(
-                enableLongPress: usesTouchTaskInteraction,
-                items: _quickActionItems(
-                  context,
-                  ref,
-                  includeFocus: usesTouchTaskInteraction,
-                ),
-                child: content,
-              );
         if (!enableSubtaskDrop) {
-          return contextualContent;
+          return content;
         }
         return AnimatedPadding(
           duration: MediaQuery.disableAnimationsOf(context)
@@ -817,7 +882,7 @@ class TaskListItem extends ConsumerWidget {
               : AppMotion.state,
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(vertical: accepting ? 4 : 0),
-          child: contextualContent,
+          child: content,
         );
       }
 
@@ -1693,6 +1758,8 @@ class _MobileTaskContent extends StatelessWidget {
     required this.parentContext,
     required this.completion,
     required this.disclosure,
+    this.statusLabel,
+    this.statusBadge,
   });
   final TaskRowSpacing rowSpacing;
   final TaskItem task;
@@ -1708,7 +1775,9 @@ class _MobileTaskContent extends StatelessWidget {
   final DateTime? quietDay;
   final TaskParentContext? parentContext;
   final Widget completion;
-  final Widget disclosure;
+  final Widget? disclosure;
+  final Widget? statusLabel;
+  final Widget? statusBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -1731,6 +1800,7 @@ class _MobileTaskContent extends StatelessWidget {
       quietDay: quietDay,
     );
     final blocks = <Widget>[
+      ?statusLabel,
       if (description?.isNotEmpty ?? false)
         Text(
           description!,
@@ -1772,12 +1842,17 @@ class _MobileTaskContent extends StatelessWidget {
         ),
     ];
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: TaskRowGeometry.controlSize),
+      constraints: BoxConstraints(
+        minHeight: statusBadge != null && disclosure != null
+            ? TaskRowGeometry.controlSize * 2
+            : TaskRowGeometry.controlSize,
+      ),
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsetsDirectional.only(
+            padding: EdgeInsetsDirectional.only(
               start: TaskRowGeometry.textStart,
+              end: statusBadge == null ? 0 : TaskRowGeometry.controlSize + 8,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1786,7 +1861,7 @@ class _MobileTaskContent extends StatelessWidget {
                 Padding(
                   padding: EdgeInsetsDirectional.only(
                     top: geometry.titleInset,
-                    end: TaskRowGeometry.controlSize,
+                    end: statusBadge == null ? TaskRowGeometry.controlSize : 0,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1828,7 +1903,10 @@ class _MobileTaskContent extends StatelessWidget {
           PositionedDirectional(
             end: 0,
             top: geometry.controlInset,
-            child: disclosure,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [?statusBadge, ?disclosure],
+            ),
           ),
         ],
       ),
@@ -1924,6 +2002,7 @@ class _AgendaTaskContent extends StatelessWidget {
     this.withinDate = true,
     this.quietDay,
     this.description,
+    this.statusLabel,
   });
 
   final TaskRowSpacing rowSpacing;
@@ -1940,6 +2019,7 @@ class _AgendaTaskContent extends StatelessWidget {
   final bool withinDate;
   final DateTime? quietDay;
   final String? description;
+  final Widget? statusLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1971,6 +2051,10 @@ class _AgendaTaskContent extends StatelessWidget {
                     : null,
               ),
             ),
+            if (statusLabel != null) ...[
+              SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
+              statusLabel!,
+            ],
             if (timing != null) ...[
               SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
               timing,
@@ -2042,12 +2126,16 @@ class _AgendaTaskContent extends StatelessWidget {
 
     final hasDescription = modern && (description?.isNotEmpty ?? false);
     final heading = dragSource(
-      hasDescription || scheduleLabel != null
+      hasDescription || scheduleLabel != null || statusLabel != null
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 title,
+                if (statusLabel != null) ...[
+                  SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
+                  statusLabel!,
+                ],
                 if (hasDescription) ...[
                   SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
                   Text(
@@ -2170,6 +2258,7 @@ class _TaskContent extends StatelessWidget {
     required this.taskTimeState,
     required this.timeDisplayMode,
     required this.defaultTimedBlockMinutes,
+    this.statusLabel,
   });
 
   final TaskRowSpacing rowSpacing;
@@ -2181,6 +2270,7 @@ class _TaskContent extends StatelessWidget {
   final TaskTimeState? taskTimeState;
   final TaskTimeDisplayMode timeDisplayMode;
   final int defaultTimedBlockMinutes;
+  final Widget? statusLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -2229,6 +2319,10 @@ class _TaskContent extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (statusLabel != null) ...[
+          SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
+          statusLabel!,
+        ],
         if (hasDescription) ...[
           SizedBox(height: TaskRowGeometry.blockGap(rowSpacing, 2)),
           Text(

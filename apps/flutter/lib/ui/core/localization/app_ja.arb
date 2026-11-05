@@ -522,7 +522,7 @@
   "menuTooltip": "メニュー",
   "localUser": "ローカルユーザー",
   "addTask": "タスクを追加",
-  "quickAddHint": "タスク名 明日 p2 #プロジェクト @ラベル 2p",
+  "quickAddHint": "タスク名 明日 優2 #プロジェクト @ラベル 2ポ",
   "couldNotAddTask": "タスクを追加できませんでした: {error}",
   "@couldNotAddTask": {
     "placeholders": {
@@ -2259,5 +2259,7 @@
   "focusPlannedDuration": "予定 · {duration}",
   "focusShortenDuration": "−5分",
   "focusExtendDuration": "+5分",
-  "focusFinish": "完了"
+  "focusFinish": "完了",
+  "taskStatusBlocked": "ブロック中",
+  "taskStatusUrgent": "緊急"
 }

@@ -57,8 +57,18 @@ void main() {
       task('c', parent: 'b'),
     ]);
     expect(p.availability('b').blockingTaskIds, ['a']);
-    expect(p.availability('c').canStartFocus, isFalse);
+    expect(p.availability('c').canComplete, isFalse);
+    expect(p.availability('c').canStartFocus, isTrue);
     expect(p.availability('a').canStartFocus, isTrue);
+  });
+  test('Focus still rejects missing, deleted and completed tasks', () {
+    final p = policy([
+      task('deleted', deleted: true),
+      task('done', done: true),
+    ]);
+    for (final id in ['missing', 'deleted', 'done']) {
+      expect(p.availability(id).canStartFocus, isFalse);
+    }
   });
   test('deleted and completed predecessors release dependencies', () {
     final p = policy([
@@ -94,6 +104,8 @@ void main() {
     ], cascade: true);
     expect(p.availability('p4').canStartFocus, isTrue);
     expect(p.availability('p2').reasons, contains(TaskBlockReason.priority));
+    expect(p.availability('p2').canStartFocus, isTrue);
+    expect(p.availability('p2').canComplete, isFalse);
     expect(p.availability('future').canStartFocus, isTrue);
     expect(p.tasks['p4']!.priority, 4);
   });
@@ -118,22 +130,28 @@ void main() {
         schedule: TaskSchedule.allDay(today),
       ),
     ], cascade: true);
-    expect(p.availability('p1').canStartFocus, isFalse);
+    expect(p.availability('p1').canComplete, isFalse);
+    expect(p.availability('p1').canStartFocus, isTrue);
     expect(p.availability('p2').canStartFocus, isTrue);
   });
-  test('personal urgent allows its chain and blocks taskless focus', () {
-    final p = policy(
-      [
-        task('hot', needs: ['step']),
-        task('step'),
-        task('other', project: 'elsewhere'),
-      ],
-      urgent: {'personal': const UrgentTaskSelection(taskId: 'hot')},
-    );
-    expect(p.availability('step').canStartFocus, isTrue);
-    expect(p.availability('other').reasons, contains(TaskBlockReason.urgent));
-    expect(p.availability(null).canStartFocus, isFalse);
-  });
+  test(
+    'personal urgent blocks completion but permits Focus with or without a task',
+    () {
+      final p = policy(
+        [
+          task('hot', needs: ['step']),
+          task('step'),
+          task('other', project: 'elsewhere'),
+        ],
+        urgent: {'personal': const UrgentTaskSelection(taskId: 'hot')},
+      );
+      expect(p.availability('step').canStartFocus, isTrue);
+      expect(p.availability('other').reasons, contains(TaskBlockReason.urgent));
+      expect(p.availability(null).canStartFocus, isTrue);
+      expect(p.availability('other').canStartFocus, isTrue);
+      expect(p.availability('other').canComplete, isFalse);
+    },
+  );
   test('shared urgent affects only actor assigned tasks in that project', () {
     final p = policy(
       [
@@ -144,7 +162,8 @@ void main() {
       ],
       urgent: {'project:work': const UrgentTaskSelection(taskId: 'hot')},
     );
-    expect(p.availability('mine').canStartFocus, isFalse);
+    expect(p.availability('mine').canComplete, isFalse);
+    expect(p.availability('mine').canStartFocus, isTrue);
     expect(p.availability('theirs').canStartFocus, isTrue);
     expect(p.availability('personal').canStartFocus, isTrue);
     expect(p.availability(null).canStartFocus, isTrue);
@@ -208,7 +227,7 @@ void main() {
       zone: 'Pacific/Auckland',
       urgent: {'personal': const UrgentTaskSelection(taskId: 'hot')},
     );
-    expect(p.availability('other').canStartFocus, isFalse);
+    expect(p.availability('other').canComplete, isFalse);
   });
   test(
     'completing urgent occurrence does not wait for its next overdue occurrence',
@@ -264,7 +283,7 @@ void main() {
         cascade: true,
         urgent: {'project:p': const UrgentTaskSelection(taskId: 'urgent')},
       );
-      expect(p.availability('other').canStartFocus, isFalse);
+      expect(p.availability('other').canComplete, isFalse);
       expect(p.availability('urgent').blockingTaskIds, contains('colleague'));
       final colleague = TaskBlockingPolicy(
         tasks: tasks,

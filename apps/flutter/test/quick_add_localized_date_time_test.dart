@@ -6,6 +6,28 @@ void main() {
   final now = DateTime(2026, 7, 10, 12);
 
   group('localized quick-add date and time parsing', () {
+    test('consumes a short year as part of the complete date', () {
+      const input = 'Созвон 25.11.27 17:30';
+      final analysis = parser.analyze(input, now: now);
+      expect(analysis.parsed.content, 'Созвон');
+      expect(
+        analysis.parsed.schedule!.start!.toLocal(),
+        DateTime(2027, 11, 25, 17, 30),
+      );
+      final date = analysis.matches.singleWhere(
+        (m) => m.kind == QuickAddTokenKind.date,
+      );
+      expect(input.substring(date.start, date.end), '25.11.27');
+    });
+
+    test('never schedules a prefix of a malformed numeric date', () {
+      for (final date in ['25.11.2', '25.11.20277', '31.02.27']) {
+        final parsed = parser.parse('Созвон $date 17:30', now: now);
+        expect(parsed.content, contains(date));
+        expect(parsed.schedule, isNull, reason: date);
+      }
+    });
+
     test('parses English AM/PM without leaving syntax in the title', () {
       final parsed = parser.parse(
         'Call client 04/05/2027 at 5:30 p.M.',

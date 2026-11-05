@@ -19,6 +19,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/app_language.dart';
 import 'package:pomodoist/config/project_collaboration.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
+import 'package:pomodoist/ui/core/view_models/app_date_format_view_model.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/core/localization/notification_copy.dart';
@@ -123,6 +125,10 @@ final focusSoundPlayerProvider = Provider<FocusSoundPlayer>((ref) {
 
 final quickAddParserProvider = Provider<QuickAddParser>(
   (ref) => QuickAddParser(
+    dateOrder: AppDateFormatter.inputOrderFor(
+      ref.watch(appDateFormatProvider),
+      resolveAppLocale(ref.watch(appLanguageProvider)).toString(),
+    ),
     defaultTimedBlockDuration: Duration(
       minutes: ref.watch(quickAddDefaultTimedBlockMinutesProvider),
     ),

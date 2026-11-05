@@ -3637,7 +3637,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const Key('projects-mode-segmented-button')),
-        matching: find.text('Labels'),
+        matching: find.byTooltip('Labels'),
       ),
     );
     await _pumpFrames(tester);

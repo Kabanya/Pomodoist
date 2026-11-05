@@ -38,9 +38,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final intervals = state.intervals;
     final remaining = state.remaining;
     final viewMode = widget.fixedViewMode ?? state.viewMode;
+    final menuAction = CompactShellHeading.menuActionOf(context);
+    final compactHeader =
+        !widget.embedded && widget.fixedViewMode == null && menuAction != null;
     final showTitle = widget.embedded || !CompactShellHeading.isShown(context);
     final showExpand =
-        viewMode == FocusViewMode.minimal && widget.fixedViewMode == null;
+        viewMode == FocusViewMode.minimal &&
+        widget.fixedViewMode == null &&
+        !compactHeader;
     final timerVisualStyle = state.timerVisualStyle;
     final effectivePreset = state.effectivePreset;
     final activePreset = state.activePreset;
@@ -70,7 +75,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         final compactFull = !desktop && viewMode == FocusViewMode.full;
         final padding = EdgeInsets.fromLTRB(
           desktop ? 32 : 16,
-          desktop ? 28 : (compactFull ? 0 : 18),
+          compactHeader ? 16 : (desktop ? 28 : (compactFull ? 0 : 18)),
           desktop ? 32 : 16,
           compactFull ? 16 : 32,
         );
@@ -113,7 +118,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         ),
                     ],
                   ),
-                if (viewMode == FocusViewMode.minimal)
+                if (viewMode == FocusViewMode.minimal && !compactHeader)
                   SizedBox(height: desktop ? 24 : 20),
                 loadError != null
                     ? _FocusLoadError(error: loadError)
@@ -121,6 +126,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                     ? const _FocusLoading()
                     : run == null && interval == null
                     ? FocusIdleStage(
+                        showHeader: !compactHeader,
                         presets: presets,
                         selectedPreset: effectivePreset,
                         timerVisualStyle: timerVisualStyle,
@@ -160,6 +166,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                         interval: interval,
                         intervals: intervals,
                         remaining: remaining,
+                        showHeader: !compactHeader,
                         presets: presets,
                         selectedPreset: activePreset,
                         timerVisualStyle: timerVisualStyle,
@@ -214,7 +221,33 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       color: ThemeBackground.hasBackdrop(context)
           ? Colors.transparent
           : context.appColors.canvas,
-      child: SafeArea(child: content),
+      child: SafeArea(
+        child: compactHeader
+            ? Column(
+                children: [
+                  FocusCompactHeader(
+                    state: state,
+                    actions: actions,
+                    onMenuPressed: menuAction,
+                    onViewModeChanged: _setViewMode,
+                    onSessionDisplayChanged: _setSessionDisplay,
+                    onPresetSelected: run == null
+                        ? _selectPreset
+                        : (id) => _changeActiveRunPreset(run, id),
+                    onCustomize: (preset) => _showPresetDialog(preset, presets),
+                    onCreate: () => _showPresetDialog(
+                      null,
+                      presets,
+                      onCreated: run == null
+                          ? null
+                          : (id) => _changeActiveRunPreset(run, id),
+                    ),
+                  ),
+                  Expanded(child: content),
+                ],
+              )
+            : content,
+      ),
     );
   }
 

@@ -8,6 +8,8 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
+import 'package:pomodoist/ui/tasks/widgets/task_branch_widgets.dart';
 
 class TaskPriorityCascadeControl extends ConsumerStatefulWidget {
   const TaskPriorityCascadeControl({super.key});
@@ -60,10 +62,12 @@ class TaskBlockingControls extends ConsumerStatefulWidget {
     required this.task,
     this.initiallyExpanded = false,
     this.child,
+    this.menuItems,
     super.key,
   });
   final TaskItem task;
   final Widget? child;
+  final List<Widget>? menuItems;
   final bool initiallyExpanded;
   @override
   ConsumerState<TaskBlockingControls> createState() =>
@@ -76,6 +80,7 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
   bool busy = false;
   String? error;
   Future<void> _change(Future<void> Function() action) async {
+    if (busy) return;
     setState(() {
       busy = true;
       error = null;
@@ -89,10 +94,20 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
     }
   }
 
+  Widget _withMenu(Widget child, {Widget? urgency}) => widget.menuItems == null
+      ? child
+      : AppContextMenuRegion(
+          enableLongPress: usesTouchTaskInteraction,
+          items: [...widget.menuItems!, ?urgency],
+          child: child,
+        );
+
   @override
   Widget build(BuildContext context) {
     final policy = ref.watch(taskBlockingPolicyProvider).asData?.value;
-    if (policy == null) return widget.child ?? const SizedBox.shrink();
+    if (policy == null) {
+      return _withMenu(widget.child ?? const SizedBox.shrink());
+    }
     final task = policy.tasks[widget.task.id] ?? widget.task;
     final availability = policy.availability(task.id);
     final syncConflict =
@@ -147,31 +162,31 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
             ? context.l10n.blockingSyncConflict
             : context.l10n.blockingControls,
     };
-    return Padding(
+    final urgency = canUrgent
+        ? ShadContextMenuItem(
+            height: 44,
+            enabled: !busy,
+            leading: const Icon(LucideIcons.flame, size: 18),
+            trailing: selected == null
+                ? null
+                : const Icon(LucideIcons.check, size: 18),
+            onPressed: () => _change(() async {
+              (await ref
+                      .read(taskBlockingRepositoryProvider)
+                      .setUrgent(task, urgent: selected == null))
+                  .getOrThrow();
+            }),
+            child: Text(context.l10n.blockingUrgent),
+          )
+        : null;
+    final content = Padding(
       padding: EdgeInsetsDirectional.only(start: widget.child == null ? 28 : 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (widget.child != null)
-            Row(
-              children: [
-                Expanded(child: widget.child!),
-                IconButton(
-                  key: ValueKey('task-blocking-expand-${task.id}'),
-                  tooltip: label,
-                  icon: Icon(
-                    reason != null || syncConflict
-                        ? LucideIcons.lockKeyhole
-                        : selected != null
-                        ? LucideIcons.flame
-                        : LucideIcons.link,
-                    size: 16,
-                  ),
-                  onPressed: () => setState(() => expanded = !expanded),
-                ),
-              ],
-            )
+            widget.child!
           else
             ShadButton.ghost(
               key: ValueKey('task-blocking-expand-${task.id}'),
@@ -351,12 +366,13 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
               ),
             if (search.isNotEmpty && candidates.isEmpty)
               Text(context.l10n.blockingNoMatches),
-            if (error != null)
-              Text(error!, style: TextStyle(color: context.appColors.error)),
             const SizedBox(height: 8),
           ],
+          if (error != null)
+            Text(error!, style: TextStyle(color: context.appColors.error)),
         ],
       ),
     );
+    return _withMenu(content, urgency: urgency);
   }
 }

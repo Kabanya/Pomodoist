@@ -429,6 +429,12 @@ Widget _buildFocusMoreActionsMenu(
               ),
             ),
         ],
+        child: Icon(
+          LucideIcons.ellipsis,
+          color: CompactShellHeading.menuActionOf(context) != null
+              ? context.appColors.accent
+              : null,
+        ),
       ),
     ),
   );

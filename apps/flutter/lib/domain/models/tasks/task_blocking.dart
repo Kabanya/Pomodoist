@@ -68,7 +68,7 @@ class TaskBlockedException implements Exception {
       'task_blocked: ${availability.reasons.map((r) => r.name).join(', ')}';
 }
 
-/// The same policy applies to row actions, workflow transitions and Focus.
+/// Blocking restricts task completion; Focus only requires an editable open task.
 class TaskBlockingPolicy {
   TaskBlockingPolicy({
     required Iterable<TaskItem> tasks,
@@ -256,13 +256,7 @@ class TaskBlockingPolicy {
     Set<String> completingIds = const {},
   }) {
     if (taskId == null) {
-      final urgent = _activeUrgent('personal', completingIds);
-      return TaskAvailability(
-        canStartFocus: urgent == null,
-        canComplete: false,
-        reasons: urgent == null ? const [] : const [TaskBlockReason.urgent],
-        blockingTaskIds: urgent == null ? const [] : [urgent.id],
-      );
+      return const TaskAvailability(canStartFocus: true, canComplete: false);
     }
     final task = tasks[taskId];
     if (task == null || task.isDeleted || task.isCompleted || !task.canEdit) {
@@ -280,7 +274,7 @@ class TaskBlockingPolicy {
       completionIds.addAll(blocked.ids);
     }
     return TaskAvailability(
-      canStartFocus: focus.reasons.isEmpty,
+      canStartFocus: true,
       canComplete: completionReasons.isEmpty,
       reasons: List.unmodifiable({...focus.reasons, ...completionReasons}),
       blockingTaskIds: List.unmodifiable({...focus.ids, ...completionIds}),

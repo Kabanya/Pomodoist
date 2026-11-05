@@ -1205,7 +1205,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addTask => '작업 추가';
 
   @override
-  String get quickAddHint => '작업 이름 내일 p2 #프로젝트 @라벨 2p';
+  String get quickAddHint => '작업 이름 내일 우2 #프로젝트 @라벨 2뽀';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4968,6 +4968,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pickerDecrease => '줄이기';
+
+  @override
+  String get taskStatusBlocked => '차단됨';
+
+  @override
+  String get taskStatusUrgent => '긴급';
 
   @override
   String get blockingControls => 'Dependencies and urgency';

@@ -1648,5 +1648,7 @@
   "focusPlannedDuration": "Prévu · {duration}",
   "focusShortenDuration": "−5 min",
   "focusExtendDuration": "+5 min",
-  "focusFinish": "Terminer"
+  "focusFinish": "Terminer",
+  "taskStatusBlocked": "Bloquée",
+  "taskStatusUrgent": "Urgente"
 }

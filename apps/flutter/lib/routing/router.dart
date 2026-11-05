@@ -44,6 +44,7 @@ import 'package:pomodoist/ui/core/widgets/app_startup_gate.dart';
 import 'package:pomodoist/config/runtime_public_config.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/routing/project_map_navigation.dart';
+import 'package:pomodoist/routing/route_date.dart';
 import 'package:pomodoist/ui/core/widgets/adaptive_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -210,9 +211,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/upcoming',
             pageBuilder: (context, state) => NoTransitionPage(
               child: UpcomingScreen(
-                selectedDate: _parseRouteDate(
-                  state.uri.queryParameters['date'],
-                ),
+                selectedDate: parseRouteDate(state.uri.queryParameters['date']),
               ),
             ),
           ),
@@ -230,9 +229,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/calendar',
             pageBuilder: (context, state) => NoTransitionPage(
               child: CalendarScreen(
-                selectedDate: _parseRouteDate(
-                  state.uri.queryParameters['date'],
-                ),
+                selectedDate: parseRouteDate(state.uri.queryParameters['date']),
               ),
             ),
           ),
@@ -240,9 +237,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/timeline',
             pageBuilder: (context, state) => NoTransitionPage(
               child: TimelineScreen(
-                selectedDate: _parseRouteDate(
-                  state.uri.queryParameters['date'],
-                ),
+                selectedDate: parseRouteDate(state.uri.queryParameters['date']),
               ),
             ),
           ),
@@ -496,24 +491,4 @@ bool _requiresWebAccount(String path) {
       path != '/reset-password' &&
       path != '/auth/challenge' &&
       path != '/purchase-success';
-}
-
-DateTime? _parseRouteDate(String? value) {
-  if (value == null) {
-    return null;
-  }
-  final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value);
-  if (match == null) {
-    return null;
-  }
-  final year = int.tryParse(match.group(1)!);
-  final month = int.tryParse(match.group(2)!);
-  final day = int.tryParse(match.group(3)!);
-  if (year == null || month == null || day == null) {
-    return null;
-  }
-  final date = DateTime(year, month, day);
-  return date.year == year && date.month == month && date.day == day
-      ? date
-      : null;
 }

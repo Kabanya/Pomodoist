@@ -53,7 +53,7 @@ void main() {
       );
 
       expect(_dayFinder(nextDay), findsOneWidget);
-      expect(_dotsFor(nextDay), findsOneWidget);
+      expect(_dotsFor(nextDay), findsNothing);
     });
 
     testWidgets('narrow arrows move 7 days across a year boundary', (
@@ -356,7 +356,7 @@ void main() {
   });
 
   group('UpcomingCalendar load and visual semantics', () {
-    testWidgets('uses 0, 1, 2, or 3 dots and exposes the uncapped count', (
+    testWidgets('wide rail uses capped dots and exposes the uncapped count', (
       tester,
     ) async {
       final semantics = tester.ensureSemantics();
@@ -366,7 +366,7 @@ void main() {
       final many = DateTime(2027, 1, 1, 12);
       await _pumpCalendar(
         tester,
-        width: 759,
+        width: 760,
         today: today,
         scheduledCounts: {zero: 0, one: 1, two: 2, many: 12},
       );
@@ -377,39 +377,52 @@ void main() {
       expect(_dotsFor(many), findsNWidgets(3));
       expect(tester.getSemantics(_dayFinder(zero)).label, contains('0'));
       expect(tester.getSemantics(_dayFinder(many)).label, contains('12'));
-      semantics.dispose();
-    });
-
-    testWidgets('today and selected dates have distinct non-color markers', (
-      tester,
-    ) async {
-      final semantics = tester.ensureSemantics();
       await _pumpCalendar(
         tester,
-        width: 759,
+        width: 390,
         today: today,
-        selectedDate: DateTime(2026, 12, 31),
+        scheduledCounts: {one: 1, two: 2, many: 12},
       );
-
-      final todayCell = _dayFinder(today);
-      final selectedCell = _dayFinder(DateTime(2026, 12, 31));
-      expect(tester.getSemantics(todayCell).label, contains('Today'));
-      expect(
-        tester.getSemantics(selectedCell).flagsCollection.isSelected,
-        Tristate.isTrue,
-      );
-      expect(
-        find.byKey(const ValueKey('upcoming-calendar-today-marker-2026-12-30')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(
-          const ValueKey('upcoming-calendar-selected-marker-2026-12-31'),
-        ),
-        findsOneWidget,
-      );
+      expect(_dotsFor(one), findsNothing);
+      expect(_dotsFor(two), findsNothing);
+      expect(_dotsFor(many), findsNothing);
+      expect(tester.getSemantics(_dayFinder(many)).label, contains('12'));
       semantics.dispose();
     });
+
+    testWidgets(
+      'today and selected dates keep their separate semantics and markers',
+      (tester) async {
+        final semantics = tester.ensureSemantics();
+        await _pumpCalendar(
+          tester,
+          width: 759,
+          today: today,
+          selectedDate: DateTime(2026, 12, 31),
+        );
+
+        final todayCell = _dayFinder(today);
+        final selectedCell = _dayFinder(DateTime(2026, 12, 31));
+        expect(tester.getSemantics(todayCell).label, contains('Today'));
+        expect(
+          tester.getSemantics(selectedCell).flagsCollection.isSelected,
+          Tristate.isTrue,
+        );
+        expect(
+          find.byKey(
+            const ValueKey('upcoming-calendar-today-marker-2026-12-30'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(
+            const ValueKey('upcoming-calendar-selected-marker-2026-12-31'),
+          ),
+          findsOneWidget,
+        );
+        semantics.dispose();
+      },
+    );
   });
 
   group('UpcomingCalendar keyboard and focus', () {

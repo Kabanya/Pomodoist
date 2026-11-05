@@ -39,6 +39,43 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  for (final (location, day) in [
+    ('/today', DateTime(2026, 7, 10)),
+    ('/upcoming?date=2026-11-13', DateTime(2026, 11, 13)),
+  ]) {
+    for (final action in ['floating button', 'sidebar', 'shortcut']) {
+      testWidgets('$action inherits the date on $location', (tester) async {
+        await _pumpShell(
+          tester,
+          size: Size(action == 'floating button' ? 390 : 1200, 900),
+          initialLocation: location,
+        );
+        if (action == 'shortcut') {
+          await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+          await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
+          await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+        } else {
+          await tester.tap(
+            find.byKey(
+              Key(
+                action == 'floating button'
+                    ? 'compact-add-task'
+                    : 'sidebar-add-task',
+              ),
+            ),
+          );
+        }
+        await _pumpShellFrame(tester);
+        expect(
+          tester
+              .widget<QuickAddComposer>(find.byType(QuickAddComposer))
+              .defaultDate,
+          day,
+        );
+      }, variant: TargetPlatformVariant({TargetPlatform.iOS}));
+    }
+  }
+
   for (final width in [390.0, 819.0, 820.0]) {
     testWidgets('Today switches layout at 820 px on mobile ($width)', (
       tester,
@@ -234,7 +271,9 @@ void main() {
     expect(tester.state<ScrollableState>(scrollable).position.pixels, 270);
   }, variant: TargetPlatformVariant({TargetPlatform.iOS}));
 
-  testWidgets('compact Inbox keeps its inline composer', (tester) async {
+  testWidgets('compact Inbox uses shell Quick Add without an inline composer', (
+    tester,
+  ) async {
     await _pumpShell(
       tester,
       size: const Size(390, 850),
@@ -242,8 +281,13 @@ void main() {
       showInbox: true,
     );
     expect(find.byKey(const Key('today-options')), findsNothing);
-    expect(find.byType(QuickAddBar), findsOneWidget);
+    final l10n = AppLocalizations.of(tester.element(find.byType(InboxScreen)));
+    expect(find.text(l10n.screenInboxSubtitle), findsNothing);
+    expect(find.byType(QuickAddBar), findsNothing);
     expect(find.byKey(const Key('compact-add-task')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('compact-add-task')));
+    await _pumpShellFrame(tester);
+    expect(find.byType(QuickAddComposer), findsOneWidget);
   }, variant: TargetPlatformVariant({TargetPlatform.iOS}));
 
   testWidgets(
@@ -524,15 +568,18 @@ Future<void> _pumpShell(
   });
 
   final now = _shellNow;
+  final location = Uri.parse(initialLocation);
   final router = GoRouter(
-    initialLocation: taskId == null
-        ? '/'
-        : '/?task=${Uri.encodeQueryComponent(taskId)}',
+    initialLocation: location
+        .replace(
+          queryParameters: {...location.queryParameters, 'task': ?taskId},
+        )
+        .toString(),
     routes: [
       GoRoute(
-        path: '/',
+        path: location.path,
         builder: (_, state) => _AdaptiveShellRouteHarness(
-          initialLocation: initialLocation,
+          initialLocation: state.uri.path,
           taskId: state.uri.queryParameters['task'],
           showInbox: showInbox,
         ),

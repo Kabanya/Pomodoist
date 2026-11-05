@@ -5115,6 +5115,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickerDecrease => 'Decrease';
 
   @override
+  String get taskStatusBlocked => 'Blocked';
+
+  @override
+  String get taskStatusUrgent => 'Urgent';
+
+  @override
   String get blockingControls => 'Dependencies and urgency';
 
   @override

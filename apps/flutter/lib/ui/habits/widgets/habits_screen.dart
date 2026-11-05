@@ -54,25 +54,24 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(padding, 24, padding, 16),
-                child: Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  spacing: 16,
-                  runSpacing: 12,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (showTitle || !progress)
+              if (showTitle)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(padding, 24, padding, 16),
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    spacing: 16,
+                    runSpacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (showTitle)
-                            Text(
-                              l.navHabits,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
+                          Text(
+                            l.navHabits,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
                           if (!progress) ...[
-                            if (showTitle) const SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               l.habitsSubtitle,
                               style: Theme.of(context).textTheme.bodyLarge
@@ -81,25 +80,25 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
                           ],
                         ],
                       ),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 12,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        if (layout?.available == true)
-                          const HabitPresentationControl(),
-                        if (progress) _HabitStatusFilter(view: view),
-                        ShadButton(
-                          enabled: !view.saving,
-                          onPressed: () => openHabitDetails(context, null),
-                          leading: const Icon(LucideIcons.plus, size: 20),
-                          child: Text(l.habitNew),
-                        ),
-                      ],
-                    ),
-                  ],
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 12,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          if (layout?.available == true)
+                            const HabitPresentationControl(),
+                          if (progress) _HabitStatusFilter(view: view),
+                          ShadButton(
+                            enabled: !view.saving,
+                            onPressed: () => openHabitDetails(context, null),
+                            leading: const Icon(LucideIcons.plus, size: 20),
+                            child: Text(l.habitNew),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               Expanded(
                 child: progress
                     ? HabitsProgressView(
@@ -114,7 +113,7 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
                               key: const PageStorageKey('habits-list-scroll'),
                               padding: EdgeInsets.fromLTRB(
                                 padding,
-                                0,
+                                showTitle ? 0 : 12,
                                 wide ? 24 : padding,
                                 32,
                               ),
@@ -490,24 +489,37 @@ class _WeekStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vm = ref.read(habitsViewModelProvider.notifier);
     final l = context.l10n, colors = context.appColors;
+    final compact = usesCompactMobileLayout(context);
+    final previousWeek = IconButton.outlined(
+      tooltip: l.habitPreviousWeek,
+      onPressed: () => vm.moveWeek(-1),
+      icon: const Icon(LucideIcons.chevronLeft, size: 18),
+    );
+    final nextWeek = IconButton.outlined(
+      tooltip: l.habitNextWeek,
+      onPressed: () => vm.moveWeek(1),
+      icon: const Icon(LucideIcons.chevronRight, size: 18),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: AlignmentDirectional.centerEnd,
-          child: ShadButton.ghost(
-            onPressed: vm.selectToday,
-            child: Text(l.today),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ShadButton.ghost(
+              onPressed: vm.selectToday,
+              child: Text(
+                l.today,
+                style: compact ? TextStyle(color: colors.accent) : null,
+              ),
+            ),
+            if (compact) ...[previousWeek, const SizedBox(width: 8), nextWeek],
+          ],
         ),
+        if (compact) const SizedBox(height: 8),
         Row(
           children: [
-            IconButton.outlined(
-              tooltip: l.habitPreviousWeek,
-              onPressed: () => vm.moveWeek(-1),
-              icon: const Icon(LucideIcons.chevronLeft, size: 18),
-            ),
-            const SizedBox(width: 8),
+            if (!compact) ...[previousWeek, const SizedBox(width: 8)],
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -536,8 +548,8 @@ class _WeekStrip extends ConsumerWidget {
                                   final selected = day == view.selectedDay,
                                       today = day == view.today;
                                   return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 2,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: compact ? 0 : 2,
                                     ),
                                     child: Semantics(
                                       label: DateFormat.yMMMMEEEEd(
@@ -588,26 +600,31 @@ class _WeekStrip extends ConsumerWidget {
                                                                   .primaryText,
                                                       ),
                                                 ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  today
-                                                      ? l.today
-                                                      : day.month !=
-                                                            view.weekStart.month
-                                                      ? DateFormat.MMM(
-                                                          l.localeName,
-                                                        ).format(day)
-                                                      : '',
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                        color: colors.mutedText,
-                                                      ),
-                                                ),
+                                                if (!compact) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    today
+                                                        ? l.today
+                                                        : day.month !=
+                                                              view
+                                                                  .weekStart
+                                                                  .month
+                                                        ? DateFormat.MMM(
+                                                            l.localeName,
+                                                          ).format(day)
+                                                        : '',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          color:
+                                                              colors.mutedText,
+                                                        ),
+                                                  ),
+                                                ],
                                               ],
                                             ),
                                           ),
@@ -625,12 +642,7 @@ class _WeekStrip extends ConsumerWidget {
                 },
               ),
             ),
-            const SizedBox(width: 8),
-            IconButton.outlined(
-              tooltip: l.habitNextWeek,
-              onPressed: () => vm.moveWeek(1),
-              icon: const Icon(LucideIcons.chevronRight, size: 18),
-            ),
+            if (!compact) ...[const SizedBox(width: 8), nextWeek],
           ],
         ),
       ],

@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/planning/numeric_date_parser.dart';
 import 'dart:core';
 
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -43,13 +44,25 @@ const _tomorrowWords = {
 };
 
 final _priorityTokenPattern = RegExp(
-  r'^(?:p|!!)([1-4])$',
+  r'^(?:p|п|أ|优|優|우|!!)([1-4])$',
   caseSensitive: false,
 );
 
 int? _priorityFromToken(String token) {
-  final match = _priorityTokenPattern.firstMatch(token);
+  final match = _priorityTokenPattern.firstMatch(normalizeDateDigits(token));
   return match == null ? null : int.parse(match.group(1)!);
+}
+
+final _focusEstimateTokenPattern = RegExp(
+  r'^(\d+)(?:p|п|ب|番|ポ|뽀)$',
+  caseSensitive: false,
+);
+
+int? _focusEstimateFromToken(String token) {
+  final match = _focusEstimateTokenPattern.firstMatch(
+    normalizeDateDigits(token),
+  );
+  return match == null ? null : parseQuickAddFocusEstimate(match.group(1)!);
 }
 
 class ParsedQuickAdd {
@@ -63,6 +76,7 @@ class ParsedQuickAdd {
     this.schedule,
     this.deadline,
     this.estimatedFocusIntervals,
+    this.hasInvalidExplicitDate = false,
   }) : labels = List.unmodifiable(labels);
 
   final String content;
@@ -74,6 +88,7 @@ class ParsedQuickAdd {
   final TaskSchedule? schedule;
   final DateTime? deadline;
   final int? estimatedFocusIntervals;
+  final bool hasInvalidExplicitDate;
 }
 
 enum QuickAddTokenKind {
@@ -112,9 +127,11 @@ class QuickAddAnalysis {
 class QuickAddParser {
   const QuickAddParser({
     this.defaultTimedBlockDuration = const Duration(minutes: 30),
+    this.dateOrder = NumericDateOrder.dayMonthYear,
   });
 
   final Duration defaultTimedBlockDuration;
+  final NumericDateOrder dateOrder;
 
   QuickAddAnalysis analyze(
     String input, {
@@ -125,21 +142,13 @@ class QuickAddParser {
     final effectiveNow = now ?? DateTime.now();
     // Editing may repair invalid date commands; ordinary parsing/highlighting
     // continues to leave them visible and suppress scheduling.
-    final editingInput = includeInvalidScheduling
-        ? QuickAddDateTimeNormalizer(_dateOnly(effectiveNow))
-              .normalize(
-                input,
-                invalidDateReplacement: (defaultDate ?? effectiveNow)
-                    .toIso8601String()
-                    .split('T')
-                    .first,
-              )
-              .text
-        : input;
-    final parsed = parse(
-      editingInput,
+    final parsed = _parse(
+      input,
       now: effectiveNow,
       defaultDate: defaultDate,
+      invalidDateReplacement: includeInvalidScheduling
+          ? (defaultDate ?? effectiveNow).toIso8601String().split('T').first
+          : null,
     );
     return QuickAddAnalysis(
       parsed: parsed,
@@ -151,11 +160,41 @@ class QuickAddParser {
     );
   }
 
-  ParsedQuickAdd parse(String input, {DateTime? now, DateTime? defaultDate}) {
+  ParsedQuickAdd parse(String input, {DateTime? now, DateTime? defaultDate}) =>
+      _parse(input, now: now, defaultDate: defaultDate);
+
+  ParsedQuickAdd _parse(
+    String input, {
+    DateTime? now,
+    DateTime? defaultDate,
+    String? invalidDateReplacement,
+  }) {
     final today = _dateOnly(now ?? DateTime.now());
-    final normalized = QuickAddDateTimeNormalizer(
-      today,
-    ).normalize(input.trim());
+    var literalMarker = '\uE001';
+    while (input.contains(literalMarker)) {
+      literalMarker += '\uE001';
+    }
+    // Date normalization may split CJK text; it must not invent command boundaries.
+    final protected = StringBuffer();
+    var cursor = 0;
+    for (final token in _sourceTokens(input)) {
+      if (!_isStandaloneToken(input, token) &&
+          (_priorityFromToken(token.text) != null ||
+              _focusEstimateFromToken(token.text) != null)) {
+        protected.write(input.substring(cursor, token.start));
+        protected.write(literalMarker);
+        cursor = token.start;
+      }
+    }
+    protected.write(input.substring(cursor));
+    final normalizer = QuickAddDateTimeNormalizer(today, dateOrder: dateOrder);
+    var normalized = normalizer.normalize(
+      protected.toString().trim(),
+      invalidDateReplacement: invalidDateReplacement,
+    );
+    if (invalidDateReplacement != null) {
+      normalized = normalizer.normalize(normalized.text);
+    }
     final tokens = _quickAddTokens(normalized.text);
     final contentTokens = <String>[];
     final labels = <String>[];
@@ -189,16 +228,10 @@ class QuickAddParser {
         priority = parsedPriority;
         continue;
       }
-      final estimateMatch = RegExp(
-        r'^(\d+)(p|п)$',
-        caseSensitive: false,
-      ).firstMatch(token);
-      if (estimateMatch != null) {
-        final count = parseQuickAddFocusEstimate(estimateMatch.group(1)!);
-        if (count != null) {
-          estimate = count;
-          continue;
-        }
+      final parsedEstimate = _focusEstimateFromToken(token);
+      if (parsedEstimate != null) {
+        estimate = parsedEstimate;
+        continue;
       }
       final timeRangeMatch = RegExp(
         r'^(\d{1,2}):(\d{2})[-–](\d{1,2}):(\d{2})$',
@@ -292,7 +325,7 @@ class QuickAddParser {
             blockDuration: blockDuration,
           );
     return ParsedQuickAdd(
-      content: contentTokens.join(' ').trim(),
+      content: contentTokens.join(' ').replaceAll(literalMarker, '').trim(),
       project: project,
       section: section,
       labels: labels,
@@ -300,15 +333,23 @@ class QuickAddParser {
       dueDate: effectiveDueDate,
       schedule: schedule,
       estimatedFocusIntervals: estimate,
+      hasInvalidExplicitDate: normalized.hasInvalidExplicitDate,
     );
   }
+
+  bool _isStandaloneToken(String input, _QuickAddSourceToken token) =>
+      (token.start == 0 || input[token.start - 1].trim().isEmpty) &&
+      (token.end == input.length || input[token.end].trim().isEmpty);
 
   List<QuickAddTokenMatch> _sourceMatches(
     String input,
     DateTime today, {
     bool includeInvalidScheduling = false,
   }) {
-    final normalized = QuickAddDateTimeNormalizer(today).normalize(input);
+    final normalized = QuickAddDateTimeNormalizer(
+      today,
+      dateOrder: dateOrder,
+    ).normalize(input);
     final suppressTemporal =
         normalized.hasInvalidExplicitDate && !includeInvalidScheduling;
     final tokens = _sourceTokens(input);
@@ -325,11 +366,11 @@ class QuickAddParser {
         kind = QuickAddTokenKind.label;
       } else if (value.startsWith('/') && value.length > 1) {
         kind = QuickAddTokenKind.section;
-      } else if (_priorityFromToken(value) != null) {
+      } else if (_isStandaloneToken(input, token) &&
+          _priorityFromToken(value) != null) {
         kind = QuickAddTokenKind.priority;
-      } else if (RegExp(r'^\d+(p|п)$', caseSensitive: false).hasMatch(value) &&
-          parseQuickAddFocusEstimate(value.substring(0, value.length - 1)) !=
-              null) {
+      } else if (_isStandaloneToken(input, token) &&
+          _focusEstimateFromToken(value) != null) {
         kind = QuickAddTokenKind.focusEstimate;
       } else {
         final duration = RegExp(
@@ -395,10 +436,13 @@ class QuickAddParser {
         tokens[startIndex].start,
         tokens[endIndex].end,
       );
-      final normalized = QuickAddDateTimeNormalizer(today).normalize(
-        source,
-        invalidDateReplacement: includeInvalidScheduling ? '2000-01-01' : null,
-      );
+      final normalized = QuickAddDateTimeNormalizer(today, dateOrder: dateOrder)
+          .normalize(
+            source,
+            invalidDateReplacement: includeInvalidScheduling
+                ? '2000-01-01'
+                : null,
+          );
       if (normalized.hasInvalidExplicitDate && !includeInvalidScheduling) {
         continue;
       }
@@ -609,11 +653,12 @@ class QuickAddParser {
     final year = int.parse(match.group(1)!);
     final month = int.parse(match.group(2)!);
     final day = int.parse(match.group(3)!);
-    final date = DateTime(year, month, day);
-    if (date.year != year || date.month != month || date.day != day) {
-      return null;
-    }
-    return date;
+    return resolveCalendarDate(
+      day: day,
+      month: month,
+      year: year,
+      today: DateTime(year),
+    );
   }
 
   TaskSchedule? _scheduleFromParsed({

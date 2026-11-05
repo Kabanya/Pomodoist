@@ -1,4 +1,6 @@
 import 'package:pomodoist/config/task_focus_dependencies.dart';
+import 'package:pomodoist/config/task_blocking_dependencies.dart';
+import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/domain/use_cases/tasks/task_scheduling.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +13,28 @@ import 'package:pomodoist/domain/models/tasks/task_focus_estimate.dart';
 import 'package:pomodoist/domain/models/settings/task_preferences.dart';
 import 'package:pomodoist/domain/models/tasks/task_time.dart';
 
+enum TaskRowBlockingStatus {
+  blocked,
+  urgent;
+
+  static TaskRowBlockingStatus? resolve(
+    TaskItem task,
+    TaskBlockingPolicy? policy, {
+    bool syncConflict = false,
+  }) {
+    if (task.isCompleted || task.isDeleted) return null;
+    final current = policy?.tasks[task.id] ?? task;
+    if (current.isCompleted || current.isDeleted) return null;
+    if (syncConflict ||
+        (policy?.availability(task.id).reasons.isNotEmpty ?? false)) {
+      return blocked;
+    }
+    return policy?.isUrgent(current) == true ? urgent : null;
+  }
+}
+
 typedef TaskItemState = ({
+  TaskRowBlockingStatus? blockingStatus,
   int? focusEstimate,
   TaskTimeState? timeState,
   TaskTimeDisplayMode timeDisplayMode,
@@ -35,6 +58,17 @@ class TaskItemViewModel extends Notifier<TaskItemState> {
       ref.watch(lastFocusPresetIdProvider),
     );
     return (
+      blockingStatus: TaskRowBlockingStatus.resolve(
+        task,
+        ref.watch(taskBlockingPolicyProvider).asData?.value,
+        syncConflict:
+            ref
+                .watch(taskBlockingConflictsProvider)
+                .asData
+                ?.value
+                .contains(task.id) ??
+            false,
+      ),
       focusEstimate: targetFocusIntervalsForTask(task, preset),
       timeState: ref.watch(taskTimeStateProvider(task)),
       timeDisplayMode: ref.watch(taskTimeDisplayModeProvider),

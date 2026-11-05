@@ -1,7 +1,10 @@
 import 'package:pomodoist/ui/settings/view_models/theme_settings_view_model.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pomodoist/config/clock_provider.dart';
+import 'package:pomodoist/routing/route_date.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
@@ -230,11 +233,10 @@ Future<void> showQuickAddDialog(
   String? projectId,
   String? labelId,
 }) {
-  final segments =
-      GoRouter.maybeOf(
-        context,
-      )?.routeInformationProvider.value.uri.pathSegments ??
-      const <String>[];
+  final location = GoRouter.maybeOf(
+    context,
+  )?.routeInformationProvider.value.uri;
+  final segments = location?.pathSegments ?? const <String>[];
   labelId ??= segments.length == 2 && segments.first == 'label'
       ? segments[1]
       : null;
@@ -244,6 +246,18 @@ Future<void> showQuickAddDialog(
     overlay.rearrange([existing.entry], below: existing.entry);
     existing.key.currentState?._setVoiceActive(false);
     return existing.closed;
+  }
+  if (defaultDate == null &&
+      (location?.path == '/today' || location?.path == '/upcoming')) {
+    final now = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(clockProvider).now().toLocal();
+    defaultDate =
+        (location!.path == '/upcoming'
+            ? parseRouteDate(location.queryParameters['date'])
+            : null) ??
+        DateUtils.dateOnly(now);
   }
   final completion = Completer<void>();
   final key = GlobalKey<_SidebarQuickAddDialogState>();

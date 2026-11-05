@@ -49,6 +49,7 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/inbox_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/kanban_screen.dart';
+import 'package:pomodoist/ui/tasks/widgets/projects_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/priority_matrix_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/search_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/timeline_screen.dart';
@@ -67,6 +68,7 @@ const _longProjectName =
 
 void main() {
   setUpAll(loadTestAppResources);
+
   setUp(() {
     SharedPreferences.setMockInitialValues({
       onboardingCompletedPreferenceKey: true,
@@ -1154,6 +1156,176 @@ void main() {
     expect(Theme.of(tester.element(settings)).brightness, Brightness.dark);
     await _disposeApp(tester);
   });
+
+  for (final width in [320.0, 390.0, 819.0, 820.0]) {
+    testWidgets(
+      'projects compact header stays centered and switches modes ($width)',
+      (tester) async {
+        if (width == 390) {
+          SharedPreferences.setMockInitialValues({
+            onboardingCompletedPreferenceKey: true,
+            launchOfferStartedAtPreferenceKey: '2026-01-01T10:00:00.000Z',
+            appLanguagePreferenceKey: 'ru',
+            appThemeModePreferenceKey: 'dark',
+          });
+        }
+        await _pumpApp(tester, size: Size(width, 850));
+        final context = tester.element(find.byType(TodayScreen));
+        GoRouter.of(context).go('/projects');
+        await _pumpFrames(tester);
+        final header = find.byKey(const Key('projects-compact-header'));
+        if (width >= 820) {
+          expect(header, findsNothing);
+          expect(find.text('Labels'), findsAtLeastNWidgets(1));
+          await _disposeApp(tester);
+          return;
+        }
+        final title = find.byKey(const Key('shell-page-title'));
+        final entityTabs = find.byKey(
+          const Key('projects-mode-segmented-button'),
+        );
+        final viewTabs = find.byKey(
+          const Key('projects-view-segmented-button'),
+        );
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(ProjectsScreen)),
+        );
+        expect(header, findsOneWidget);
+        expect(tester.getCenter(title).dx, width / 2);
+        for (final controls in [
+          entityTabs,
+          viewTabs,
+          find.byKey(const Key('projects-add-button')),
+        ]) {
+          expect(
+            find.descendant(of: header, matching: controls),
+            findsOneWidget,
+          );
+        }
+        for (final button
+            in find
+                .descendant(of: viewTabs, matching: find.byType(ShadButton))
+                .evaluate()) {
+          final size = tester.getSize(find.byWidget(button.widget));
+          expect(size.width, greaterThanOrEqualTo(44));
+          expect(size.height, greaterThanOrEqualTo(44));
+        }
+        expect(tester.takeException(), isNull);
+        if (width == 390) {
+          expect(
+            tester.getCenter(entityTabs).dy,
+            tester.getCenter(viewTabs).dy,
+          );
+          expect(
+            tester.getCenter(entityTabs).dx,
+            lessThan(tester.getCenter(title).dx),
+          );
+          expect(
+            tester.getCenter(viewTabs).dx,
+            greaterThan(tester.getCenter(title).dx),
+          );
+          await tester.tap(
+            find.descendant(
+              of: viewTabs,
+              matching: find.byTooltip(l10n.projectViewMap),
+            ),
+          );
+          await _pumpFrames(tester);
+          expect(
+            find.byKey(const Key('projects-header-context')),
+            findsOneWidget,
+          );
+          expect(
+            find.text('${l10n.navProjects} · ${l10n.projectViewMap}'),
+            findsOneWidget,
+          );
+          await tester.tap(find.byKey(const Key('project-map-fullscreen')));
+          await _pumpFrames(tester);
+          expect(header, findsNothing);
+          expect(title, findsNothing);
+          await tester.tap(find.byKey(const Key('project-map-fullscreen')));
+          await _pumpFrames(tester);
+          expect(header, findsOneWidget);
+          expect(tester.getCenter(title).dx, width / 2);
+          await tester.tap(
+            find.descendant(
+              of: viewTabs,
+              matching: find.byTooltip(l10n.projectViewList),
+            ),
+          );
+          await _pumpFrames(tester);
+        }
+        await tester.tap(
+          find.descendant(
+            of: entityTabs,
+            matching: find.byTooltip(l10n.labelsTitle),
+          ),
+        );
+        await _pumpFrames(tester);
+        expect(find.byKey(const Key('labels-add-button')), findsOneWidget);
+        expect(viewTabs, findsNothing);
+        expect(tester.getCenter(title).dx, width / 2);
+        expect(find.text('@Design'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('labels-add-button')));
+        await _pumpFrames(tester);
+        expect(find.byKey(const Key('label-create-input')), findsOneWidget);
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await _pumpFrames(tester);
+        await tester.tap(
+          find.descendant(
+            of: entityTabs,
+            matching: find.byTooltip(l10n.navProjects),
+          ),
+        );
+        await _pumpFrames(tester);
+        expect(viewTabs, findsOneWidget);
+        expect(tester.getCenter(title).dx, width / 2);
+        await tester.tap(find.byKey(_shellMenuButtonKey));
+        await _pumpFrames(tester);
+        expect(find.byKey(const Key('sidebar-projects-link')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _disposeApp(tester);
+      },
+      variant: TargetPlatformVariant({
+        TargetPlatform.iOS,
+        TargetPlatform.android,
+      }),
+    );
+  }
+
+  for (final theme in ['light', 'dark']) {
+    testWidgets(
+      'projects compact header supports scaled Russian text ($theme)',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          onboardingCompletedPreferenceKey: true,
+          appLanguagePreferenceKey: 'ru',
+          appThemeModePreferenceKey: theme,
+          launchOfferStartedAtPreferenceKey: '2026-01-01T10:00:00.000Z',
+        });
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _pumpApp(tester, size: const Size(390, 850));
+        GoRouter.of(
+          tester.element(find.byType(TodayScreen)),
+        ).go('/projects?tab=labels');
+        await _pumpFrames(tester);
+        final header = find.byKey(const Key('projects-compact-header'));
+        final title = find.byKey(const Key('shell-page-title'));
+        final tabs = find.byKey(const Key('projects-mode-segmented-button'));
+        expect(header, findsOneWidget);
+        expect(tester.getCenter(title).dx, 195);
+        expect(
+          tester.getTopLeft(tabs).dy,
+          greaterThanOrEqualTo(tester.getBottomLeft(title).dy),
+        );
+        expect(find.byKey(const Key('labels-add-button')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _disposeApp(tester);
+      },
+      variant: TargetPlatformVariant({TargetPlatform.iOS}),
+    );
+  }
 
   testWidgets('projects screen searches and switches to archived projects', (
     tester,

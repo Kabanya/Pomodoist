@@ -2584,6 +2584,8 @@
       }
     }
   },
+  "taskStatusBlocked": "Blocked",
+  "taskStatusUrgent": "Urgent",
   "blockingControls": "Dependencies and urgency",
   "blockingUrgent": "Urgent for me",
   "blockingRepeat": "Keep future occurrences urgent",

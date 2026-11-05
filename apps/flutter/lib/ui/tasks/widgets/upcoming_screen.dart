@@ -138,22 +138,24 @@ class _UpcomingScreenState extends ConsumerState<UpcomingScreen> {
                                   _selectToday(context, today),
                               onClearSelection: () => _clearSelection(context),
                             ),
-                            const SizedBox(height: 16),
-                            QuickAddBar(
-                              defaultDate: selectedDay ?? today,
-                              onTaskCreated: (ids) {
-                                motion.created(ids.toSet());
-                                unawaited(
-                                  revealCreatedTaskBranches(
-                                    context,
-                                    ref,
-                                    'upcoming',
-                                    ids,
-                                  ),
-                                );
-                                unawaited(playHaptic(AppHapticCue.light));
-                              },
-                            ),
+                            if (!usesCompactMobileLayout(context)) ...[
+                              const SizedBox(height: 16),
+                              QuickAddBar(
+                                defaultDate: selectedDay ?? today,
+                                onTaskCreated: (ids) {
+                                  motion.created(ids.toSet());
+                                  unawaited(
+                                    revealCreatedTaskBranches(
+                                      context,
+                                      ref,
+                                      'upcoming',
+                                      ids,
+                                    ),
+                                  );
+                                  unawaited(playHaptic(AppHapticCue.light));
+                                },
+                              ),
+                            ],
                             const SizedBox(height: 20),
                           ],
                         ),

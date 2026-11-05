@@ -19,6 +19,7 @@ Future<void> openPicker(
   bool dark = false,
   Locale locale = const Locale('en'),
   AppDateFormat format = AppDateFormat.automatic,
+  ValueNotifier<AppDateFormat>? formatChanges,
   double textScale = 1,
   int zoom = 100,
 }) async {
@@ -35,9 +36,8 @@ Future<void> openPicker(
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => AppDateFormatScope(
-          format: format,
-          child: MediaQuery(
+        builder: (context, child) {
+          final content = MediaQuery(
             data: MediaQuery.of(
               context,
             ).copyWith(textScaler: TextScaler.linear(textScale)),
@@ -49,8 +49,15 @@ Future<void> openPicker(
                     ],
                     child: AppZoom(child: testAppBuilder(context, child)),
                   ),
-          ),
-        ),
+          );
+          return formatChanges == null
+              ? AppDateFormatScope(format: format, child: content)
+              : ValueListenableBuilder<AppDateFormat>(
+                  valueListenable: formatChanges,
+                  builder: (context, value, _) =>
+                      AppDateFormatScope(format: value, child: content),
+                );
+        },
         home: Scaffold(
           body: Align(
             alignment: Alignment.topCenter,
@@ -79,6 +86,57 @@ class _PickerZoom extends AppZoomController {
 
 void main() {
   setUpAll(loadTestAppResources);
+  testWidgets(
+    'numeric date drafts survive format changes and preserve the chosen time',
+    (tester) async {
+      final format = ValueNotifier(AppDateFormat.dayMonthYear);
+      addTearDown(format.dispose);
+      ({DateTime date, TimeOfDay? time})? result;
+      await openPicker(tester, (picker) async {
+        result = await picker.pickSchedule(
+          initialDate: DateTime(2026, 11, 6),
+          initialTime: const TimeOfDay(hour: 15, minute: 30),
+          initialAllDay: false,
+          firstDate: DateTime(2020),
+          lastDate: DateTime(2100),
+        );
+      }, formatChanges: format);
+      final input = find.descendant(
+        of: find.byKey(const Key('picker-date-input')),
+        matching: find.byType(EditableText),
+      );
+      await tester.enterText(input, '04/05/27');
+      final controller = tester.widget<EditableText>(input).controller;
+      controller.value = controller.value.copyWith(
+        selection: const TextSelection.collapsed(offset: 4),
+        composing: const TextRange(start: 3, end: 5),
+      );
+      final draft = controller.value;
+      format.value = AppDateFormat.monthDayYear;
+      await tester.pumpAndSettle();
+      expect(controller.value, draft);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(result, (
+        date: DateTime(2027, 4, 5),
+        time: const TimeOfDay(hour: 15, minute: 30),
+      ));
+
+      await tester.tap(find.text('Open picker'));
+      await tester.pumpAndSettle();
+      await tester.enterText(input, '25.11.20277');
+      final unfinished = tester.widget<EditableText>(input).controller.value;
+      format.value = AppDateFormat.yearMonthDay;
+      await tester.pumpAndSettle();
+      expect(tester.widget<EditableText>(input).controller.value, unfinished);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('picker-date-input')), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(result, isNull);
+    },
+  );
   testWidgets('time adjustments wrap midnight and invalid fields cannot save', (
     tester,
   ) async {

@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'support/test_app.dart';
 import 'package:pomodoist/config/providers.dart';
@@ -30,6 +34,84 @@ TaskItem item(String id, {List<String> needs = const []}) => TaskItem(
 );
 void main() {
   setUpAll(loadTestAppResources);
+  for (final platform in [
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+    TargetPlatform.macOS,
+  ]) {
+    for (final urgent in [false, true]) {
+      testWidgets('task menu toggles urgency on $platform from $urgent', (
+        tester,
+      ) async {
+        debugDefaultTargetPlatformOverride = platform;
+        try {
+          final task = item('Task');
+          final blocking = _Blocking();
+          await _pumpTaskMenu(tester, task, blocking, urgent: urgent);
+
+          expect(
+            find.byKey(const ValueKey('task-blocking-expand-Task')),
+            findsNothing,
+          );
+          expect(find.byIcon(LucideIcons.flame), findsNothing);
+          await _openTaskMenu(tester, platform);
+          expect(find.text('Existing action'), findsOneWidget);
+          expect(
+            find.byIcon(LucideIcons.check),
+            urgent ? findsOneWidget : findsNothing,
+          );
+          await tester.tap(find.text('Urgent for me'));
+          await tester.pumpAndSettle();
+          expect(blocking.urgentId, urgent ? null : task.id);
+          expect(blocking.urgentWrites, 1);
+          expect(tester.takeException(), isNull);
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
+      });
+    }
+  }
+  testWidgets('existing task menu remains available while policy loads', (
+    tester,
+  ) async {
+    await _pumpTaskMenu(
+      tester,
+      item('Task'),
+      _Blocking(),
+      policies: const Stream.empty(),
+    );
+    await _openTaskMenu(tester, TargetPlatform.macOS);
+    expect(find.text('Existing action'), findsOneWidget);
+    expect(find.text('Urgent for me'), findsNothing);
+  });
+  testWidgets('task menu stays open when blocking policy finishes loading', (
+    tester,
+  ) async {
+    final task = item('Task');
+    final policy = Completer<TaskBlockingPolicy>();
+    await _pumpTaskMenu(
+      tester,
+      task,
+      _Blocking(),
+      policies: policy.future.asStream(),
+    );
+    await _openTaskMenu(tester, TargetPlatform.macOS);
+    policy.complete(TaskBlockingPolicy(tasks: [task], actorId: 'me'));
+    await tester.pumpAndSettle();
+    expect(find.text('Existing action'), findsOneWidget);
+    expect(find.text('Urgent for me'), findsOneWidget);
+  });
+  testWidgets('urgency failure remains visible after the menu closes', (
+    tester,
+  ) async {
+    await _pumpTaskMenu(tester, item('Task'), _Blocking()..failUrgent = true);
+    await _openTaskMenu(tester, TargetPlatform.macOS);
+    await tester.tap(find.text('Urgent for me'));
+    await tester.pumpAndSettle();
+    expect(find.text('Existing action'), findsNothing);
+    expect(find.textContaining('unavailable'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'inline dependency, urgency and cascade controls dispatch changes',
     (tester) async {
@@ -179,6 +261,64 @@ void main() {
   );
 }
 
+Future<void> _pumpTaskMenu(
+  WidgetTester tester,
+  TaskItem task,
+  _Blocking blocking, {
+  bool urgent = false,
+  Stream<TaskBlockingPolicy>? policies,
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        taskBlockingRepositoryProvider.overrideWithValue(blocking),
+        taskBlockingConflictsProvider.overrideWith(
+          (_) => Stream.value(<String>{}),
+        ),
+        taskBlockingPolicyProvider.overrideWith(
+          (_) =>
+              policies ??
+              Stream.value(
+                TaskBlockingPolicy(
+                  tasks: [task],
+                  actorId: 'me',
+                  urgentSelections: {
+                    if (urgent)
+                      'personal': UrgentTaskSelection(taskId: task.id),
+                  },
+                ),
+              ),
+        ),
+      ],
+      child: MaterialApp(
+        builder: testAppBuilder,
+        home: Scaffold(
+          body: TaskBlockingControls(
+            task: task,
+            menuItems: [
+              ShadContextMenuItem(
+                onPressed: () {},
+                child: const Text('Existing action'),
+              ),
+            ],
+            child: const SizedBox(width: 300, height: 48, child: Text('Task')),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _openTaskMenu(WidgetTester tester, TargetPlatform platform) async {
+  if (platform == TargetPlatform.android || platform == TargetPlatform.iOS) {
+    await tester.longPress(find.text('Task'));
+  } else {
+    await tester.tap(find.text('Task'), buttons: kSecondaryMouseButton);
+  }
+  await tester.pumpAndSettle();
+}
+
 class _Tasks extends Fake implements TaskRepository {
   List<String>? needs;
   @override
@@ -191,6 +331,8 @@ class _Tasks extends Fake implements TaskRepository {
 class _Blocking extends Fake implements DriftTaskBlockingRepository {
   bool cascade = false;
   String? urgentId;
+  int urgentWrites = 0;
+  bool failUrgent = false;
   @override
   Future<Result<void>> setCascade(bool enabled) async {
     cascade = enabled;
@@ -203,6 +345,8 @@ class _Blocking extends Fake implements DriftTaskBlockingRepository {
     required bool urgent,
     bool repeatWithSeries = true,
   }) async {
+    urgentWrites++;
+    if (failUrgent) throw StateError('offline');
     urgentId = urgent ? task.id : null;
     return const Result.ok(null);
   }

@@ -12,11 +12,17 @@ bool usesCompactMobileLayout(BuildContext context) =>
 class CompactShellHeading extends InheritedWidget {
   const CompactShellHeading({
     required this.shown,
+    this.onMenuPressed,
     required super.child,
     super.key,
   });
 
   final bool shown;
+  final VoidCallback? onMenuPressed;
+
+  static VoidCallback? menuActionOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<CompactShellHeading>()
+      ?.onMenuPressed;
 
   static bool isShown(BuildContext context) =>
       context
@@ -26,5 +32,5 @@ class CompactShellHeading extends InheritedWidget {
 
   @override
   bool updateShouldNotify(CompactShellHeading oldWidget) =>
-      shown != oldWidget.shown;
+      shown != oldWidget.shown || onMenuPressed != oldWidget.onMenuPressed;
 }

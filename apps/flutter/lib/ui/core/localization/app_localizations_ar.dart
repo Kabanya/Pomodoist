@@ -1235,7 +1235,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addTask => 'إضافة مهمة';
 
   @override
-  String get quickAddHint => 'اسم المهمة غدا p2 #مشروع @وسم 2p';
+  String get quickAddHint => 'اسم المهمة غدا أ2 #مشروع @وسم 2ب';
 
   @override
   String couldNotAddTask(Object error) {
@@ -5035,6 +5035,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pickerDecrease => 'تقليل';
+
+  @override
+  String get taskStatusBlocked => 'محظورة';
+
+  @override
+  String get taskStatusUrgent => 'عاجلة';
 
   @override
   String get blockingControls => 'Dependencies and urgency';

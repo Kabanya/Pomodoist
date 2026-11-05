@@ -8,9 +8,61 @@ import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_text_controller.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
+import 'package:pomodoist/domain/models/settings/app_date_format.dart';
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 
 void main() {
   setUpAll(loadTestAppResources);
+  testWidgets(
+    'format changes rehighlight a retained draft without changing editing state',
+    (tester) async {
+      final format = ValueNotifier(AppDateFormat.dayMonthYear);
+      addTearDown(format.dispose);
+      final controller = QuickAddTextController()
+        ..value = const TextEditingValue(
+          text: 'Task 25.11.27',
+          selection: TextSelection.collapsed(offset: 9),
+          composing: TextRange(start: 5, end: 13),
+        );
+      addTearDown(controller.dispose);
+      final original = controller.value;
+      late TextSpan span;
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: testAppBuilder,
+          home: ValueListenableBuilder<AppDateFormat>(
+            valueListenable: format,
+            builder: (context, value, _) => AppDateFormatScope(
+              format: value,
+              child: Builder(
+                builder: (context) {
+                  span = controller.buildTextSpan(
+                    context: context,
+                    withComposing: true,
+                  );
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      List<String?> highlighted() => span.children!
+          .cast<TextSpan>()
+          .where((s) => s.style?.color != null)
+          .map((s) => s.text)
+          .toList();
+      expect(highlighted(), ['25.11.27']);
+      format.value = AppDateFormat.monthDayYear;
+      await tester.pump();
+      expect(highlighted(), isEmpty);
+      expect(controller.value, original);
+      format.value = AppDateFormat.yearMonthDay;
+      await tester.pump();
+      expect(highlighted(), ['25.11.27']);
+      expect(controller.value, original);
+    },
+  );
   testWidgets('quick-add input displays the shared effective hint', (
     tester,
   ) async {

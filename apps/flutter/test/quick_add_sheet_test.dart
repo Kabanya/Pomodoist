@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
@@ -12,6 +13,7 @@ import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_details.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_dialog.dart';
+import 'package:pomodoist/utils/clock.dart';
 
 import 'support/test_app.dart';
 
@@ -29,14 +31,33 @@ Future<void> _open(
   Brightness brightness = Brightness.dark,
   Locale locale = const Locale('en'),
   DateTime? defaultDate,
+  String location = '/inbox',
+  Clock? clock,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
   addTearDown(tester.view.reset);
+  final router = GoRouter(
+    initialLocation: location,
+    routes: [
+      GoRoute(
+        path: Uri.parse(location).path,
+        builder: (context, state) => Scaffold(
+          body: TextButton(
+            onPressed: () =>
+                showQuickAddDialog(context, defaultDate: defaultDate),
+            child: const Text('Open'),
+          ),
+        ),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        if (clock != null) clockProvider.overrideWithValue(clock),
         focusPresetsProvider.overrideWith((ref) => Stream.value([])),
         projectsProvider.overrideWith(
           (ref) => Stream.value(const <ProjectItem>[]),
@@ -45,7 +66,8 @@ Future<void> _open(
         if (saving)
           quickAddViewModelProvider.overrideWith2(_SavingQuickAdd.new),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
+        routerConfig: router,
         locale: locale,
         theme: brightness == Brightness.dark
             ? AppTheme.dark()
@@ -58,15 +80,6 @@ Future<void> _open(
             disableAnimations: reduceMotion,
           ),
           child: testAppBuilder(context, child),
-        ),
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => TextButton(
-              onPressed: () =>
-                  showQuickAddDialog(context, defaultDate: defaultDate),
-              child: const Text('Open'),
-            ),
-          ),
         ),
       ),
     ),
@@ -90,6 +103,56 @@ Future<void> _swipe(WidgetTester tester, Offset offset) async {
 
 void main() {
   setUpAll(loadTestAppResources);
+
+  for (final width in [390.0, 1000.0]) {
+    for (final (location, expected) in [
+      ('/today', DateTime(2026, 11, 6)),
+      ('/today?task=selected', DateTime(2026, 11, 6)),
+      ('/upcoming?date=2026-11-13', DateTime(2026, 11, 13)),
+      ('/upcoming?date=2024-02-29', DateTime(2024, 2, 29)),
+      ('/upcoming', DateTime(2026, 11, 6)),
+      ('/upcoming?date=2026-02-30', DateTime(2026, 11, 6)),
+      ('/upcoming?date=2026-13-01', DateTime(2026, 11, 6)),
+      ('/upcoming?date=2026-11-00', DateTime(2026, 11, 6)),
+      ('/upcoming?date=2026-1-3', DateTime(2026, 11, 6)),
+      ('/upcoming?date=invalid', DateTime(2026, 11, 6)),
+      ('/inbox', null),
+      ('/calendar?date=2026-11-13', null),
+    ]) {
+      testWidgets('Quick Add inherits date from $location at $width px', (
+        tester,
+      ) async {
+        await _open(
+          tester,
+          location: location,
+          size: Size(width, 900),
+          clock: FixedClock(DateTime(2026, 11, 6, 17, 45)),
+        );
+        expect(
+          tester
+              .widget<QuickAddComposer>(find.byType(QuickAddComposer))
+              .defaultDate,
+          expected,
+        );
+      });
+    }
+  }
+
+  testWidgets('explicit default date overrides the selected Upcoming day', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      location: '/upcoming?date=2026-11-13',
+      defaultDate: DateTime(2026, 11, 20),
+    );
+    expect(
+      tester
+          .widget<QuickAddComposer>(find.byType(QuickAddComposer))
+          .defaultDate,
+      DateTime(2026, 11, 20),
+    );
+  });
 
   testWidgets(
     'schedule menu saves one draft and time offsets keep the task date',

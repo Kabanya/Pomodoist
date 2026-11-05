@@ -1200,7 +1200,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addTask => 'タスクを追加';
 
   @override
-  String get quickAddHint => 'タスク名 明日 p2 #プロジェクト @ラベル 2p';
+  String get quickAddHint => 'タスク名 明日 優2 #プロジェクト @ラベル 2ポ';
 
   @override
   String couldNotAddTask(Object error) {
@@ -4955,6 +4955,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pickerDecrease => '減らす';
+
+  @override
+  String get taskStatusBlocked => 'ブロック中';
+
+  @override
+  String get taskStatusUrgent => '緊急';
 
   @override
   String get blockingControls => 'Dependencies and urgency';

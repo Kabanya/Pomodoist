@@ -8817,6 +8817,18 @@ abstract class AppLocalizations {
   /// **'Decrease'**
   String get pickerDecrease;
 
+  /// No description provided for @taskStatusBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get taskStatusBlocked;
+
+  /// No description provided for @taskStatusUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get taskStatusUrgent;
+
   /// No description provided for @blockingControls.
   ///
   /// In en, this message translates to:

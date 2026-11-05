@@ -30,13 +30,13 @@ void main() {
 
       expect(
         container.read(quickAddHintTextProvider),
-        'Название задачи завтра p2 #Проект @метка 2p',
+        'Название задачи завтра п2 #Проект @метка 2п',
       );
       await pumpEventQueue();
       container.invalidate(quickAddHintTextProvider);
       expect(
         container.read(quickAddHintTextProvider),
-        'Название задачи завтра p2 #Проект @метка 2p',
+        'Название задачи завтра п2 #Проект @метка 2п',
       );
     },
   );
@@ -61,7 +61,7 @@ void main() {
     container.invalidate(appLanguageProvider);
     expect(
       container.read(quickAddHintTextProvider),
-      'Название задачи завтра p2 #Проект @метка 2p',
+      'Название задачи завтра п2 #Проект @метка 2п',
     );
   });
 }
