@@ -59,7 +59,7 @@ final class ShellSidebarState {
 }
 
 final shellSidebarViewModelProvider = Provider<ShellSidebarState>((ref) {
-  final now = DateTime.now();
+  final now = ref.watch(clockProvider).now().toLocal();
   final today = DateTime(now.year, now.month, now.day);
   final profile = ref.watch(accountProfileProvider);
   final inbox = ref.watch(tasksByQueryProvider(const TaskQuery.inbox()));

@@ -216,8 +216,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text('3 Pomodoros'));
-        await tester.tap(find.text('3 Pomodoros'));
+        await tester.ensureVisible(find.byTooltip('3 Pomodoros'));
+        await tester.tap(find.byTooltip('3 Pomodoros'));
         await tester.pumpAndSettle();
         final taskInput = tester.widget<TextField>(
           find.byKey(const Key('sidebar-quick-add-input')),

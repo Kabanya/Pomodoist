@@ -6,6 +6,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     required this.onCancel,
     this.initialText = '',
     this.defaultDate,
+    this.dateInText = false,
     this.projectId,
     this.labelId,
     this.onVoiceModeChanged,
@@ -25,6 +26,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final VoidCallback onCancel;
   final String initialText;
   final DateTime? defaultDate;
+  final bool dateInText;
   final String? projectId;
   final String? labelId;
   final ValueChanged<bool>? onVoiceModeChanged;
@@ -57,6 +59,8 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
   final _hintsKey = GlobalKey();
   final _ownedInputFocus = FocusNode();
   FocusNode get _inputFocus => widget.focusNode ?? _ownedInputFocus;
+  DateTime? get _textDefaultDate =>
+      widget.dateInText ? null : widget.defaultDate;
   bool _editorOpen = false;
   Offset _headerDrag = Offset.zero;
   bool get _busy =>
@@ -209,7 +213,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     final details = QuickAddDetails(
       key: _detailsKey,
       controller: _controller,
-      defaultDate: widget.defaultDate,
+      defaultDate: _textDefaultDate,
       projectId: widget.projectId,
       enabled: !_busy,
       touchTargets: widget.compact,
@@ -582,7 +586,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
         context,
         title: _controller,
         description: _commentController,
-        defaultDate: widget.defaultDate,
+        defaultDate: _textDefaultDate,
         projectId: widget.projectId,
         labelId: widget.labelId,
       );
@@ -606,7 +610,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
     final task = await ref
         .read(quickAddViewModelProvider(_identity).notifier)
         .submit(
-          defaultDate: widget.defaultDate,
+          defaultDate: _textDefaultDate,
           projectId: widget.projectId,
           labelId: widget.labelId,
         );

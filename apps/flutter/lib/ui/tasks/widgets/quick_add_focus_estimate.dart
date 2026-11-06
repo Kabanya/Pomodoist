@@ -20,6 +20,7 @@ class QuickAddFocusEstimateChip extends StatefulWidget {
     this.touchTargets = false,
     this.desktop = false,
     this.iconsOnly = false,
+    this.toolbarBuilder,
   });
 
   final int? estimate;
@@ -29,6 +30,7 @@ class QuickAddFocusEstimateChip extends StatefulWidget {
   final bool touchTargets;
   final bool desktop;
   final bool iconsOnly;
+  final Widget Function(Widget trigger)? toolbarBuilder;
   final ValueChanged<int?> onChanged;
 
   @override
@@ -349,8 +351,20 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
     final label = widget.estimate == null
         ? l10n.quickAddFocusEstimate
         : l10n.quickAddEstimatedPomodoros(widget.estimate!);
-    if (_inline && _expanded) return _editor(context);
+    if (_inline && _expanded && widget.toolbarBuilder == null) {
+      return _editor(context);
+    }
     final trigger = _buildTrigger(context, label, foreground, style);
+    if (_inline && widget.toolbarBuilder != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          widget.toolbarBuilder!(trigger),
+          if (_expanded) _editor(context),
+        ],
+      );
+    }
     if (_inline) {
       return Align(alignment: AlignmentDirectional.centerStart, child: trigger);
     }
@@ -385,26 +399,30 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
     TextStyle style,
   ) {
     final colors = context.appColors;
+    final mobileIcon = widget.touchTargets && widget.iconsOnly;
+    final expanded = _inline ? _expanded : _popover.isOpen;
     return Tooltip(
       message: label,
       excludeFromSemantics: true,
       child: MergeSemantics(
         child: Semantics(
           label: widget.iconsOnly ? label : null,
-          expanded: _popover.isOpen,
+          expanded: expanded,
           child: ShadButton.outline(
             key: _trigger,
             focusNode: _triggerFocus,
             size: ShadButtonSize.sm,
             height: widget.touchTargets ? 48 : 40,
-            width: widget.iconsOnly ? 40 : null,
+            width: widget.iconsOnly ? (widget.touchTargets ? 48 : 40) : null,
             padding: widget.iconsOnly ? EdgeInsets.zero : null,
             enabled: widget.enabled,
             onPressed: widget.enabled ? _toggle : null,
             foregroundColor: foreground,
             hoverForegroundColor: foreground,
             pressedForegroundColor: foreground,
-            backgroundColor: style.backgroundColor,
+            backgroundColor: mobileIcon
+                ? colors.surfaceTint
+                : style.backgroundColor,
             hoverBackgroundColor: colors.quickAddBackground(
               foreground,
               emphasized: true,
@@ -415,16 +433,18 @@ class _QuickAddFocusEstimateChipState extends State<QuickAddFocusEstimateChip> {
             ),
             decoration: ShadDecoration(
               border: ShadBorder.all(
-                color: colors.quickAddBorder(
-                  foreground,
-                  active: _popover.isOpen,
-                ),
+                strokeAlign: mobileIcon ? BorderSide.strokeAlignOutside : null,
+                color: mobileIcon && !expanded
+                    ? colors.border
+                    : colors.quickAddBorder(foreground, active: expanded),
                 radius: BorderRadius.circular(8),
               ),
             ),
             leading: Icon(
               LucideIcons.timer,
-              size: widget.touchTargets || widget.desktop ? 18 : 14,
+              size: mobileIcon
+                  ? 22
+                  : (widget.touchTargets || widget.desktop ? 18 : 14),
             ),
             child: widget.iconsOnly
                 ? null

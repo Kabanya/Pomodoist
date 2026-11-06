@@ -10,8 +10,9 @@ keys = {key for key in base if not key.startswith('@')}
 for path in (root / 'apps/flutter/lib/ui/core/localization').glob('app_*.arb'):
     data = json.loads(path.read_text())
     if path.stem == 'app_pt_BR':
-        assert data['@@locale'] == 'pt_BR' and len(data) == 1, path
-        continue
+        assert data['@@locale'] == 'pt_BR', path
+        # Flutter inherits missing regional strings from the language catalog.
+        data = {**json.loads(path.with_name('app_pt.arb').read_text()), **data}
     assert {key for key in data if not key.startswith('@')} == keys, path
     for key in keys:
         assert isinstance(data[key], str) and data[key].strip(), (path, key)
@@ -23,7 +24,7 @@ for path in (root / 'apps/flutter/lib/ui/core/localization').glob('app_*.arb'):
             assert token in data[key], (path, key, token)
 watch = json.loads((root / 'apps/flutter/ios/PomodoistWatch/Localizable.xcstrings').read_text())['strings']
 for key, record in watch.items():
-    for locale in ['pt-BR', 'ja', 'ko']:
+    for locale in ['en', 'ru', 'de', 'es', 'fr', 'ar', 'zh', 'pt-BR', 'ja', 'ko']:
         assert record['localizations'][locale]['stringUnit']['value'].strip(), (key, locale)
 resources = root / 'apps/flutter/apple/Localization'
 native_sets = []

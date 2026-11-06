@@ -4866,46 +4866,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get taskStatusUrgent => '紧急';
 
   @override
-  String get blockingControls => 'Dependencies and urgency';
+  String get blockingControls => '依赖关系与紧急程度';
 
   @override
-  String get blockingUrgent => 'Urgent for me';
+  String get blockingUrgent => '对我而言很紧急';
 
   @override
-  String get blockingRepeat => 'Keep future occurrences urgent';
+  String get blockingRepeat => '将后续重复任务保持为紧急';
 
   @override
-  String get blockingCascade => 'Priority order';
+  String get blockingCascade => '优先级顺序';
 
   @override
-  String get blockingSearch => 'Find a prerequisite';
+  String get blockingSearch => '查找前置任务';
 
   @override
-  String get blockingDependency => 'Waiting for prerequisites';
+  String get blockingDependency => '等待前置任务';
 
   @override
-  String get blockingPriority => 'Higher-priority tasks first';
+  String get blockingPriority => '优先处理高优先级任务';
 
   @override
-  String get blockingUrgentReason => 'An urgent task comes first';
+  String get blockingUrgentReason => '优先处理紧急任务';
 
   @override
-  String get blockingUnavailable =>
-      'This action is unavailable. Refresh and try again.';
+  String get blockingUnavailable => '此操作不可用。请刷新数据后重试。';
 
   @override
-  String get blockingDeleteWarning =>
-      'Deleting this task releases dependent tasks.';
+  String get blockingDeleteWarning => '删除此任务将解除依赖任务的阻塞。';
 
   @override
-  String get blockingNoMatches => 'No available prerequisites';
+  String get blockingNoMatches => '没有可用的前置任务';
 
   @override
   String get blockingSyncConflictDetails =>
-      'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.';
+      '由于此任务处于阻塞状态，服务器拒绝将其标记为完成。任务状态已恢复，累计专注时长已保留。';
 
   @override
-  String get blockingSyncConflict => 'Sync conflict';
+  String get blockingSyncConflict => '同步冲突';
 
   @override
   String get focusDuration => '时长';

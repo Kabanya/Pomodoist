@@ -13,7 +13,13 @@ import 'package:pomodoist/ui/core/themes/app_theme.dart';
 
 /// A persistent anchor for date/time panels, including inside manual overlays.
 class AppDateTimePicker extends StatefulWidget {
-  const AppDateTimePicker({required this.builder, super.key});
+  const AppDateTimePicker({
+    required this.builder,
+    this.bottomAligned = false,
+    super.key,
+  });
+
+  final bool bottomAligned;
 
   final Widget Function(BuildContext context, AppDateTimePickerState picker)
   builder;
@@ -243,6 +249,7 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
       _geometry?.size ?? media.size,
       viewPadding: media.viewPadding,
       viewInsets: media.viewInsets,
+      bottomAligned: widget.bottomAligned,
     );
     // Include the popover's padding and border in the available rectangle.
     final width = math.max(1.0, math.min(_panelWidth - 26, space.width - 26));
@@ -258,7 +265,16 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
       groupId: _group,
       // Start inside the chosen visible area: its top stays valid even when
       // calendar rows, text scale, or validation messages change the height.
-      anchor: ShadGlobalAnchor(Offset(centerX, space.top)),
+      anchor: widget.bottomAligned
+          ? ShadAnchor(
+              childAlignment: Alignment.bottomCenter,
+              overlayAlignment: Alignment.topLeft,
+              offset: Offset(
+                space.center.dx - anchor.left,
+                space.bottom - anchor.top,
+              ),
+            )
+          : ShadGlobalAnchor(Offset(centerX, space.top)),
       padding: const EdgeInsets.all(12),
       decoration: ShadDecoration(
         color: colors.surface,
@@ -288,12 +304,13 @@ class AppDateTimePickerState extends State<AppDateTimePicker> {
   }
 }
 
-/// Chooses a visible rectangle above or below the trigger in overlay coordinates.
+/// Chooses safe overlay bounds, using the full visible area for bottom alignment.
 Rect pickerAvailableSpace(
   Rect anchor,
   Size viewport, {
   EdgeInsets viewPadding = EdgeInsets.zero,
   EdgeInsets viewInsets = EdgeInsets.zero,
+  bool bottomAligned = false,
 }) {
   final left = (math.max(viewPadding.left, viewInsets.left) + 12).clamp(
     0.0,
@@ -315,6 +332,7 @@ Rect pickerAvailableSpace(
       viewport.height - math.max(viewPadding.bottom, viewInsets.bottom) - 12,
     ),
   );
+  if (bottomAligned) return visible;
   final aboveBottom = (anchor.top - 8).clamp(visible.top, visible.bottom);
   final belowTop = (anchor.bottom + 8).clamp(visible.top, visible.bottom);
   final above = aboveBottom - visible.top;

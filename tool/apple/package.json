@@ -1,0 +1,11 @@
+{
+  "name": "pomodoist-store-assets",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "playwright": "1.63.0",
+    "sharp": "0.35.4"
+  }
+}

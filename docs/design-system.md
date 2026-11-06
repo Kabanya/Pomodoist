@@ -677,9 +677,10 @@ corners, positioned above software keyboard insets and inside system safe areas.
 Keep the centered panel handle and an explicit Close action at the trailing edge,
 without a visible heading or detailed-editor button. Retain the localized Add task name
 in route semantics. The large multiline field fills the width between the 20 px
-side insets. Use wrapping date, project and priority controls with 48 px touch
-targets. Show the short `P1`–`P4` priority label while retaining its localized
-accessible name.
+side insets. Use a compact icon-only metadata toolbar with 48 px square touch
+targets in this order: date, project, priority, Pomodoro estimate, Comment. Keep
+the priority flag centered without a visible `P1`–`P4` label; retain localized
+accessible names, current values and tooltips for all controls.
 Only the text field requests autofocus on opening, so typing can start with the
 software keyboard immediately; surrounding focus wrappers must not claim it.
 Keep the microphone and expanded Add button in a pinned 48 px action row; scroll
@@ -925,6 +926,14 @@ sidebar and keyboard shortcut at every width. An explicit caller default takes
 precedence over the screen context; a date in the task phrase overrides either.
 Other destinations and the separate Quick Add window keep their existing defaults.
 
+On Today and Upcoming, a new empty dialog draft contains that date as editable
+text, followed by a space with the caret at the end. Use the localized Today word
+for the current day and the existing ISO schedule token for other days. In this
+mode, text preview, creation and the detailed editor have no hidden date default:
+removing the token creates an undated task. Voice input retains the context date.
+Preserve caller-supplied nonempty text and open drafts across repeated opening,
+rebuilds and width changes; seed the text only when creating a new dialog.
+
 Every empty Quick Add input uses the same permanent, localized syntax example:
 `Task name tomorrow p2 #Project @label 2p`. Keep it independent of task history,
 subscription status and saved suggestions; it never triggers AI generation or
@@ -942,7 +951,8 @@ including localized digits. Menus continue to insert canonical `pN` / `Np` token
 Parsed date/time, project and priority chips edit recognized spans in the source
 phrase. Both `#` and `№` introduce project names, including quoted names, in
 parsing, highlighting, and autocomplete. The phrase is the only metadata state:
-clearing a token reveals the existing context defaults. Preview and creation use the same parser, configured
+clearing a token reveals the existing context defaults, except for the date seeded
+into Today/Upcoming dialog text as described above. Preview and creation use the same parser, configured
 duration and clock. Preserve IME composition, selection and unrelated tokens.
 Quoted metadata names remain literal during date normalization. Ready voice
 subtasks preview the project inherited from their parent's current phrase.
@@ -983,6 +993,15 @@ control use a stronger semantic border. Hover and press retain the semantic colo
 with a slightly stronger fill; disabled states retain the shared button behavior.
 Keep 8 px control corners, wrapping, and keyboard focus outlines. All five controls
 use the same height: 40 px on desktop and 48 px in touch forms.
+Below 820 px, touch forms use icon-only 48 px square controls with 22 px semantic
+icons, neutral `surfaceTint` fills, `border` outlines and 8 px corners. Distribute
+them across one row with at least 8 px gaps; wrap only when the containing form
+is too narrow to retain touch targets. Keep semantic colors on icons, stronger
+semantic outlines for open controls, and the Comment presence badge. This applies
+to the mobile sheet, inline forms and editable voice drafts including subtasks.
+Keep current values in localized tooltips and accessibility labels. The estimate
+trigger stays in the toolbar while its editor expands below the full toolbar;
+tapping it again collapses the editor without discarding the estimate.
 Apply this treatment to inline Quick Add, dialogs, the separate window and editable
 voice drafts including subtasks, using the existing shared components.
 
@@ -1042,6 +1061,11 @@ cancelled gestures do nothing; scrolling fields or metadata never moves the pane
 Tapping the handle also expands, with keyboard and accessibility support.
 Expansion fills the available viewport above the keyboard, respecting system
 safe areas, and retains the same composer, draft, selection, focus and comment.
+When a metadata menu dismisses the keyboard, preserve the compact sheet's top
+edge and the draft position by extending the sheet into the freed space below.
+Reverse that extension as the keyboard returns. Reset this geometry when the
+viewport changes or the sheet is reopened; hardware-keyboard sessions retain
+the natural content-sized sheet.
 Swipe down closes from either size through the existing cancel action; disable
 these actions while submitting. Use `AppMotion.panel` and `AppMotion.curve`,
 with no animation under Reduce Motion. Each new opening starts compact; desktop,
@@ -1154,6 +1178,13 @@ stays correct. Exclude safe insets and the on-screen keyboard, cap the complete
 panel size including decoration, and scroll content within that area. Recompute
 placement after scrolling or resizing; when neither side can hold a control,
 use the visible viewport with overlap rather than placing controls off-screen.
+Mobile Quick Add is the exception to automatic side selection: its date, project
+and priority menus, including the nested date/time picker, stay bottom-aligned
+within the safe viewport above the keyboard in both compact and expanded sheets.
+Use explicit bottom anchoring from the first frame so dismissing the keyboard
+cannot flip a menu from above the trigger to below it. Project search does not
+autofocus in touch forms; open the keyboard only when the user taps the search
+field. Desktop keyboard-first search behavior stays unchanged.
 
 ### Task row styles
 

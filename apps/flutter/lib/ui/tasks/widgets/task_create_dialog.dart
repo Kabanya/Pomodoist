@@ -25,24 +25,33 @@ Future<String?> showTaskCreateDialog(
   String? projectId,
   String? kanbanStatusId,
   String? labelId,
-}) => showDialog<String>(
-  context: context,
-  barrierDismissible: false,
-  animationStyle: AnimationStyle(
-    duration: AppMotion.duration(context, AppMotion.popup),
-    reverseDuration: AppMotion.duration(context, AppMotion.popup),
-    curve: AppMotion.curve,
-  ),
-  builder: (_) => _TaskCreateDialog(
-    title: title,
-    description: description,
-    priority: priority,
-    defaultDate: defaultDate,
-    projectId: projectId,
-    kanbanStatusId: kanbanStatusId,
-    labelId: labelId,
-  ),
-);
+}) async {
+  ModalRoute<String>? dialogRoute;
+  final result = await showDialog<String>(
+    context: context,
+    barrierDismissible: false,
+    animationStyle: AnimationStyle(
+      duration: AppMotion.duration(context, AppMotion.popup),
+      reverseDuration: AppMotion.duration(context, AppMotion.popup),
+      curve: AppMotion.curve,
+    ),
+    builder: (context) {
+      dialogRoute = ModalRoute.of<String>(context);
+      return _TaskCreateDialog(
+        title: title,
+        description: description,
+        priority: priority,
+        defaultDate: defaultDate,
+        projectId: projectId,
+        kanbanStatusId: kanbanStatusId,
+        labelId: labelId,
+      );
+    },
+  );
+  // Keep caller-owned controllers alive through the reverse transition.
+  await dialogRoute?.completed;
+  return result;
+}
 
 class _TaskCreateDialog extends ConsumerStatefulWidget {
   const _TaskCreateDialog({

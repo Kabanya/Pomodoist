@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pomodoist for Apple Watch</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 416px; height: 496px; margin: 0; overflow: hidden; }
+    body { color: #111; -webkit-font-smoothing: antialiased; }
+    .slide {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(138deg, #f25447 0%, #df382f 58%, #c82b27 100%);
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      width: 248px;
+      height: 248px;
+      right: -82px;
+      top: -106px;
+      border: 2px solid rgba(255, 255, 255, .14);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 42px rgba(255, 255, 255, .045),
+        0 0 0 84px rgba(255, 255, 255, .028);
+    }
+    .slide::after {
+      content: "";
+      position: absolute;
+      left: -18px;
+      bottom: -14px;
+      width: 180px;
+      height: 180px;
+      opacity: .1;
+      background-image: radial-gradient(#111 1.5px, transparent 1.5px);
+      background-size: 13px 13px;
+      mask-image: linear-gradient(35deg, #000, transparent 74%);
+    }
+    .copy {
+      position: absolute;
+      z-index: 3;
+      left: 20px;
+      top: 15px;
+      width: 376px;
+    }
+    h1 {
+      margin: 0;
+      font: 500 40px/.94 Georgia, "Times New Roman", serif;
+      letter-spacing: -.05em;
+      white-space: nowrap;
+    }
+    p {
+      margin: 7px 0 0;
+      font: 560 16px/1.15 -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif;
+      letter-spacing: -.018em;
+      opacity: .82;
+      white-space: nowrap;
+    }
+    .screen-shell {
+      position: absolute;
+      z-index: 2;
+      left: 36px;
+      top: 92px;
+      width: 344px;
+      aspect-ratio: 416 / 496;
+      border: 2px solid rgba(255, 255, 255, .4);
+      border-radius: 68px 68px 0 0;
+      background: #000;
+      box-shadow: 0 30px 62px rgba(78, 9, 8, .48);
+    }
+    .screen-shell::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: -7px 5px 5px -6px;
+      border-radius: 74px 74px 9px 9px;
+      background: rgba(255, 239, 218, .74);
+      transform: rotate(.7deg);
+    }
+    .screen-clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: 65px 65px 0 0;
+    }
+    .screenshot { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+  <main class="slide">
+    <div class="copy">
+      <h1 id="title"></h1>
+      <p id="subtitle"></p>
+    </div>
+    <div class="screen-shell">
+      <div class="screen-clip">
+        <img id="screenshot" class="screenshot" alt="">
+      </div>
+    </div>
+  </main>
+  
+</body>
+</html>

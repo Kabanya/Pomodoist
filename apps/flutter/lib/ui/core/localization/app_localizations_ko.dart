@@ -4976,46 +4976,44 @@ class AppLocalizationsKo extends AppLocalizations {
   String get taskStatusUrgent => '긴급';
 
   @override
-  String get blockingControls => 'Dependencies and urgency';
+  String get blockingControls => '의존 관계 및 긴급도';
 
   @override
-  String get blockingUrgent => 'Urgent for me';
+  String get blockingUrgent => '나에게 긴급한 작업';
 
   @override
-  String get blockingRepeat => 'Keep future occurrences urgent';
+  String get blockingRepeat => '다음 반복 작업도 긴급으로 유지';
 
   @override
-  String get blockingCascade => 'Priority order';
+  String get blockingCascade => '우선순위 순서';
 
   @override
-  String get blockingSearch => 'Find a prerequisite';
+  String get blockingSearch => '선행 작업 찾기';
 
   @override
-  String get blockingDependency => 'Waiting for prerequisites';
+  String get blockingDependency => '선행 작업 완료 대기 중';
 
   @override
-  String get blockingPriority => 'Higher-priority tasks first';
+  String get blockingPriority => '우선순위가 높은 작업부터';
 
   @override
-  String get blockingUrgentReason => 'An urgent task comes first';
+  String get blockingUrgentReason => '긴급한 작업 우선';
 
   @override
-  String get blockingUnavailable =>
-      'This action is unavailable. Refresh and try again.';
+  String get blockingUnavailable => '이 작업을 수행할 수 없습니다. 데이터를 새로고침한 후 다시 시도하세요.';
 
   @override
-  String get blockingDeleteWarning =>
-      'Deleting this task releases dependent tasks.';
+  String get blockingDeleteWarning => '이 작업을 삭제하면 의존하는 작업의 차단이 해제됩니다.';
 
   @override
-  String get blockingNoMatches => 'No available prerequisites';
+  String get blockingNoMatches => '사용 가능한 선행 작업이 없습니다';
 
   @override
   String get blockingSyncConflictDetails =>
-      'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.';
+      '이 작업이 차단되어 서버에서 완료 처리를 거부했습니다. 작업 상태가 복원되었으며 누적 집중 시간은 유지됩니다.';
 
   @override
-  String get blockingSyncConflict => 'Sync conflict';
+  String get blockingSyncConflict => '동기화 충돌';
 
   @override
   String get focusDuration => '시간';

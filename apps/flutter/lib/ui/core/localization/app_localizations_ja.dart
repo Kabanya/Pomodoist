@@ -4963,46 +4963,44 @@ class AppLocalizationsJa extends AppLocalizations {
   String get taskStatusUrgent => '緊急';
 
   @override
-  String get blockingControls => 'Dependencies and urgency';
+  String get blockingControls => '依存関係と緊急度';
 
   @override
-  String get blockingUrgent => 'Urgent for me';
+  String get blockingUrgent => '自分にとって緊急';
 
   @override
-  String get blockingRepeat => 'Keep future occurrences urgent';
+  String get blockingRepeat => '今後の繰り返しも緊急にする';
 
   @override
-  String get blockingCascade => 'Priority order';
+  String get blockingCascade => '優先度順';
 
   @override
-  String get blockingSearch => 'Find a prerequisite';
+  String get blockingSearch => '先行タスクを検索';
 
   @override
-  String get blockingDependency => 'Waiting for prerequisites';
+  String get blockingDependency => '先行タスクの完了待ち';
 
   @override
-  String get blockingPriority => 'Higher-priority tasks first';
+  String get blockingPriority => '優先度の高いタスクから';
 
   @override
-  String get blockingUrgentReason => 'An urgent task comes first';
+  String get blockingUrgentReason => '緊急タスクを優先';
 
   @override
-  String get blockingUnavailable =>
-      'This action is unavailable. Refresh and try again.';
+  String get blockingUnavailable => 'この操作は利用できません。データを更新して、もう一度お試しください。';
 
   @override
-  String get blockingDeleteWarning =>
-      'Deleting this task releases dependent tasks.';
+  String get blockingDeleteWarning => 'このタスクを削除すると、依存するタスクのブロックが解除されます。';
 
   @override
-  String get blockingNoMatches => 'No available prerequisites';
+  String get blockingNoMatches => '利用可能な先行タスクがありません';
 
   @override
   String get blockingSyncConflictDetails =>
-      'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.';
+      'このタスクはブロックされていたため、サーバーが完了を拒否しました。タスクの状態は復元され、蓄積された集中時間は保持されています。';
 
   @override
-  String get blockingSyncConflict => 'Sync conflict';
+  String get blockingSyncConflict => '同期の競合';
 
   @override
   String get focusDuration => '時間';

@@ -1,0 +1,82 @@
+{
+  "en-US": [
+    "Review the project plan",
+    "Prepare the presentation",
+    "Read a chapter",
+    "Plan the next week",
+    "Go for a walk",
+    "Drink water"
+  ],
+  "ru": [
+    "Проверить план проекта",
+    "Подготовить презентацию",
+    "Прочитать главу",
+    "Спланировать неделю",
+    "Прогуляться",
+    "Выпить воды"
+  ],
+  "de-DE": [
+    "Projektplan prüfen",
+    "Präsentation vorbereiten",
+    "Ein Kapitel lesen",
+    "Die nächste Woche planen",
+    "Spazieren gehen",
+    "Wasser trinken"
+  ],
+  "es-ES": [
+    "Revisar el plan del proyecto",
+    "Preparar la presentación",
+    "Leer un capítulo",
+    "Planificar la semana",
+    "Salir a caminar",
+    "Beber agua"
+  ],
+  "fr-FR": [
+    "Relire le plan du projet",
+    "Préparer la présentation",
+    "Lire un chapitre",
+    "Planifier la semaine",
+    "Faire une promenade",
+    "Boire de l’eau"
+  ],
+  "ar-SA": [
+    "مراجعة خطة المشروع",
+    "إعداد العرض التقديمي",
+    "قراءة فصل",
+    "التخطيط للأسبوع القادم",
+    "المشي",
+    "شرب الماء"
+  ],
+  "zh-Hans": [
+    "检查项目计划",
+    "准备演示文稿",
+    "阅读一章",
+    "规划下一周",
+    "散步",
+    "喝水"
+  ],
+  "pt-BR": [
+    "Revisar o plano do projeto",
+    "Preparar a apresentação",
+    "Ler um capítulo",
+    "Planejar a próxima semana",
+    "Fazer uma caminhada",
+    "Beber água"
+  ],
+  "ja": [
+    "プロジェクト計画を確認",
+    "プレゼンを準備",
+    "本を一章読む",
+    "来週の計画を立てる",
+    "散歩する",
+    "水を飲む"
+  ],
+  "ko": [
+    "프로젝트 계획 검토",
+    "발표 준비",
+    "책 한 장 읽기",
+    "다음 주 계획",
+    "산책하기",
+    "물 마시기"
+  ]
+}

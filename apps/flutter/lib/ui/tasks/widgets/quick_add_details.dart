@@ -15,6 +15,7 @@ import 'package:shadcn_ui/shadcn_ui.dart'
         ShadDecoration,
         ShadPopover,
         ShadGlobalAnchor,
+        ShadAnchor,
         ShadPopoverController;
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
@@ -63,6 +64,9 @@ class QuickAddDetails extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mobileToolbar =
+        touchTargets && !desktop && MediaQuery.sizeOf(context).width < 820;
+    final iconsOnly = this.iconsOnly || mobileToolbar;
     final viewState = ref.watch(quickAddDetailsViewModelProvider);
     final viewModel = ref.read(quickAddDetailsViewModelProvider.notifier);
     final allProjects = viewState.allProjects;
@@ -261,6 +265,157 @@ class QuickAddDetails extends ConsumerWidget {
         if (value.text.trim().isEmpty) return const SizedBox.shrink();
         final inlineEstimate =
             !desktop && MediaQuery.sizeOf(context).width < 820;
+        Widget toolbar(Widget estimateControl) => Wrap(
+          alignment: mobileToolbar
+              ? WrapAlignment.spaceBetween
+              : WrapAlignment.start,
+          spacing: touchTargets || desktop ? 8 : 4,
+          runSpacing: touchTargets || desktop ? 8 : 4,
+          children: [
+            AppDateTimePicker(
+              bottomAligned: mobileToolbar,
+              builder: (context, picker) => _DetailsMenu(
+                touchTargets: touchTargets,
+                desktop: desktop,
+                iconsOnly: iconsOnly,
+                focusNode: picker.focusNode,
+                label: scheduleLabel,
+                semanticLabel:
+                    '${context.l10n.taskSchedule}: ${timeLabel == null ? dateLabel : '$dateLabel · $timeLabel'}',
+                icon: LucideIcons.calendar,
+                color: colors.quickAddTokenColor(QuickAddTokenKind.date),
+                enabled: canEdit,
+                content: (close) => SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.pickerDateAndTime,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              scheduleLabel,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: colors.secondaryText),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _scheduleOption(
+                        context,
+                        context.l10n.timelinePickDate,
+                        LucideIcons.calendar,
+                        dateLabel,
+                        () {
+                          close();
+                          changeDate(picker);
+                        },
+                      ),
+                      _scheduleOption(
+                        context,
+                        context.l10n.quickAddChangeTime,
+                        LucideIcons.clock,
+                        timeLabel,
+                        () {
+                          close();
+                          changeTime(picker);
+                        },
+                      ),
+                      _scheduleOption(
+                        context,
+                        context.l10n.allDay,
+                        LucideIcons.sun,
+                        null,
+                        () {
+                          close();
+                          edit(
+                            quickAddSchedulingKinds,
+                            quickAddScheduleToken(
+                              TaskSchedule.allDay(
+                                currentSchedule()?.displayDate ??
+                                    viewModel.now(),
+                              ),
+                            ),
+                          );
+                        },
+                        checked: schedule?.isAllDay ?? false,
+                      ),
+                      const Divider(),
+                      _scheduleOption(
+                        context,
+                        context.l10n.quickAddResetDetails,
+                        LucideIcons.rotateCcw,
+                        null,
+                        () {
+                          close();
+                          edit(quickAddSchedulingKinds, null);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            _DetailsMenu(
+              touchTargets: touchTargets,
+              desktop: desktop,
+              iconsOnly: iconsOnly,
+              label: projectName,
+              semanticLabel: '${context.l10n.kanbanProjectField}: $projectName',
+              icon: LucideIcons.hash,
+              color: colors.quickAddTokenColor(QuickAddTokenKind.project),
+              enabled: canEdit,
+              content: (close) => QuickAddProjectPicker(
+                projects: projects,
+                selectedProjectId: selectedProjectId,
+                touchTargets: touchTargets,
+                projectToken: viewModel.projectToken,
+                onClose: close,
+                onSelected: (token) {
+                  close();
+                  edit({QuickAddTokenKind.project}, token);
+                },
+              ),
+            ),
+            _DetailsMenu(
+              touchTargets: touchTargets,
+              desktop: desktop,
+              iconsOnly: iconsOnly,
+              label: touchTargets || desktop
+                  ? 'P${parsed.priority ?? priority ?? 4}'
+                  : context.l10n.priority(parsed.priority ?? priority ?? 4),
+              semanticLabel: context.l10n.priority(
+                parsed.priority ?? priority ?? 4,
+              ),
+              icon: LucideIcons.flag,
+              color: colors.quickAddTokenColor(
+                QuickAddTokenKind.priority,
+                priority: parsed.priority ?? priority ?? 4,
+              ),
+              enabled: canEdit,
+              items: (close) => [
+                for (var number = 1; number <= 4; number++)
+                  _PriorityOption(
+                    priority: number,
+                    selected: number == (parsed.priority ?? priority ?? 4),
+                    onPressed: () {
+                      close();
+                      edit({QuickAddTokenKind.priority}, 'p$number');
+                    },
+                  ),
+              ],
+            ),
+            if (!inlineEstimate || mobileToolbar) estimateControl,
+            ?trailing,
+          ],
+        );
         final estimateControl = QuickAddFocusEstimateChip(
           estimate: estimate,
           manual: parsed.estimatedFocusIntervals != null,
@@ -269,178 +424,29 @@ class QuickAddDetails extends ConsumerWidget {
           touchTargets: touchTargets || inlineEstimate,
           desktop: desktop,
           iconsOnly: iconsOnly,
+          toolbarBuilder: mobileToolbar ? toolbar : null,
           onChanged: (count) => edit({
             QuickAddTokenKind.focusEstimate,
           }, count == null ? null : '${count}p'),
         );
         return Padding(
           padding: EdgeInsets.only(top: desktop ? 0 : 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: inlineEstimate
-                ? CrossAxisAlignment.stretch
-                : CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: touchTargets || desktop ? 8 : 4,
-                runSpacing: touchTargets || desktop ? 8 : 4,
-                children: [
-                  AppDateTimePicker(
-                    builder: (context, picker) => _DetailsMenu(
-                      touchTargets: touchTargets,
-                      desktop: desktop,
-                      iconsOnly: iconsOnly,
-                      focusNode: picker.focusNode,
-                      label: scheduleLabel,
-                      semanticLabel:
-                          '${context.l10n.taskSchedule}: ${timeLabel == null ? dateLabel : '$dateLabel · $timeLabel'}',
-                      icon: LucideIcons.calendar,
-                      color: colors.quickAddTokenColor(QuickAddTokenKind.date),
-                      enabled: canEdit,
-                      content: (close) => SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    context.l10n.pickerDateAndTime,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    scheduleLabel,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: colors.secondaryText),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _scheduleOption(
-                              context,
-                              context.l10n.timelinePickDate,
-                              LucideIcons.calendar,
-                              dateLabel,
-                              () {
-                                close();
-                                changeDate(picker);
-                              },
-                            ),
-                            _scheduleOption(
-                              context,
-                              context.l10n.quickAddChangeTime,
-                              LucideIcons.clock,
-                              timeLabel,
-                              () {
-                                close();
-                                changeTime(picker);
-                              },
-                            ),
-                            _scheduleOption(
-                              context,
-                              context.l10n.allDay,
-                              LucideIcons.sun,
-                              null,
-                              () {
-                                close();
-                                edit(
-                                  quickAddSchedulingKinds,
-                                  quickAddScheduleToken(
-                                    TaskSchedule.allDay(
-                                      currentSchedule()?.displayDate ??
-                                          viewModel.now(),
-                                    ),
-                                  ),
-                                );
-                              },
-                              checked: schedule?.isAllDay ?? false,
-                            ),
-                            const Divider(),
-                            _scheduleOption(
-                              context,
-                              context.l10n.quickAddResetDetails,
-                              LucideIcons.rotateCcw,
-                              null,
-                              () {
-                                close();
-                                edit(quickAddSchedulingKinds, null);
-                              },
-                            ),
-                          ],
-                        ),
+          child: mobileToolbar
+              ? estimateControl
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: inlineEstimate
+                      ? CrossAxisAlignment.stretch
+                      : CrossAxisAlignment.start,
+                  children: [
+                    toolbar(estimateControl),
+                    if (inlineEstimate)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: estimateControl,
                       ),
-                    ),
-                  ),
-                  _DetailsMenu(
-                    touchTargets: touchTargets,
-                    desktop: desktop,
-                    iconsOnly: iconsOnly,
-                    label: projectName,
-                    semanticLabel:
-                        '${context.l10n.kanbanProjectField}: $projectName',
-                    icon: LucideIcons.hash,
-                    color: colors.quickAddTokenColor(QuickAddTokenKind.project),
-                    enabled: canEdit,
-                    content: (close) => QuickAddProjectPicker(
-                      projects: projects,
-                      selectedProjectId: selectedProjectId,
-                      touchTargets: touchTargets,
-                      projectToken: viewModel.projectToken,
-                      onClose: close,
-                      onSelected: (token) {
-                        close();
-                        edit({QuickAddTokenKind.project}, token);
-                      },
-                    ),
-                  ),
-                  _DetailsMenu(
-                    touchTargets: touchTargets,
-                    desktop: desktop,
-                    iconsOnly: iconsOnly,
-                    label: touchTargets || desktop
-                        ? 'P${parsed.priority ?? priority ?? 4}'
-                        : context.l10n.priority(
-                            parsed.priority ?? priority ?? 4,
-                          ),
-                    semanticLabel: context.l10n.priority(
-                      parsed.priority ?? priority ?? 4,
-                    ),
-                    icon: LucideIcons.flag,
-                    color: colors.quickAddTokenColor(
-                      QuickAddTokenKind.priority,
-                      priority: parsed.priority ?? priority ?? 4,
-                    ),
-                    enabled: canEdit,
-                    items: (close) => [
-                      for (var number = 1; number <= 4; number++)
-                        _PriorityOption(
-                          priority: number,
-                          selected:
-                              number == (parsed.priority ?? priority ?? 4),
-                          onPressed: () {
-                            close();
-                            edit({QuickAddTokenKind.priority}, 'p$number');
-                          },
-                        ),
-                    ],
-                  ),
-                  if (!inlineEstimate) estimateControl,
-                  ?trailing,
-                ],
-              ),
-              if (inlineEstimate)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: estimateControl,
+                  ],
                 ),
-            ],
-          ),
         );
       },
     );
@@ -654,6 +660,7 @@ class _DetailsMenuState extends State<_DetailsMenu> {
   final _popover = ShadPopoverController();
   final _trigger = GlobalKey();
   final _triggerFocus = FocusNode();
+  Rect? _anchor;
 
   @override
   void initState() {
@@ -662,6 +669,13 @@ class _DetailsMenuState extends State<_DetailsMenu> {
   }
 
   void _onPopoverChanged() {
+    if (_popover.isOpen) {
+      // Read geometry on opening, after a responsive reparent has been laid out.
+      final box = _trigger.currentContext?.findRenderObject() as RenderBox?;
+      _anchor = box != null && box.hasSize
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+    }
     if (!_popover.isOpen && widget.content != null) {
       _triggerFocus.requestFocus();
     }
@@ -685,23 +699,24 @@ class _DetailsMenuState extends State<_DetailsMenu> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final mobileIcon = widget.touchTargets && widget.iconsOnly;
     final style = colors.quickAddStyle(widget.color);
     final foreground = style.color!;
     final label = widget.semanticLabel ?? widget.label;
     final media = MediaQuery.of(context);
-    final box = _trigger.currentContext?.findRenderObject() as RenderBox?;
-    final anchor = box != null && box.hasSize
-        ? box.localToGlobal(Offset.zero) & box.size
-        : Rect.fromCenter(
-            center: media.size.center(Offset.zero),
-            width: 1,
-            height: 1,
-          );
+    final anchor =
+        _anchor ??
+        Rect.fromCenter(
+          center: media.size.center(Offset.zero),
+          width: 1,
+          height: 1,
+        );
     final space = pickerAvailableSpace(
       anchor,
       media.size,
       viewPadding: media.viewPadding,
       viewInsets: media.viewInsets,
+      bottomAligned: mobileIcon,
     );
     final width = math.max(1.0, math.min(360.0, space.width - 26));
     final centerX = space.width <= width + 26
@@ -725,12 +740,26 @@ class _DetailsMenuState extends State<_DetailsMenu> {
                   radius: BorderRadius.circular(12),
                 ),
               ),
-        anchor: widget.content == null
+        anchor: mobileIcon
+            ? ShadAnchor(
+                childAlignment: Alignment.bottomCenter,
+                overlayAlignment: Alignment.topLeft,
+                offset: Offset(
+                  space.center.dx - anchor.left,
+                  space.bottom - anchor.top,
+                ),
+              )
+            : widget.content == null
             ? null
             : ShadGlobalAnchor(Offset(centerX, space.top)),
         popover: (context) => ConstrainedBox(
           constraints: widget.content == null
-              ? const BoxConstraints(maxHeight: 320, maxWidth: 280)
+              ? BoxConstraints(
+                  maxHeight: mobileIcon
+                      ? math.max(1.0, math.min(320.0, space.height - 26))
+                      : 320,
+                  maxWidth: mobileIcon ? math.min(280.0, width) : 280,
+                )
               : BoxConstraints(
                   maxWidth: width,
                   maxHeight: math.max(1.0, math.min(420.0, space.height - 26)),
@@ -754,14 +783,16 @@ class _DetailsMenuState extends State<_DetailsMenu> {
               focusNode: widget.focusNode ?? _triggerFocus,
               size: ShadButtonSize.sm,
               height: widget.touchTargets ? 48 : 40,
-              width: widget.iconsOnly ? 40 : null,
+              width: widget.iconsOnly ? (widget.touchTargets ? 48 : 40) : null,
               padding: widget.iconsOnly ? EdgeInsets.zero : null,
               enabled: widget.enabled,
               onPressed: widget.enabled ? _popover.toggle : null,
               foregroundColor: foreground,
               hoverForegroundColor: foreground,
               pressedForegroundColor: foreground,
-              backgroundColor: style.backgroundColor,
+              backgroundColor: mobileIcon
+                  ? colors.surfaceTint
+                  : style.backgroundColor,
               hoverBackgroundColor: colors.quickAddBackground(
                 foreground,
                 emphasized: true,
@@ -772,16 +803,23 @@ class _DetailsMenuState extends State<_DetailsMenu> {
               ),
               decoration: ShadDecoration(
                 border: ShadBorder.all(
-                  color: colors.quickAddBorder(
-                    foreground,
-                    active: _popover.isOpen,
-                  ),
+                  strokeAlign: mobileIcon
+                      ? BorderSide.strokeAlignOutside
+                      : null,
+                  color: mobileIcon && !_popover.isOpen
+                      ? colors.border
+                      : colors.quickAddBorder(
+                          foreground,
+                          active: _popover.isOpen,
+                        ),
                   radius: BorderRadius.circular(8),
                 ),
               ),
               leading: Icon(
                 widget.icon,
-                size: widget.touchTargets || widget.desktop ? 18 : 14,
+                size: mobileIcon
+                    ? 22
+                    : (widget.touchTargets || widget.desktop ? 18 : 14),
               ),
               trailing: widget.desktop && !widget.iconsOnly
                   ? const Icon(LucideIcons.chevronDown, size: 12)

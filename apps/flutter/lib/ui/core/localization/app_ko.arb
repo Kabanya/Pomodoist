@@ -2261,5 +2261,18 @@
   "focusExtendDuration": "+5분",
   "focusFinish": "완료",
   "taskStatusBlocked": "차단됨",
-  "taskStatusUrgent": "긴급"
+  "taskStatusUrgent": "긴급",
+  "blockingControls": "의존 관계 및 긴급도",
+  "blockingUrgent": "나에게 긴급한 작업",
+  "blockingRepeat": "다음 반복 작업도 긴급으로 유지",
+  "blockingCascade": "우선순위 순서",
+  "blockingSearch": "선행 작업 찾기",
+  "blockingDependency": "선행 작업 완료 대기 중",
+  "blockingPriority": "우선순위가 높은 작업부터",
+  "blockingUrgentReason": "긴급한 작업 우선",
+  "blockingUnavailable": "이 작업을 수행할 수 없습니다. 데이터를 새로고침한 후 다시 시도하세요.",
+  "blockingDeleteWarning": "이 작업을 삭제하면 의존하는 작업의 차단이 해제됩니다.",
+  "blockingNoMatches": "사용 가능한 선행 작업이 없습니다",
+  "blockingSyncConflictDetails": "이 작업이 차단되어 서버에서 완료 처리를 거부했습니다. 작업 상태가 복원되었으며 누적 집중 시간은 유지됩니다.",
+  "blockingSyncConflict": "동기화 충돌"
 }

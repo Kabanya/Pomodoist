@@ -1,0 +1,33 @@
+/* Continue the existing macOS Editorial Signal template. */
+* { box-sizing: border-box; }
+html, body { width: 2880px; height: 1800px; margin: 0; overflow: hidden; }
+body { color: #111; -webkit-font-smoothing: antialiased; }
+.slide { position: relative; width: 100%; height: 100%; overflow: hidden; background: linear-gradient(138deg, #f25447 0%, #df382f 58%, #c82b27 100%); }
+.slide::before { content: ""; position: absolute; width: 880px; height: 880px; right: -148px; top: -300px; border: 4px solid #ffffff24; border-radius: 50%; box-shadow: 0 0 0 144px #ffffff0b, 0 0 0 288px #ffffff07; }
+.copy { position: absolute; z-index: 2; left: 192px; top: 150px; width: 2496px; }
+h1 { margin: 0; white-space: nowrap; font: 500 196px/.94 Georgia, "Times New Roman", serif; letter-spacing: 0; }
+.subtitle { margin: 38px 0 0; font: 470 60px/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif; letter-spacing: 0; opacity: .78; }
+.screen { position: absolute; left: 144px; top: 620px; width: 2592px; height: 1626px; overflow: hidden; border-radius: 30px; outline: 2px solid #ffffff47; background: #0a0a0a; box-shadow: 0 76px 156px #4e09086b; }
+.screen img { position: absolute; display: block; width: 100%; height: auto; }
+.focus-inset { display: none; position: absolute; z-index: 3; top: 90px; right: 156px; width: 552px; margin: 0; padding: 12px; border: 2px solid #ffffff6b; border-radius: 34px; background: #ffefdaeb; box-shadow: 0 36px 86px #4e09086b; transform: rotate(1deg); }
+.slide[data-slide="focus"] .focus-inset { display: block; }
+.slide[data-slide="focus"] .copy { width: 1740px; }
+.focus-inset figcaption { margin: 10px 10px 20px; font: 600 32px/1.2 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -.02em; }
+.focus-inset img { display: block; width: 100%; border-radius: 22px; }
+.slide[data-slide="timeline"] .screen { top: 570px; }
+.slide[data-slide="timeline"] .screen img { top: -90px; }
+.slide[data-slide="priority"] .screen { left: 465px; top: 555px; width: 1950px; height: 1224px; border-radius: 24px; }
+.slide[data-slide="search"] .screen { left: 540px; top: 580px; width: 1800px; height: 1178px; border-radius: 32px; }
+.slide[data-slide="search"] .screen img { width: 4860px; left: -1530px; top: -936.5625px; }
+.slide[data-slide="reports"] .screen { left: 240px; top: 550px; width: 2400px; height: 1220px; }
+.slide[data-slide="reports"] .screen img { top: -66.6667px; }
+.slide[data-slide="voice"] .screen { left: 580px; top: 540px; width: 1720px; height: 1138px; border-radius: 30px; }
+.slide[data-slide="calendar"] .screen { left: 465px; top: 555px; width: 1950px; height: 1224px; }
+.slide[data-slide="calendar"] .screen img { inset: 0; height: 100%; object-fit: fill; }
+.calendar-dark { clip-path: inset(0 33.333333% 0 33.333333%); }
+.calendar-forest { position: absolute; inset: 0; clip-path: inset(0 0 0 66.666667%); isolation: isolate; }
+.slide[data-slide="calendar"] .screen .calendar-forest-background { object-fit: cover; filter: brightness(.45) saturate(.75); }
+.calendar-forest-ui { mix-blend-mode: screen; }
+.calendar-seam { position: absolute; top: 0; bottom: 0; width: 2px; background: #ffefda99; }
+.calendar-themes { position: absolute; left: 465px; top: 480px; width: 1950px; display: grid; grid-template-columns: repeat(3, 1fr); justify-items: center; }
+.calendar-themes span { padding: 12px 24px; border: 2px solid #11111126; border-radius: 999px; background: #ffefdad9; font: 600 28px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0; }

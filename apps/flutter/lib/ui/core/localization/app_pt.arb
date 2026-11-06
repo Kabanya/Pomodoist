@@ -2261,5 +2261,18 @@
   "focusExtendDuration": "+5 min",
   "focusFinish": "Concluir",
   "taskStatusBlocked": "Bloqueada",
-  "taskStatusUrgent": "Urgente"
+  "taskStatusUrgent": "Urgente",
+  "blockingControls": "Dependências e urgência",
+  "blockingUrgent": "Urgente para mim",
+  "blockingRepeat": "Manter as próximas ocorrências urgentes",
+  "blockingCascade": "Ordem de prioridade",
+  "blockingSearch": "Buscar um pré-requisito",
+  "blockingDependency": "Aguardando pré-requisitos",
+  "blockingPriority": "Tarefas de maior prioridade primeiro",
+  "blockingUrgentReason": "Uma tarefa urgente vem primeiro",
+  "blockingUnavailable": "Esta ação está indisponível. Atualize os dados e tente novamente.",
+  "blockingDeleteWarning": "Excluir esta tarefa desbloqueia as tarefas que dependem dela.",
+  "blockingNoMatches": "Nenhum pré-requisito disponível",
+  "blockingSyncConflictDetails": "O servidor recusou a conclusão porque esta tarefa estava bloqueada. O status foi restaurado e o tempo de foco acumulado foi preservado.",
+  "blockingSyncConflict": "Conflito de sincronização"
 }

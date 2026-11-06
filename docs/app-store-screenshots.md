@@ -8,9 +8,12 @@ of the new explorations. Keep the coral-red gradient (`#F25447`, `#DF382F`,
 The refreshed Mac series and editable HTML live in `design/app-store/macos/`.
 Export Mac compositions at 2880 x 1800.
 
-Phone work is deferred until new screenshots are supplied. Future iPhone
-headlines must use the full available canvas width inside safe margins rather
-than a narrow text column. No new phone series is part of the Mac refresh.
+The iPhone refresh now captures current production Flutter routes with populated
+English demo data. Keep headlines across the full available width inside safe
+margins. The deterministic recipe, tracked template copies and export command
+are documented in [the Apple workflow](localization/stores/apple/README.md).
+Run `make app-store-assets APP_STORE_ASSET_ARGS="--verify"` to regenerate all
+ten iPhone covers in all ten languages. App UI and task content default to English.
 
 Use automated rendering, text measurements, asset and PNG checks for this
 refresh. Do not perform manual or visual browser checks.

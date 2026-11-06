@@ -13,6 +13,8 @@ void main() {
     ('Report', DateTime(2026, 11, 13), DateTime(2026, 11, 13)),
     ('Report 2026-11-20', DateTime(2026, 11, 13), DateTime(2026, 11, 20)),
     ('Report', null, null),
+    ('Сегодня Report', null, DateTime(2026, 11, 6)),
+    ('2026-11-13 Report', null, DateTime(2026, 11, 13)),
   ]) {
     test('saves $input with default $defaultDate as an all-day task', () async {
       final db = AppDatabase(NativeDatabase.memory());
@@ -30,6 +32,13 @@ void main() {
         input,
         defaultDate: defaultDate,
       )).getOrThrow();
+      for (final dateOnly in ['Сегодня ', '2026-11-13 ']) {
+        await expectLater(
+          () async => (await useCase.createTask(dateOnly)).getOrThrow(),
+          throwsArgumentError,
+        );
+      }
+      expect(await db.select(db.tasks).get(), hasLength(1));
       final task = await repository.watchTask(id).first;
       expect(task, isNotNull);
       expect(task!.content, 'Report');

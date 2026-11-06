@@ -1650,5 +1650,18 @@
   "focusExtendDuration": "+٥ د",
   "focusFinish": "إنهاء",
   "taskStatusBlocked": "محظورة",
-  "taskStatusUrgent": "عاجلة"
+  "taskStatusUrgent": "عاجلة",
+  "blockingControls": "التبعيات والاستعجال",
+  "blockingUrgent": "عاجلة بالنسبة لي",
+  "blockingRepeat": "إبقاء التكرارات القادمة عاجلة",
+  "blockingCascade": "ترتيب الأولويات",
+  "blockingSearch": "البحث عن مهمة مسبقة",
+  "blockingDependency": "بانتظار المهام المسبقة",
+  "blockingPriority": "المهام ذات الأولوية الأعلى أولاً",
+  "blockingUrgentReason": "المهمة العاجلة أولاً",
+  "blockingUnavailable": "هذا الإجراء غير متاح. حدّث البيانات وحاول مرة أخرى.",
+  "blockingDeleteWarning": "حذف هذه المهمة يلغي حظر المهام التي تعتمد عليها.",
+  "blockingNoMatches": "لا توجد مهام مسبقة متاحة",
+  "blockingSyncConflictDetails": "رفض الخادم إكمال المهمة لأنها كانت محظورة. تمت استعادة حالتها مع الاحتفاظ بوقت التركيز المتراكم.",
+  "blockingSyncConflict": "تعارض في المزامنة"
 }

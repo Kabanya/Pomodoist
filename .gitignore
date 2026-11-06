@@ -213,7 +213,7 @@ release-assets/
 # relative SYMROOT can land a full build tree in a nested apps/flutter/ios/apps.
 apps/flutter/ios/apps/
 
-# Node tooling: apps/chrome-extension is the only npm package in the repo.
+# Node tooling (Chrome extension and local store-asset renderer).
 node_modules/
 
 # Public API contract.
@@ -238,6 +238,10 @@ docs/assets/app-store-grid-reference.png
 
 # Local agent scratch files
 **/.superpowers/
+
+# Reproducible store composition sources, not temporary design output.
+!tool/apple/templates/
+!tool/apple/templates/**
 
 # Local sound auditions and email bundles; shipping WAV assets stay tracked.
 /artifacts/focus-sounds/

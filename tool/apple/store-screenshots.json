@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "captureDate": "2026-11-06T10:30:00",
+  "timeZone": "Europe/Moscow",
+  "theme": "dark",
+  "locales": [
+    "en-US",
+    "ru",
+    "de-DE",
+    "es-ES",
+    "fr-FR",
+    "ar-SA",
+    "zh-Hans",
+    "pt-BR",
+    "ja",
+    "ko"
+  ],
+  "slides": [
+    [
+      "01-upcoming-planner",
+      "/today",
+      "navToday",
+      "calendarSubtitle"
+    ],
+    [
+      "02-focus",
+      "/focus",
+      "navFocus",
+      "focusIdleSubtitle"
+    ],
+    [
+      "03-calendar",
+      "/calendar",
+      "navCalendar",
+      "calendarSubtitle"
+    ],
+    [
+      "04-timeline",
+      "/timeline",
+      "navTimeline",
+      "timelineSubtitle"
+    ],
+    [
+      "05-priority-matrix",
+      "/priority-matrix",
+      "navPriorityMatrix",
+      "priorityMatrixSubtitle"
+    ],
+    [
+      "06-kanban",
+      "/kanban",
+      "navKanban",
+      "kanbanSubtitle"
+    ],
+    [
+      "07-quick-add",
+      "/today",
+      "themeBackgroundQuickAdd",
+      "screenInboxSubtitle"
+    ],
+    [
+      "08-habits",
+      "/habits",
+      "navHabits",
+      "habitsSubtitle"
+    ],
+    [
+      "09-search",
+      "/search",
+      "navSearch",
+      "searchEmptyDescription"
+    ],
+    [
+      "10-reports",
+      "/reports",
+      "navReports",
+      "reportsTimeByProject"
+    ]
+  ],
+  "devices": {
+    "iphone": {
+      "template": "iphone",
+      "canvas": [
+        1320,
+        2868
+      ],
+      "output": [
+        1206,
+        2622
+      ],
+      "scale": 3,
+      "safeArea": [
+        62,
+        34
+      ]
+    },
+    "ipad": {
+      "template": "ipad",
+      "canvas": [
+        2880,
+        2160
+      ],
+      "output": [
+        2732,
+        2048
+      ],
+      "scale": 2,
+      "safeArea": [
+        24,
+        20
+      ]
+    },
+    "mac": {
+      "template": "macos",
+      "canvas": [
+        2880,
+        1800
+      ],
+      "output": [
+        2880,
+        1800
+      ],
+      "scale": 2,
+      "safeArea": [
+        0,
+        0
+      ]
+    },
+    "watch": {
+      "template": "watch",
+      "canvas": [
+        416,
+        496
+      ],
+      "output": [
+        416,
+        496
+      ]
+    }
+  }
+}

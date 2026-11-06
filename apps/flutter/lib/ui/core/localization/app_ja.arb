@@ -2261,5 +2261,18 @@
   "focusExtendDuration": "+5分",
   "focusFinish": "完了",
   "taskStatusBlocked": "ブロック中",
-  "taskStatusUrgent": "緊急"
+  "taskStatusUrgent": "緊急",
+  "blockingControls": "依存関係と緊急度",
+  "blockingUrgent": "自分にとって緊急",
+  "blockingRepeat": "今後の繰り返しも緊急にする",
+  "blockingCascade": "優先度順",
+  "blockingSearch": "先行タスクを検索",
+  "blockingDependency": "先行タスクの完了待ち",
+  "blockingPriority": "優先度の高いタスクから",
+  "blockingUrgentReason": "緊急タスクを優先",
+  "blockingUnavailable": "この操作は利用できません。データを更新して、もう一度お試しください。",
+  "blockingDeleteWarning": "このタスクを削除すると、依存するタスクのブロックが解除されます。",
+  "blockingNoMatches": "利用可能な先行タスクがありません",
+  "blockingSyncConflictDetails": "このタスクはブロックされていたため、サーバーが完了を拒否しました。タスクの状態は復元され、蓄積された集中時間は保持されています。",
+  "blockingSyncConflict": "同期の競合"
 }

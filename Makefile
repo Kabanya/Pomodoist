@@ -889,6 +889,12 @@ telegram-production-deploy: setup-telegram deploy-production
 APP_STORE_MODE ?= check
 APP_STORE_VERSION ?= $(shell sed -n 's/^version: \([^+]*\)+.*/\1/p' "$(FLUTTER_ROOT)/pubspec.yaml")
 APP_STORE_SCREENSHOTS ?= design/app-store/localized
+
+# Local capture and cover generation; no store credentials or network mutations.
+APP_STORE_ASSET_ARGS ?=
+.PHONY: app-store-assets
+app-store-assets: flutter-build-link
+	python3 tool/apple/store_screenshots.py $(APP_STORE_ASSET_ARGS)
 APP_STORE_APPLY ?= 0
 
 .PHONY: app-store

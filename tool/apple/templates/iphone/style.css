@@ -1,0 +1,149 @@
+/* Adapted from the approved iPhone Editorial Signal template. */
+* { box-sizing: border-box; }
+    html, body { width: 1320px; height: 2868px; margin: 0; overflow: hidden; }
+    body { color: #111; -webkit-font-smoothing: antialiased; }
+    .slide {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(138deg, #f25447 0%, #df382f 58%, #c82b27 100%);
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      width: 850px;
+      height: 850px;
+      right: -250px;
+      top: -310px;
+      border: 4px solid rgba(255, 255, 255, .14);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 138px rgba(255, 255, 255, .045),
+        0 0 0 276px rgba(255, 255, 255, .028);
+    }
+    .slide::after {
+      content: "";
+      position: absolute;
+      left: -70px;
+      bottom: 0;
+      width: 520px;
+      height: 520px;
+      opacity: .09;
+      background-image: radial-gradient(#111 4px, transparent 4px);
+      background-size: 38px 38px;
+      mask-image: linear-gradient(35deg, #000, transparent 75%);
+    }
+    .copy {
+      position: absolute;
+      z-index: 3;
+      left: 80px;
+      top: 112px;
+      width: 1160px;
+    }
+    h1 {
+      margin: 0;
+      white-space: pre-line;
+      font: 500 142px/.94 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+    }
+    p {
+      max-width: 1120px;
+      margin: 34px 0 0;
+      white-space: pre-line;
+      font: 470 48px/1.22 -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif;
+      letter-spacing: 0;
+      opacity: .8;
+    }
+    .screen-shell {
+      position: absolute;
+      z-index: 2;
+      left: 168px;
+      top: 650px;
+      width: 984px;
+      aspect-ratio: 1170 / 2532;
+      border: 4px solid rgba(255, 255, 255, .38);
+      border-radius: 66px;
+      background: #160d0f;
+      box-shadow: 0 82px 170px rgba(78, 9, 8, .45);
+    }
+    .screen-shell::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: -24px 20px 20px -20px;
+      border-radius: 90px 90px 26px 26px;
+      background: rgba(255, 239, 218, .7);
+      transform: rotate(1deg);
+    }
+    .screen-clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: 61px;
+    }
+    .screenshot { position: absolute; inset: 0; display: block; width: 100%; }
+    .theme-dark { clip-path: inset(0 0 0 50%); }
+    .theme-labels { display: none; position: absolute; z-index: 4; top: 605px; left: 168px; width: 984px; justify-content: space-around; }
+    .theme-labels span, .voice-label { padding: 14px 30px; border-radius: 999px; background: #fff0dc; font: 600 34px/1 -apple-system, BlinkMacSystemFont, sans-serif; }
+    [data-slide="today"] .theme-labels { display: flex; }
+    [data-slide="today"] .screen-shell { top: 720px; }
+    [data-slide="today"] .screen-clip::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #fff0dc99; }
+    [data-slide="today"] h1 { font-size: 142px; }
+    [data-slide="upcoming"] h1 { font-size: 100px; }
+    .voice-label { position: absolute; z-index: 5; top: 1970px; right: 90px; }
+    .voice-inset { position: absolute; z-index: 5; right: 90px; top: 2055px; width: 680px; height: 551px; overflow: hidden; border-radius: 30px; outline: 2px solid #ffffff99; box-shadow: 0 30px 80px #0006; }
+    .voice-inset img { position: absolute; width: 740.78px; left: -30.39px; top: -642.01px; }
+
+/* Portrait adaptation of the macOS Editorial Signal compositions. */
+h1 { font-size: 142px; line-height: .98; }
+p { opacity: .85; }
+.screen-shell { left: 160px; top: 600px; width: 1000px; aspect-ratio: 1320 / 2868; }
+.screen-shell::before { border-radius: 72px; }
+.screen-clip { border-radius: 61px; }
+[data-slide="focus"] .screen-shell, [data-slide="priority"] .screen-shell,
+[data-slide="reports"] .screen-shell { left: 180px; top: 690px; width: 960px; }
+[data-slide="kanban"] .screen-shell { top: 690px; width: 960px; left:180px; }
+[data-slide="calendar"] .screen-shell { top: 650px; }
+[data-slide="calendar"] .theme-labels { display:flex; top:540px; left:160px; width:1000px; }
+.calendar-dark { clip-path: inset(0 0 0 33.333%); }
+.forest { position:absolute; inset:0; clip-path:inset(0 0 0 66.666%); overflow:hidden; background:#15352b; }
+.forest .forest-photo { position:absolute; width:100%; height:100%; object-fit:cover; opacity:.42; }
+.forest .screenshot { mix-blend-mode:screen; opacity:.92; }
+.seam { position:absolute; left:50%; top:0; bottom:0; width:3px; background:#fff0dc90; }
+.hero .copy { top:355px; }
+.hero h1 { font-size:119px; }
+.pomo-greeting { position:absolute; width:280px; height:288px; object-fit:contain; left:520px; top:30px; filter:drop-shadow(0 10px 14px #65171433); }
+.eyebrow { position:absolute; left:80px; top:150px; padding:18px 24px; border:2px solid #1113; background:#ffefdabf; border-radius:999px; font:700 27px/1 -apple-system,BlinkMacSystemFont,sans-serif; }
+.open-source { left:auto; right:80px; display:flex; align-items:center; gap:12px; }
+.open-source svg { width:30px; height:30px; }
+.hero .voice { position:absolute; left:100px; top:750px; width:1120px; height:350px; }
+.hero .voice img { width:100%; height:100%; object-fit:contain; }
+.flow { position:absolute; left:80px; top:1120px; width:1160px; display:grid; grid-template-columns:1fr 1.35fr 1fr; border-top:2px solid #1113; }
+.feature { padding-top:24px; text-align:center; font:650 28px/1.1 -apple-system,BlinkMacSystemFont,sans-serif; }
+.feature b { color:#fff0dc; margin-right:12px; font-weight:500; }
+.hero .screen-shell { top:1310px; left:300px; width:720px; }
+.hero .theme-labels { display:flex; top:1215px; left:300px; width:720px; }
+.voice-step { position:absolute; left:100px; margin:0; font:500 76px/1.05 Georgia,serif; }
+.voice-step.first { top:640px; }
+.voice-step.last { top:1420px; }
+.voice-art { position:absolute; left:100px; top:735px; width:1120px; height:650px; object-fit:contain; }
+.workflow-art { position:absolute; left:80px; top:1515px; width:1160px; height:1100px; object-fit:cover; }
+.voice-note { position:absolute; left:100px; top:2635px; margin:0; width:1120px; font-size:43px; }
+.organization-art { position:absolute; top:420px; width:320px; height:320px; overflow:hidden; }
+.organization-art img { position:absolute; top:0; width:960px; height:320px; max-width:none; }
+.organization-art.projects { left:140px; }
+.organization-art.projects img { left:-320px; }
+.organization-art.labels { left:860px; }
+.organization-art.labels img { left:-640px; }
+.side-info { position:absolute; top:740px; width:480px; text-align:center; border-top:2px solid #1113; }
+.side-info.projects { left:80px; }.side-info.labels { right:80px; }
+.info-title { margin:22px 0 0; font:500 60px/1.05 Georgia,serif; }
+.info-copy { margin:20px 0 0; font-size:34px; line-height:1.2; }
+.search-slide .screen-shell { top:1040px; left:250px; width:820px; }
+.search-info { position:absolute; left:80px; top:2675px; width:1160px; text-align:center; }
+.search-info .info-title { display:none; }.search-info .info-copy { font-size:38px; }
+
+.hero .feature { display:flex; gap:12px; align-items:center; justify-content:center; }
+.hero .index { color:#fff0dc; font-size:24px; }
+.search-slide .screen-shell { left:285px; width:750px; }

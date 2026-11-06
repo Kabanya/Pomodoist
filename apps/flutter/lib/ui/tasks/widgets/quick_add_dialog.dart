@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pomodoist/config/clock_provider.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/routing/route_date.dart';
+import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/themes/theme_background.dart';
 import 'package:pomodoist/ui/core/widgets/app_date_time_picker.dart';
 import 'package:pomodoist/ui/core/widgets/resizable_dialog.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart';
+import 'package:pomodoist/ui/tasks/view_models/quick_add_metadata_edit.dart';
 
 class _SidebarQuickAddDialog extends StatefulWidget {
   const _SidebarQuickAddDialog({
@@ -18,6 +21,7 @@ class _SidebarQuickAddDialog extends StatefulWidget {
     required this.onDisposed,
     required this.route,
     required this.initialText,
+    required this.dateInText,
     this.defaultDate,
     this.projectId,
     this.labelId,
@@ -28,6 +32,7 @@ class _SidebarQuickAddDialog extends StatefulWidget {
   final VoidCallback onDisposed;
   final ModalRoute<dynamic>? route;
   final String initialText;
+  final bool dateInText;
   final DateTime? defaultDate;
   final String? projectId;
   final String? labelId;
@@ -38,9 +43,14 @@ class _SidebarQuickAddDialog extends StatefulWidget {
 
 class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
   bool _voiceActive = false;
+  bool _editorActive = false;
   bool _commentExpanded = false;
   bool _expanded = false;
   double _compactHeight = 0;
+  Size? _viewportSize;
+  double _keyboardInset = 0;
+  double _lastKeyboardInset = 0;
+  double? _keyboardPanelHeight;
   final _panelKey = GlobalKey();
   bool _disposing = false;
   LocalHistoryEntry? _backEntry;
@@ -100,7 +110,34 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 820;
+    final media = MediaQuery.of(context);
+    final compact = media.size.width < 820;
+    if (_viewportSize != media.size || !compact) {
+      _viewportSize = media.size;
+      _keyboardInset = 0;
+      _lastKeyboardInset = 0;
+      _keyboardPanelHeight = null;
+    }
+    if (compact && !_voiceActive && !_editorActive) {
+      if (!_expanded &&
+          _lastKeyboardInset > 0 &&
+          _lastKeyboardInset == _keyboardInset) {
+        final panel =
+            _panelKey.currentContext?.findRenderObject() as RenderBox?;
+        if (panel != null && panel.hasSize) {
+          _keyboardPanelHeight = panel.size.height;
+        }
+      }
+      if (media.viewInsets.bottom > _keyboardInset) {
+        _keyboardInset = media.viewInsets.bottom;
+      }
+      _lastKeyboardInset = media.viewInsets.bottom;
+    }
+    // Menus dismiss the keyboard; grow below the draft instead of moving it down.
+    final dockedHeight =
+        _keyboardPanelHeight != null && media.viewInsets.bottom < _keyboardInset
+        ? _keyboardPanelHeight! + _keyboardInset - media.viewInsets.bottom
+        : null;
     final composer = QuickAddComposer(
       key: _composerKey,
       compact: compact,
@@ -115,19 +152,23 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
         });
       },
       initialText: widget.initialText,
+      dateInText: widget.dateInText,
       defaultDate: widget.defaultDate,
       projectId: widget.projectId,
       labelId: widget.labelId,
       onCompleted: widget.onClose,
       onCancel: widget.onClose,
       onVoiceSessionChanged: _setVoiceActive,
+      onEditorModeChanged: (active) async {
+        if (mounted) setState(() => _editorActive = active);
+      },
       onCommentExpandedChanged: (expanded) =>
           setState(() => _commentExpanded = expanded),
     );
     final dialog = ExcludeFocus(
-      excluding: _voiceActive,
+      excluding: _voiceActive || _editorActive,
       child: Offstage(
-        offstage: _voiceActive,
+        offstage: _voiceActive || _editorActive,
         child: Stack(
           children: [
             ModalBarrier(
@@ -160,7 +201,10 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
                                             (constraints.maxHeight -
                                                     _compactHeight) *
                                                 progress
-                                      : null,
+                                      : dockedHeight?.clamp(
+                                          0.0,
+                                          constraints.maxHeight,
+                                        ),
                                   child: child,
                                 ),
                                 child: Material(
@@ -208,7 +252,7 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
     if (Router.maybeOf(context) == null) return dialog;
     return BackButtonListener(
       onBackButtonPressed: () async {
-        if (_voiceActive) return false;
+        if (_voiceActive || _editorActive) return false;
         widget.onClose();
         return true;
       },
@@ -247,17 +291,25 @@ Future<void> showQuickAddDialog(
     existing.key.currentState?._setVoiceActive(false);
     return existing.closed;
   }
-  if (defaultDate == null &&
-      (location?.path == '/today' || location?.path == '/upcoming')) {
+  final dateScreen =
+      location?.path == '/today' || location?.path == '/upcoming';
+  final dateInText = dateScreen && initialText.isEmpty;
+  if (dateScreen) {
     final now = ProviderScope.containerOf(
       context,
       listen: false,
     ).read(clockProvider).now().toLocal();
-    defaultDate =
+    defaultDate ??=
         (location!.path == '/upcoming'
             ? parseRouteDate(location.queryParameters['date'])
             : null) ??
         DateUtils.dateOnly(now);
+    if (dateInText) {
+      final token = DateUtils.isSameDay(defaultDate, now)
+          ? context.l10n.today
+          : quickAddScheduleToken(TaskSchedule.allDay(defaultDate));
+      initialText = '$token ';
+    }
   }
   final completion = Completer<void>();
   final key = GlobalKey<_SidebarQuickAddDialogState>();
@@ -281,6 +333,7 @@ Future<void> showQuickAddDialog(
       onDisposed: () => close(remove: false),
       route: route,
       initialText: initialText,
+      dateInText: dateInText,
       defaultDate: defaultDate,
       projectId: projectId,
       labelId: labelId,

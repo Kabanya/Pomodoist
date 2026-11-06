@@ -1650,5 +1650,18 @@
   "focusExtendDuration": "+5 分钟",
   "focusFinish": "结束",
   "taskStatusBlocked": "已阻塞",
-  "taskStatusUrgent": "紧急"
+  "taskStatusUrgent": "紧急",
+  "blockingControls": "依赖关系与紧急程度",
+  "blockingUrgent": "对我而言很紧急",
+  "blockingRepeat": "将后续重复任务保持为紧急",
+  "blockingCascade": "优先级顺序",
+  "blockingSearch": "查找前置任务",
+  "blockingDependency": "等待前置任务",
+  "blockingPriority": "优先处理高优先级任务",
+  "blockingUrgentReason": "优先处理紧急任务",
+  "blockingUnavailable": "此操作不可用。请刷新数据后重试。",
+  "blockingDeleteWarning": "删除此任务将解除依赖任务的阻塞。",
+  "blockingNoMatches": "没有可用的前置任务",
+  "blockingSyncConflictDetails": "由于此任务处于阻塞状态，服务器拒绝将其标记为完成。任务状态已恢复，累计专注时长已保留。",
+  "blockingSyncConflict": "同步冲突"
 }

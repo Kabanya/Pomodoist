@@ -97,7 +97,7 @@ class _QuickAddProjectPickerState extends State<QuickAddProjectPicker> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: ShadInput(
                     controller: _search,
-                    autofocus: true,
+                    autofocus: !widget.touchTargets,
                     leading: Icon(
                       LucideIcons.search,
                       size: 20,

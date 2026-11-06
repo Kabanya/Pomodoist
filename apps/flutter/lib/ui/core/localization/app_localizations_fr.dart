@@ -5149,46 +5149,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get taskStatusUrgent => 'Urgente';
 
   @override
-  String get blockingControls => 'Dependencies and urgency';
+  String get blockingControls => 'Dépendances et urgence';
 
   @override
-  String get blockingUrgent => 'Urgent for me';
+  String get blockingUrgent => 'Urgente pour moi';
 
   @override
-  String get blockingRepeat => 'Keep future occurrences urgent';
+  String get blockingRepeat => 'Garder les prochaines occurrences urgentes';
 
   @override
-  String get blockingCascade => 'Priority order';
+  String get blockingCascade => 'Ordre de priorité';
 
   @override
-  String get blockingSearch => 'Find a prerequisite';
+  String get blockingSearch => 'Rechercher un prérequis';
 
   @override
-  String get blockingDependency => 'Waiting for prerequisites';
+  String get blockingDependency => 'En attente de prérequis';
 
   @override
-  String get blockingPriority => 'Higher-priority tasks first';
+  String get blockingPriority => 'Les tâches les plus prioritaires d’abord';
 
   @override
-  String get blockingUrgentReason => 'An urgent task comes first';
+  String get blockingUrgentReason => 'Une tâche urgente passe en premier';
 
   @override
   String get blockingUnavailable =>
-      'This action is unavailable. Refresh and try again.';
+      'Cette action est indisponible. Actualisez les données et réessayez.';
 
   @override
   String get blockingDeleteWarning =>
-      'Deleting this task releases dependent tasks.';
+      'Supprimer cette tâche débloque les tâches qui en dépendent.';
 
   @override
-  String get blockingNoMatches => 'No available prerequisites';
+  String get blockingNoMatches => 'Aucun prérequis disponible';
 
   @override
   String get blockingSyncConflictDetails =>
-      'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.';
+      'Le serveur a refusé la finalisation car cette tâche était bloquée. Son état a été rétabli et le temps de concentration cumulé est conservé.';
 
   @override
-  String get blockingSyncConflict => 'Sync conflict';
+  String get blockingSyncConflict => 'Conflit de synchronisation';
 
   @override
   String get focusDuration => 'Durée';

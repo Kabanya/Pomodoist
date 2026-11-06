@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:pomodoist/domain/models/settings/app_language.dart';
 import 'package:pomodoist/ui/core/localization/app_locale.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +15,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('every shipping language translates every template key', () {
+    final directory = Directory('lib/ui/core/localization');
+    Map<String, dynamic> catalog(String locale) =>
+        jsonDecode(File('${directory.path}/app_$locale.arb').readAsStringSync())
+            as Map<String, dynamic>;
+    final keys = catalog('en').keys.where((key) => !key.startsWith('@'));
+    for (final language in AppLanguage.values) {
+      final tag = language.languageTag;
+      if (tag == null) continue;
+      final translations = tag == 'pt-BR'
+          ? {...catalog('pt'), ...catalog('pt_BR')}
+          : catalog(tag);
+      expect(translations.keys, containsAll(keys), reason: tag);
+    }
+  });
   test(
     'each language survives preference reload, preserves auth callback and localizes channels',
     () async {

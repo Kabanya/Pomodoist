@@ -5043,46 +5043,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taskStatusUrgent => 'عاجلة';
 
   @override
-  String get blockingControls => 'Dependencies and urgency';
+  String get blockingControls => 'التبعيات والاستعجال';
 
   @override
-  String get blockingUrgent => 'Urgent for me';
+  String get blockingUrgent => 'عاجلة بالنسبة لي';
 
   @override
-  String get blockingRepeat => 'Keep future occurrences urgent';
+  String get blockingRepeat => 'إبقاء التكرارات القادمة عاجلة';
 
   @override
-  String get blockingCascade => 'Priority order';
+  String get blockingCascade => 'ترتيب الأولويات';
 
   @override
-  String get blockingSearch => 'Find a prerequisite';
+  String get blockingSearch => 'البحث عن مهمة مسبقة';
 
   @override
-  String get blockingDependency => 'Waiting for prerequisites';
+  String get blockingDependency => 'بانتظار المهام المسبقة';
 
   @override
-  String get blockingPriority => 'Higher-priority tasks first';
+  String get blockingPriority => 'المهام ذات الأولوية الأعلى أولاً';
 
   @override
-  String get blockingUrgentReason => 'An urgent task comes first';
+  String get blockingUrgentReason => 'المهمة العاجلة أولاً';
 
   @override
   String get blockingUnavailable =>
-      'This action is unavailable. Refresh and try again.';
+      'هذا الإجراء غير متاح. حدّث البيانات وحاول مرة أخرى.';
 
   @override
   String get blockingDeleteWarning =>
-      'Deleting this task releases dependent tasks.';
+      'حذف هذه المهمة يلغي حظر المهام التي تعتمد عليها.';
 
   @override
-  String get blockingNoMatches => 'No available prerequisites';
+  String get blockingNoMatches => 'لا توجد مهام مسبقة متاحة';
 
   @override
   String get blockingSyncConflictDetails =>
-      'The server rejected completion because this task was blocked. Its status has been restored; accumulated Focus is preserved.';
+      'رفض الخادم إكمال المهمة لأنها كانت محظورة. تمت استعادة حالتها مع الاحتفاظ بوقت التركيز المتراكم.';
 
   @override
-  String get blockingSyncConflict => 'Sync conflict';
+  String get blockingSyncConflict => 'تعارض في المزامنة';
 
   @override
   String get focusDuration => 'المدة';
