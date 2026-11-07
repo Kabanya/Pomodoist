@@ -1,5 +1,5 @@
 import 'package:pomodoist/ui/tasks/widgets/task_blocking_controls.dart';
-import 'package:pomodoist/config/task_blocking_dependencies.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_blocking_view_model.dart';
 import 'package:pomodoist/ui/tasks/view_models/task_list_view_model.dart'
     show taskListViewModelProvider;
 import 'package:pomodoist/ui/tasks/widgets/task_row_geometry.dart';

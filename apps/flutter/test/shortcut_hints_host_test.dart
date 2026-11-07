@@ -61,6 +61,8 @@ void main() {
           await tester.tap(find.text('Upcoming'));
         }
         await tester.pump();
+        await tester
+            .pump(); // Render the reset scheduled after the route builds.
         final navigationException = tester.takeException();
         expect(location, '/upcoming');
         final visibleAfterNavigation = tester

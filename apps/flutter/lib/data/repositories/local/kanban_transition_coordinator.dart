@@ -1,5 +1,5 @@
 import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
-import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
+import 'package:pomodoist/data/services/local/task_blocking_store.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -50,7 +50,7 @@ class KanbanTransitionCoordinator {
     await SharedAccess(_db).task(rootId);
     final rows = await _activeTaskRows();
     if (rows.any((r) => r.id == rootId && r.status != 'completed')) {
-      (await DriftTaskBlockingRepository(
+      (await TaskBlockingStore(
         _db,
         _syncQueue,
       ).policy(now: timestamp)).availability(rootId).requireCompletion();

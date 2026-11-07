@@ -11,8 +11,8 @@ import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/utils/result.dart';
 
-class DriftTaskBlockingRepository {
-  DriftTaskBlockingRepository(this.db, this.queue) {
+class TaskBlockingStore {
+  TaskBlockingStore(this.db, this.queue) {
     if (!_zonesReady) {
       tz_data.initializeTimeZones();
       _zonesReady = true;

@@ -611,7 +611,12 @@ void main() {
       activeInterval: _activeInterval(now),
       hasAccountPro: true,
     );
-    await tester.tap(find.text('Inbox'));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('mobile-bottom-navigation')),
+        matching: find.text('Inbox'),
+      ),
+    );
     await _pumpFrames(tester);
 
     expect(find.byKey(const Key('mini-focus-player-surface')), findsOneWidget);
@@ -632,11 +637,13 @@ void main() {
     );
     expect(find.text('Inbox task'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Voice quick add'));
+    await tester.tap(find.byKey(const Key('compact-add-task')));
+    await _pumpFrames(tester);
+    await tester.tap(find.byKey(const Key('sidebar-quick-add-voice')));
     await _pumpFrames(tester);
 
     expect(find.text('Voice add'), findsOneWidget);
-    await tester.tap(find.text('Focus'), warnIfMissed: false);
+    await tester.tap(find.byTooltip('Collapse voice panel'));
     await _pumpFrames(tester);
 
     expect(find.byKey(const Key('voice-mini-panel')), findsOneWidget);

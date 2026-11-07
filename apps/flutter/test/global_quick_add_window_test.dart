@@ -119,8 +119,9 @@ void main() {
           .read(appZoomProvider.notifier)
           .setPercent(zoom == 200 ? 100 : 200);
       await tester.pumpAndSettle();
-      await tester.runAsync(tester.binding.reassembleApplication);
+      final reassembled = tester.binding.reassembleApplication();
       await tester.pumpAndSettle();
+      await reassembled;
       expect(
         minimumHeight,
         zoom == 200 ? lessThan(oldMinimum) : greaterThan(oldMinimum),

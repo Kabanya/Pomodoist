@@ -118,6 +118,13 @@ class TaskItemViewModel extends Notifier<TaskItemState> {
     )).getOrThrow();
   }
 
+  Future<void> setPrerequisites(List<String> ids) async {
+    (await _tasks.updateTask(
+      task.id,
+      UpdateTaskPatch(prerequisiteIds: ids),
+    )).getOrThrow();
+  }
+
   Future<void> moveToDay(int offset) async {
     final now = ref.read(clockProvider).now().toLocal();
     final day = DateTime(

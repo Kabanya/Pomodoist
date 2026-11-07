@@ -304,12 +304,15 @@ class _ShortcutHintsScopeState extends State<ShortcutHintsScope> {
       host?.scopes.remove(this);
       host?.scopes.add(this);
     }
-    if (oldWidget.enabled != widget.enabled ||
+    final reset =
+        oldWidget.enabled != widget.enabled ||
         oldWidget.modal != widget.modal ||
-        oldWidget.identity != widget.identity) {
-      host?.reset();
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) => host?._sync());
+        oldWidget.identity != widget.identity;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (reset) host?.reset();
+      host?._sync();
+    });
   }
 
   @override

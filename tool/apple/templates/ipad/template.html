@@ -10,6 +10,54 @@
     <header class="copy"><h1 id="title"></h1><p class="subtitle" id="subtitle"></p></header>
     <div class="screen"><img id="screenshot" alt=""></div>
   </main>
-  
+  <script>
+    const slides = {
+      focus: {
+        title: "Pomodoro Focus",
+        subtitle: "Stay in rhythm with focused work intervals.",
+        image: "02-focus-dark.png"
+      },
+      timeline: {
+        title: "Timeline",
+        subtitle: "Give every task its time and place.",
+        image: "04-timeline-dark.png"
+      },
+      priority: {
+        title: "Priority Matrix",
+        subtitle: "Decide what matters before everything feels urgent.",
+        image: "05-priority-matrix-dark.png"
+      },
+      kanban: {
+        title: "Kanban Boards",
+        subtitle: "Move work from idea to done.",
+        image: "06-kanban-dark.png"
+      },
+      projects: {
+        title: "Projects and Labels",
+        subtitle: "Keep every goal and next step together.",
+        image: "08-projects-labels-dark.png"
+      },
+      search: {
+        title: "Instant Search",
+        subtitle: "Find a task. Start an action. Keep your flow.",
+        image: "09-search-dark.png"
+      },
+      reports: {
+        title: "Productivity Reports",
+        subtitle: "See where your time and focus go.",
+        image: "10-reports-dark.png"
+      }
+    };
+    const key = new URLSearchParams(location.search).get("slide") || "focus";
+    const slide = slides[key];
+    if (!slide) throw new Error(`Unknown slide: ${key}`);
+    document.querySelector(".slide").dataset.slide = key;
+    document.title = `Pomodoist — ${slide.title}`;
+    document.getElementById("title").textContent = slide.title;
+    document.getElementById("subtitle").textContent = slide.subtitle;
+    const screenshot = document.getElementById("screenshot");
+    screenshot.src = `../macos_new/screenshots/${slide.image}`;
+    screenshot.alt = `Actual Pomodoist ${slide.title} screenshot`;
+  </script>
 </body>
 </html>

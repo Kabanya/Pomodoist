@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Pomodoist — Your focus. Your style.</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .themes { position: absolute; z-index: 2; top: 530px; left: 0; width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; }
+  .themes span { padding: 16px 42px; border-radius: 999px; background: #fff0dc; font: 600 36px/1 -apple-system, BlinkMacSystemFont, sans-serif; }
+  .panorama { position: absolute; top: 650px; left: 0; width: 2880px; height: 1806.67px; }
+  .panorama img { position: absolute; top: 0; left: 0; width: 100%; }
+  .blue { clip-path: inset(0 50% 0 25%); }
+  .luna { clip-path: inset(0 25% 0 50%); }
+  .forest { clip-path: inset(0 0 0 75%); }
+  .seam { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff0dc80; }
+</style>
+<main class="slide">
+  <header class="copy"><h1>Your focus. Your style.</h1><p class="subtitle">Choose a theme. Make every color and background yours.</p></header>
+  <div class="themes"><span>Sepia</span><span>Blue</span><span>Luna</span><span>Forest</span></div>
+  <div class="panorama">
+    <img src="../macos_new/screenshots/03-today-01-sepia.png" alt="Today in Sepia">
+    <img class="blue" src="../macos_new/screenshots/03-today-02-blue.png" alt="The same Today screen in Blue">
+    <img class="luna" src="../macos_new/screenshots/03-today-03-luna.png" alt="The same Today screen with the Luna background">
+    <img class="forest" src="../macos_new/screenshots/03-today-04-forest.png" alt="The same Today screen with the Forest background">
+    <div class="seam" style="left:25%"></div><div class="seam" style="left:50%"></div><div class="seam" style="left:75%"></div>
+  </div>
+</main>
+</html>

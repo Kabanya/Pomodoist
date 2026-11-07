@@ -1,5 +1,5 @@
 import 'package:pomodoist/domain/models/tasks/local_completion_event.dart';
-import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
+import 'package:pomodoist/data/services/local/task_blocking_store.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:pomodoist/data/repositories/focus/focus_repository.dart';
 import 'dart:async';
@@ -289,7 +289,7 @@ class DriftFocusRepository implements FocusRepository {
     final projectId = input.projectId ?? task?.projectId;
 
     await ownerBoundTransaction(_db, _syncQueue, () async {
-      (await DriftTaskBlockingRepository(
+      (await TaskBlockingStore(
         _db,
         _syncQueue,
       ).policy(now: timestamp)).availability(input.taskId).requireFocus();
@@ -365,7 +365,7 @@ class DriftFocusRepository implements FocusRepository {
     final now = DateTime.now().toUtc();
     await ownerBoundTransaction(_db, _syncQueue, () async {
       if (interval.type == 'work') {
-        (await DriftTaskBlockingRepository(
+        (await TaskBlockingStore(
           _db,
           _syncQueue,
         ).policy(now: now)).availability(interval.taskId).requireFocus();
@@ -425,7 +425,7 @@ class DriftFocusRepository implements FocusRepository {
             interval.pausedTotalSeconds + (pausedDelta < 0 ? 0 : pausedDelta);
         await ownerBoundTransaction(_db, _syncQueue, () async {
           if (interval.type == 'work') {
-            (await DriftTaskBlockingRepository(_db, _syncQueue).policy(
+            (await TaskBlockingStore(_db, _syncQueue).policy(
               now: timestamp,
             )).availability(interval.taskId).requireFocus();
           }
@@ -462,7 +462,7 @@ class DriftFocusRepository implements FocusRepository {
         final timestamp = (now ?? DateTime.now()).toUtc();
         await ownerBoundTransaction(_db, _syncQueue, () async {
           if (interval.type == 'work') {
-            (await DriftTaskBlockingRepository(_db, _syncQueue).policy(
+            (await TaskBlockingStore(_db, _syncQueue).policy(
               now: timestamp,
             )).availability(interval.taskId).requireFocus();
           }
@@ -899,7 +899,7 @@ class DriftFocusRepository implements FocusRepository {
     final intervalId = _uuid.v4();
     if (type == 'work' &&
         status == 'running' &&
-        !(await DriftTaskBlockingRepository(
+        !(await TaskBlockingStore(
           _db,
           _syncQueue,
         ).policy(now: startedAt)).availability(run.taskId).canStartFocus) {

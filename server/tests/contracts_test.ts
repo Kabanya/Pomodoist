@@ -27,6 +27,8 @@ Deno.test('new shared migrations retain the hosted assembler naming contract', a
     '20261006160605_pomodoist_habit_icons.sql',
     '20261011222749_calendar_provider_connections.sql',
     '20261020092144_pomodoist_manual_focus_estimate.sql',
+    // Already applied in hosted production under this exact name.
+    '20261030132756_expose_api_v1_to_postgrest.sql',
   ]);
   for await (const entry of Deno.readDir(new URL('../supabase/migrations', import.meta.url))) {
     if (!entry.isFile || !entry.name.endsWith('.sql') || baseline.has(entry.name)) continue;

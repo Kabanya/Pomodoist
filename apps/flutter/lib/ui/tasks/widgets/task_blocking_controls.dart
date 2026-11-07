@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:pomodoist/config/providers.dart';
-import 'package:pomodoist/config/task_blocking_dependencies.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_item_view_model.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_blocking_view_model.dart';
 import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
@@ -41,7 +41,7 @@ class _TaskPriorityCascadeControlState
                   });
                   try {
                     (await ref
-                            .read(taskBlockingRepositoryProvider)
+                            .read(taskBlockingActionsProvider)
                             .setCascade(enabled))
                         .getOrThrow();
                   } catch (_) {
@@ -172,7 +172,7 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
                 : const Icon(LucideIcons.check, size: 18),
             onPressed: () => _change(() async {
               (await ref
-                      .read(taskBlockingRepositoryProvider)
+                      .read(taskBlockingActionsProvider)
                       .setUrgent(task, urgent: selected == null))
                   .getOrThrow();
             }),
@@ -264,7 +264,7 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
                     : (value) => _change(
                         () async =>
                             (await ref
-                                    .read(taskBlockingRepositoryProvider)
+                                    .read(taskBlockingActionsProvider)
                                     .setUrgent(task, urgent: value))
                                 .getOrThrow(),
                       ),
@@ -280,7 +280,7 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
                     : (value) => _change(
                         () async =>
                             (await ref
-                                    .read(taskBlockingRepositoryProvider)
+                                    .read(taskBlockingActionsProvider)
                                     .setUrgent(
                                       task,
                                       urgent: true,
@@ -314,19 +314,15 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
                         onPressed: busy
                             ? null
                             : () => _change(
-                                () async =>
-                                    (await ref
-                                            .read(taskRepositoryProvider)
-                                            .updateTask(
-                                              task.id,
-                                              UpdateTaskPatch(
-                                                prerequisiteIds: task
-                                                    .prerequisiteIds
-                                                    .where((p) => p != id)
-                                                    .toList(),
-                                              ),
-                                            ))
-                                        .getOrThrow(),
+                                () => ref
+                                    .read(
+                                      taskItemViewModelProvider(task).notifier,
+                                    )
+                                    .setPrerequisites(
+                                      task.prerequisiteIds
+                                          .where((p) => p != id)
+                                          .toList(),
+                                    ),
                               ),
                       ),
                   ],
@@ -343,19 +339,12 @@ class _TaskBlockingControlsState extends ConsumerState<TaskBlockingControls> {
                 onPressed: busy
                     ? null
                     : () => _change(
-                        () async =>
-                            (await ref
-                                    .read(taskRepositoryProvider)
-                                    .updateTask(
-                                      task.id,
-                                      UpdateTaskPatch(
-                                        prerequisiteIds: [
-                                          ...task.prerequisiteIds,
-                                          candidate.id,
-                                        ],
-                                      ),
-                                    ))
-                                .getOrThrow(),
+                        () => ref
+                            .read(taskItemViewModelProvider(task).notifier)
+                            .setPrerequisites([
+                              ...task.prerequisiteIds,
+                              candidate.id,
+                            ]),
                       ),
                 leading: const Icon(LucideIcons.plus, size: 16),
                 child: Text(

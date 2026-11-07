@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository_impl.dart';
-import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
+import 'package:pomodoist/data/services/local/task_blocking_store.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
 import 'package:pomodoist/data/services/local/outbox_service.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
@@ -83,7 +83,7 @@ void main() {
     () async {
       final a = await create('a');
       final b = await create('b', needs: [a]);
-      final blocking = DriftTaskBlockingRepository(db, queue);
+      final blocking = TaskBlockingStore(db, queue);
       final deleted = (await tasks.deleteTask(a)).getOrThrow();
       expect((await blocking.policy()).availability(b).canComplete, isTrue);
       (await tasks.restoreDeletedTasks(deleted)).getOrThrow();
@@ -95,7 +95,7 @@ void main() {
     () async {
       final id = await create('urgent');
       final other = await create('other');
-      final blocking = DriftTaskBlockingRepository(db, queue);
+      final blocking = TaskBlockingStore(db, queue);
       (await blocking.setUrgent(
         (await tasks.watchTask(id).first)!,
         urgent: true,
@@ -119,7 +119,7 @@ void main() {
       final a = await create('a');
       final b = await create('b', needs: [a]);
       final focus = DriftFocusRepository(db, queue, _Notifications());
-      final blocking = DriftTaskBlockingRepository(db, queue);
+      final blocking = TaskBlockingStore(db, queue);
       final now = DateTime.now().toUtc();
       (await blocking.setUrgent(
         (await tasks.watchTask(a).first)!,
@@ -170,7 +170,7 @@ void main() {
       (await focus.startRun(
         StartFocusRunInput(taskId: b, targetWorkIntervals: 2),
       )).getOrThrow();
-      (await DriftTaskBlockingRepository(db, queue).setUrgent(
+      (await TaskBlockingStore(db, queue).setUrgent(
         (await tasks.watchTask(a).first)!,
         urgent: true,
       )).getOrThrow();

@@ -242,6 +242,7 @@ docs/assets/app-store-grid-reference.png
 # Reproducible store composition sources, not temporary design output.
 !tool/apple/templates/
 !tool/apple/templates/**
+/tool/apple/templates/**/.DS_Store
 
 # Local sound auditions and email bundles; shipping WAV assets stay tracked.
 /artifacts/focus-sounds/

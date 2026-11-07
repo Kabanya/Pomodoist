@@ -148,6 +148,10 @@ void main() {
   testWidgets('Quick Add draft and focus survive task refresh and scroll', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final stream = StreamController<List<TaskItem>>();
     addTearDown(stream.close);
     final tasks = List.generate(40, (i) => CountedTask('$i'));

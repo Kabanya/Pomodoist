@@ -166,7 +166,7 @@ begin
  else
   if new.entity_type<>'task' then return null; end if;
   actor:=coalesce(nullif(current_setting('pomodoist.blocking_actor',true),'')::uuid,auth.uid());
-  if actor is null then select owner_id into actor from private.pomodoist_scopes where id=new.scope_id; end if;
+  if actor is null then select s.owner_id into actor from private.pomodoist_scopes s where s.id=new.scope_id; end if;
  end if;
  g:=private.pomodoist_blocking_graph(actor); prefs:=private.pomodoist_blocking_preferences(actor);
  if new.entity_type='task_blocking' then

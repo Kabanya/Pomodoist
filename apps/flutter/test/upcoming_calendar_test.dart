@@ -258,7 +258,7 @@ void main() {
       final selected = <DateTime>[];
       await _pumpCalendar(
         tester,
-        width: 759,
+        width: 760,
         today: today,
         scheduledCounts: {DateTime(2026, 12, 29): 1},
         onDateSelected: selected.add,
@@ -301,7 +301,7 @@ void main() {
 
       await _pumpCalendar(
         tester,
-        width: 759,
+        width: 760,
         today: today,
         selectedDate: DateTime(2026, 12, 29),
         scheduledCounts: {DateTime(2026, 12, 29): 1},

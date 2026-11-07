@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/providers.dart';
-import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
+import 'package:pomodoist/data/services/local/task_blocking_store.dart';
 import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
+import 'package:pomodoist/domain/models/tasks/task_models.dart';
 
 final taskBlockingRepositoryProvider = Provider(
-  (ref) => DriftTaskBlockingRepository(
+  (ref) => TaskBlockingStore(
     ref.watch(appDatabaseProvider),
     ref.watch(syncQueueRepositoryProvider),
   ),
@@ -39,17 +40,16 @@ final taskBlockingConflictsProvider = StreamProvider.autoDispose<Set<String>>((
       );
 });
 
-class InlineTaskDeleteRequests
-    extends Notifier<Map<String, Future<void> Function()>> {
-  @override
-  Map<String, Future<void> Function()> build() => {};
-  void request(String id, Future<void> Function() action) =>
-      state = {...state, id: action};
-  void clear(String id) => state = {...state}..remove(id);
-}
-
-final inlineTaskDeleteRequestsProvider =
-    NotifierProvider<
-      InlineTaskDeleteRequests,
-      Map<String, Future<void> Function()>
-    >(InlineTaskDeleteRequests.new);
+final taskBlockingActionsProvider = Provider((ref) {
+  final store = ref.watch(taskBlockingRepositoryProvider);
+  return (
+    setCascade: store.setCascade,
+    setUrgent:
+        (TaskItem task, {required bool urgent, bool repeatWithSeries = true}) =>
+            store.setUrgent(
+              task,
+              urgent: urgent,
+              repeatWithSeries: repeatWithSeries,
+            ),
+  );
+});

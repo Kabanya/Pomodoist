@@ -7,12 +7,14 @@ import 'package:flutter/services.dart';
 import 'support/test_app.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/data/repositories/tasks/task_repository.dart';
-import 'package:pomodoist/data/repositories/tasks/task_blocking_repository.dart';
+import 'package:pomodoist/data/services/local/task_blocking_store.dart';
 import 'package:pomodoist/utils/result.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/task_blocking_dependencies.dart';
+import 'package:pomodoist/ui/tasks/view_models/task_blocking_view_model.dart'
+    show inlineTaskDeleteRequestsProvider;
 import 'package:pomodoist/domain/models/tasks/task_blocking.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_blocking_controls.dart';
@@ -328,7 +330,7 @@ class _Tasks extends Fake implements TaskRepository {
   }
 }
 
-class _Blocking extends Fake implements DriftTaskBlockingRepository {
+class _Blocking extends Fake implements TaskBlockingStore {
   bool cascade = false;
   String? urgentId;
   int urgentWrites = 0;

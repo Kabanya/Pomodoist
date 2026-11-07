@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pomodoist — Upcoming Planner</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .copy { left: 140px; width: 1060px; }
+    .eyebrow { display: inline-block; margin-bottom: 44px; padding: 16px 24px; border: 2px solid #1111112e; border-radius: 999px; background: #ffefdaC7; font: 760 25px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: .11em; text-transform: uppercase; }
+    h1 { white-space: normal; font-size: 136px; }
+    .screen { left: 1240px; top: 480px; width: 1620px; height: 1016.25px; overflow: visible; border-radius: 34px; transform: rotate(-.8deg); }
+    .screen::before { content: ""; position: absolute; inset: -24px 20px 18px -20px; border-radius: 42px; background: #ffefdab8; transform: rotate(1.7deg); }
+    .screen-clip { position: absolute; inset: 0; overflow: hidden; border-radius: 30px; }
+    .dark { clip-path: inset(0 0 0 50%); }
+    .seam { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #f24a3f; }
+    .handle { position: absolute; left: 50%; top: 52%; width: 64px; height: 64px; border: 5px solid #f24a3f; border-radius: 50%; background: linear-gradient(90deg, white 50%, #0a0a0a 50%); transform: translate(-50%, -50%); }
+    .theme-label { position: absolute; padding: 12px 17px; border-radius: 999px; font: 760 20px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: .08em; }
+    .light-label { left: 24px; top: -78px; background: #ffefdae0; }
+    .dark-label { right: 24px; top: -78px; color: white; background: #171717db; }
+    .voice { position: absolute; left: 140px; top: 990px; width: 980px; height: 480px; }
+    .voice img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .flow { position: absolute; left: 140px; top: 1500px; width: 980px; display: grid; grid-template-columns: 240px 500px 240px; border-top: 2px solid #11111126; }
+    .feature { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 26px 0; font: 680 27px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0; }
+    .index { color: #ffefda; font-size: 22px; font-weight: 500; }
+    .copy, .copy *, .flow * { letter-spacing: 0; }
+    .open-source { position: absolute; top: 150px; right: 140px; display: inline-flex; align-items: center; gap: 12px; margin: 0; letter-spacing: 0; text-transform: none; transform: scale(1.4); transform-origin: top right; }
+    .open-source svg { width: 30px; height: 30px; flex: none; }
+    .pomo-greeting { position: absolute; z-index: 3; left: 50%; top: 48px; width: 350px; height: 340px; object-fit: contain; transform: translateX(-50%); filter: url(#pomo-outline) drop-shadow(0 14px 16px #65171433); }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="pomo-outline" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="expanded"/>
+        <feFlood flood-color="#111111" result="ink"/>
+        <feComposite in="ink" in2="expanded" operator="in" result="silhouette"/>
+        <feMerge><feMergeNode in="silhouette"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+  </svg>
+  <main class="slide">
+    <img class="pomo-greeting" src="../assets/pomo-greeting.png" alt="Pomo smiling and waving hello">
+    <div class="eyebrow open-source">
+      <!-- GitHub glyph from the installed Lucide icon set (ISC). -->
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2" fill="none"/></svg>
+      <span>Open Source</span>
+    </div>
+    <header class="copy">
+      <div class="eyebrow">Upcoming Planner</div>
+      <h1>Turn thoughts<br>into tasks —<br>and get them done</h1>
+    </header>
+    <div class="voice"><img src="../assets/voice-calendar-pomodoro-v2.png" alt="Sculpted microphone, calendar and tomato-shaped Pomodoro timer connected by an ivory audio ribbon"></div>
+    <div class="flow" aria-label="Voice input to Google Calendar to Pomodoro">
+      <div class="feature"><span class="index">01</span>Voice input</div>
+      <div class="feature"><span class="index">02</span>Google Calendar</div>
+      <div class="feature"><span class="index">03</span>Pomodoro</div>
+    </div>
+    <div class="screen"><div class="screen-clip">
+      <img src="screenshots/01-upcoming-planner-light.png" alt="Actual Pomodoist Upcoming Planner in light mode">
+      <img class="dark" src="screenshots/01-upcoming-planner-dark.png" alt="Actual Pomodoist Upcoming Planner in dark mode">
+      <div class="seam"></div><div class="handle"></div>
+    </div><div class="theme-label light-label">Light</div><div class="theme-label dark-label">Dark</div></div>
+  </main>
+</body>
+</html>

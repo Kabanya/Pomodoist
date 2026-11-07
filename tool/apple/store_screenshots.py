@@ -43,11 +43,13 @@ def generate(output, devices, locales, ui_locale):
     })
     rendered = json.loads((output / 'render-checks.json').read_text())
     rows = rendered['results']
-    assert len(rows) == len(devices) * len(locales) * len(CONFIG['slides'])
+    assert len(rows) == sum(len(CONFIG['decks'][device]) for device in devices) * len(locales)
     for row in rows:
         assert digest(output / row['file']) == row['sha256'], row['file']
         assert digest(output / row['source']) == row['sourceSha256'], row['source']
-    sources = sorted({row['source'] for row in rows})
+        for source in row['sources']:
+            assert digest(output / source['file']) == source['sha256'], source['file']
+    sources = sorted({source['file'] for row in rows for source in row['sources'] if source['file'].startswith('raw/')})
     provenance = {name: json.loads((output / name).with_suffix('.json').read_text())
                   for name in sources}
     source_paths = [ROOT / '.fvmrc', ROOT / 'apps/flutter/pubspec.lock',
@@ -58,7 +60,7 @@ def generate(output, devices, locales, ui_locale):
     source_paths += [path for path in TOOL.rglob('*') if path.is_file()
                      and 'node_modules' not in path.parts
                      and '__pycache__' not in path.parts
-                     and path.suffix in {'.py', '.json', '.cjs', '.html', '.css'}]
+                     and path.suffix in {'.py', '.json', '.cjs', '.html', '.css', '.png'}]
     source_hashes = {str(path.relative_to(ROOT)): digest(path) for path in sorted(source_paths)}
     fonts = [Path('/System/Library/Fonts/Supplemental/Georgia.ttf'),
              Path('/System/Library/Fonts/Helvetica.ttc'),

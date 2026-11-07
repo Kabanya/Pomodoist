@@ -1,6 +1,6 @@
 # Apple storefront release
 
-Current preparation status and upload restriction: [1.1.8 readiness](1.1.8-readiness.md).
+Current preparation and submission status: [1.1.8 readiness](1.1.8-readiness.md).
 
 Use the local macOS release workflow for Pomodoist's iOS and Mac App Store
 listings. It uses [asc](https://github.com/rorkai/App-Store-Connect-CLI) (tested
@@ -47,8 +47,9 @@ make app-store-assets APP_STORE_ASSET_ARGS="--verify"
 The default is ten current iPhone screens with English UI and meaningful English
 demo work, composed into 100 covers for all ten shipping languages. Outputs are
 under `output/app-store-screenshots/`: `index.html`, `covers.zip`, `manifest.json`,
-`raw/iphone/en-US/` and `iphone/<locale>/`. The cover text comes from the existing
-ARB translations. `--verify` captures and renders twice in separate temporary
+`raw/iphone/en-US/<theme>/` and `iphone/<locale>/`. Marketing copy and its ten
+translations come from `tool/apple/store-cover-copy.json`; navigation labels
+are not substitutes for the approved headlines. `--verify` captures and renders twice in separate temporary
 directories and requires identical PNG hashes and text provenance before
 replacing outputs. ZIP timestamps and ordering are fixed too.
 
@@ -56,15 +57,37 @@ replacing outputs. ZIP timestamps and ordering are fixed too.
 # Other Flutter platforms, also across all ten cover languages.
 make app-store-assets APP_STORE_ASSET_ARGS="--devices iphone,ipad,mac --verify"
 
-# App UI in each cover's language; demo task/project content stays English.
-make app-store-assets APP_STORE_ASSET_ARGS="--ui-locale localized --verify"
+# Mac UI in each cover's language; demo task/project content stays English.
+make app-store-assets APP_STORE_ASSET_ARGS="--devices mac --ui-locale localized --verify --output output/app-store-assets-mac"
 
 # A quick English-only check, written separately from the complete matrix.
 make app-store-assets APP_STORE_ASSET_ARGS="--locales en-US --output /tmp/pomodoist-english"
 ```
 
-`tool/apple/store-screenshots.json` owns locale order, slide routes, captions,
-dimensions, safe areas, the fixed capture date and timezone.
+`tool/apple/store-screenshots.json` owns locale order, capture routes, device
+decks, themes, dimensions, safe areas, the fixed capture date and timezone.
+Keep the approved compositions, illustrations, messages and order. Replace only
+app captures and translated copy; never flatten the deck into a generic layout.
+
+| Position | iPhone | Mac | iPad |
+| --- | --- | --- | --- |
+| 1 | Upcoming hero with Pomo | Upcoming hero with Pomo | Upcoming hero with voice inset |
+| 2 | Pomodoro Focus | Pomodoro Focus + menu bar | Pomodoro Focus |
+| 3 | Calendar | Calendar | Theme customization |
+| 4 | Timeline | Priority Matrix | Timeline |
+| 5 | Priority Matrix | Voice workflow | Kanban Boards |
+| 6 | Kanban Boards | Kanban Boards | Priority Matrix |
+| 7 | Voice workflow | Timeline | Voice workflow |
+| 8 | Habits | Habits | Instant Search |
+| 9 | Search | Search | Projects and Labels |
+| 10 | Productivity Reports | Productivity Reports | Productivity Reports |
+
+The tracked templates retain the original artwork and geometry. Existing voice
+workflow illustrations, iPad voice insets and the Mac menu-bar inset remain in
+English. New search-palette captures record their actual bounds instead of using
+crop coordinates from an older app window. Light/dark split captures and theme
+strips use separate production renders. The harness loads bundled Geist aliases
+used by the Shadcn calendar to prevent the test runner's rectangular Ahem glyphs.
 `tool/apple/seed_store_demo.py` owns the English demo workspace: four projects,
 36 tasks including subtasks and completed work, colored labels, Kanban states,
 five habits and 14 days of Focus/check-in history. Reports calculate their values
@@ -151,7 +174,8 @@ xcrun simctl bootstatus "$(cat build/localized-watch/simulator-id.txt)" -b
 python3 tool/apple/capture_watch_screenshots.py
 xcrun simctl shutdown "$(cat build/localized-watch/simulator-id.txt)"
 
-STORE_RENDER_DEVICES=watch STORE_UI_LOCALE=localized node tool/apple/render_localized_screenshots.cjs
+STORE_OUTPUT="$PWD/design/app-store/localized" STORE_RENDER_DEVICES=watch \
+  STORE_UI_LOCALE=localized node tool/apple/render_localized_screenshots.cjs
 ```
 
 The Watch renderer reuses the tracked Editorial Signal HTML template and the
@@ -186,7 +210,7 @@ make app-store APP_STORE_MODE=screenshots APP_STORE_APPLY=1
 make all-production-testflight
 
 # Attach the exact CFBundleVersion uploaded for this release.
-make app-store APP_STORE_MODE=attach APP_STORE_APPLY=1 APP_STORE_BUILD=132
+make app-store APP_STORE_MODE=attach APP_STORE_APPLY=1 APP_STORE_BUILD=133
 
 # Read back the version states and screenshots.
 make app-store APP_STORE_MODE=status

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Pomodoist — Speak your mind</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 2880px; height: 2160px; overflow: hidden; }
+  body { color: #111; -webkit-font-smoothing: antialiased; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  main { position: relative; width: 100%; height: 100%; overflow: hidden; background: linear-gradient(138deg, #f25447 0%, #df382f 58%, #c82b27 100%); }
+  main::before { content: ""; position: absolute; width: 880px; height: 880px; right: -148px; top: -300px; border: 4px solid #ffffff24; border-radius: 50%; box-shadow: 0 0 0 144px #ffffff0b, 0 0 0 288px #ffffff07; }
+  header { position: absolute; left: 192px; top: 150px; }
+  h1 { margin: 0; font: 500 196px/.94 Georgia, serif; letter-spacing: -.05em; }
+  header p { margin: 38px 0 0; font-size: 57px; line-height: 1.2; letter-spacing: -.018em; opacity: .78; }
+  .step { position: absolute; display: flex; align-items: center; gap: 20px; margin: 0; font-size: 42px; font-weight: 560; letter-spacing: -.025em; }
+  .step span { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: #ffe4cb; font-size: 29px; font-weight: 650; }
+  .shot { position: absolute; overflow: hidden; border-radius: 25px; box-shadow: 0 35px 80px #4e09084d; outline: 2px solid #ffffff35; background: #141414; }
+  .crop { position: absolute; overflow: hidden; transform-origin: top left; }
+  .crop img { position: absolute; max-width: none; width: 3456px; height: 2168px; }
+  .record { left: 144px; top: 770px; width: 1152px; height: 497px; }
+  .record .crop { width: 1280px; height: 552px; transform: scale(.9); }
+  .record img { left: -1088px; top: -1584px; }
+  .organize { left: 144px; top: 1470px; width: 1152px; height: 461px; border-radius: 22px; }
+  .organize .crop { width: 1196px; height: 478px; transform: scale(.9632107); }
+  .organize img { left: -1128px; top: -1522px; }
+  .review { left: 1936px; top: 690px; width: 800px; height: 1210px; border-radius: 21px; }
+  .review .crop { width: 1280px; height: 1936px; transform: scale(.625); }
+  .review img { left: -1088px; top: -200px; }
+  .payoff { position: absolute; left: 1360px; top: 1111px; width: 500px; text-align: center; }
+  .payoff p { margin: 0; font: 500 81px/1.06 Georgia, serif; letter-spacing: -.045em; }
+  .payoff small { display: block; margin-top: 30px; font-size: 31px; line-height: 1.35; opacity: .75; }
+  svg { position: absolute; inset: 0; width: 2880px; height: 2160px; pointer-events: none; }
+.shot .crop { position:absolute; inset:0; width:100%; height:100%; transform:none; } .shot .crop img { position:static; width:100%; height:100%; object-fit:contain; }
+</style>
+<main>
+  <header><h1>Speak your mind.</h1><p>Turn your voice into tasks. Review the details. Add them together.</p></header>
+  <svg viewBox="0 0 2880 2160" fill="none" aria-hidden="true">
+    <path d="M1120 1300 V1420 M1106 1406 L1120 1420 L1134 1406" stroke="#111" stroke-opacity=".55" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1326 1700 C1590 1700 1650 1580 1897 1580 M1877 1563 L1897 1580 L1877 1597" stroke="#ffe4cb" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <h2 class="step" style="left:144px;top:678px"><span>1</span> Speak naturally</h2>
+  <div class="shot record"><div class="crop"><img src="../assets/ipad-voice-recording.png" alt="Real Pomodoist screenshot: Voice add recording with Smart mode enabled."></div></div>
+  <h2 class="step" style="left:144px;top:1381px"><span>2</span> Let Pomodoist organize</h2>
+  <div class="shot organize"><div class="crop"><img src="../assets/ipad-voice-organizing.png" alt="Real Pomodoist screenshot: recorded speech being split into tasks."></div></div>
+  <div class="payoff"><p>One voice note.<br>Three clear tasks.</p><small>Your dates. Your priorities.<br>Your final say.</small></div>
+  <h2 class="step" style="left:1936px;top:600px"><span>3</span> Review &amp; add</h2>
+  <div class="shot review"><div class="crop"><img src="../assets/ipad-voice-review.png" alt="Real Pomodoist screenshot: three editable tasks with dates, priorities, and the Add 3 button."></div></div>
+</main>
+</html>

@@ -1,1 +1,14 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Pomodoist for iPhone</title><link rel="stylesheet" href="style.css"></head><body><main class="slide"><header class="copy"><h1></h1><p class="subtitle"></p></header><div class="theme-labels"><span>Light</span><span>Dark</span><span>Forest</span></div><div class="screen-shell"><div class="screen-clip"><img class="screenshot" alt="Actual Pomodoist on iPhone"></div></div></main></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Pomodoist for iPhone</title><link rel="stylesheet" href="style.css"></head><body><main class="slide"><header class="copy"><h1></h1><p class="subtitle"></p></header><div class="theme-labels"><span>Light</span><span>Dark</span><span>Forest</span></div><div class="screen-shell"><div class="screen-clip"><img class="screenshot" alt="Actual Pomodoist on iPhone"></div></div></main><script>
+const slides={
+focus:['Pomodoro\nFocus','Stay in rhythm with focused work intervals.','02-focus-dark'],
+calendar:['Calendar','See your schedule and make room for what matters.','03-calendar-light'],
+timeline:['Timeline','Give every task its time and place.','04-timeline-dark'],
+priority:['Priority\nMatrix','Decide what matters before everything feels urgent.','05-priority-matrix-dark'],
+kanban:['Kanban\nBoards','Move work from idea to done.','06-kanban-dark'],
+habits:['Habits','Keep your habits and daily work in one place.','08-habits-dark'],
+reports:['Productivity\nReports','See where your time and focus go.','10-reports-dark']};
+const key=new URLSearchParams(location.search).get('slide')||'focus',s=slides[key];if(!s)throw Error('Unknown slide');
+document.querySelector('.slide').dataset.slide=key;document.querySelector('h1').textContent=s[0];document.querySelector('.subtitle').textContent=s[1];
+const root='screenshots/20261023/';document.querySelector('.screenshot').src=root+s[2]+'.png';
+if(key==='calendar'){document.querySelector('.screen-clip').insertAdjacentHTML('beforeend',`<img class="screenshot calendar-dark" src="${root}03-calendar-dark.png" alt="The same Calendar in dark mode"><div class="forest"><img class="forest-photo" src="../assets/calendar-forest-background.png" alt="Illustrative forest background"><img class="screenshot" src="${root}03-calendar-dark.png" alt="Illustrative Forest composition using the native Calendar"></div>`);}
+</script></body></html>

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pomodoist/config/clock_provider.dart';
+import 'package:pomodoist/ui/tasks/view_models/quick_add_details_view_model.dart';
 import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/routing/route_date.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
@@ -298,7 +298,7 @@ Future<void> showQuickAddDialog(
     final now = ProviderScope.containerOf(
       context,
       listen: false,
-    ).read(clockProvider).now().toLocal();
+    ).read(quickAddNowProvider)().toLocal();
     defaultDate ??=
         (location!.path == '/upcoming'
             ? parseRouteDate(location.queryParameters['date'])

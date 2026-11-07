@@ -18,7 +18,7 @@
   "slides": [
     [
       "01-upcoming-planner",
-      "/today",
+      "/upcoming",
       "navToday",
       "calendarSubtitle"
     ],
@@ -53,9 +53,9 @@
       "kanbanSubtitle"
     ],
     [
-      "07-quick-add",
+      "07-voice-process",
       "/today",
-      "themeBackgroundQuickAdd",
+      "addTask",
       "screenInboxSubtitle"
     ],
     [
@@ -75,6 +75,18 @@
       "/reports",
       "navReports",
       "reportsTimeByProject"
+    ],
+    [
+      "11-projects-labels",
+      "/projects",
+      "navProjects",
+      "calendarSubtitle"
+    ],
+    [
+      "12-customization",
+      "/today",
+      "navToday",
+      "calendarSubtitle"
     ]
   ],
   "devices": {
@@ -137,5 +149,151 @@
         496
       ]
     }
+  },
+  "decks": {
+    "iphone": [
+      [
+        "01-upcoming-planner",
+        "hero.html"
+      ],
+      [
+        "02-focus",
+        "template.html?slide=focus"
+      ],
+      [
+        "03-calendar",
+        "template.html?slide=calendar"
+      ],
+      [
+        "04-timeline",
+        "template.html?slide=timeline"
+      ],
+      [
+        "05-priority-matrix",
+        "template.html?slide=priority"
+      ],
+      [
+        "06-kanban",
+        "template.html?slide=kanban"
+      ],
+      [
+        "07-voice-process",
+        "voice.html"
+      ],
+      [
+        "08-habits",
+        "template.html?slide=habits"
+      ],
+      [
+        "09-search",
+        "search.html"
+      ],
+      [
+        "10-reports",
+        "template.html?slide=reports"
+      ]
+    ],
+    "mac": [
+      [
+        "01-upcoming-planner",
+        "hero.html"
+      ],
+      [
+        "02-focus",
+        "template.html?slide=focus"
+      ],
+      [
+        "03-calendar",
+        "template.html?slide=calendar"
+      ],
+      [
+        "04-priority-matrix",
+        "template.html?slide=priority"
+      ],
+      [
+        "05-voice-process",
+        "voice.html"
+      ],
+      [
+        "06-kanban",
+        "template.html?slide=kanban"
+      ],
+      [
+        "07-timeline",
+        "template.html?slide=timeline"
+      ],
+      [
+        "08-habits",
+        "template.html?slide=habits"
+      ],
+      [
+        "09-search",
+        "search.html"
+      ],
+      [
+        "10-reports",
+        "template.html?slide=reports"
+      ]
+    ],
+    "ipad": [
+      [
+        "01-upcoming-planner",
+        "hero.html"
+      ],
+      [
+        "02-focus",
+        "template.html?slide=focus"
+      ],
+      [
+        "03-customization",
+        "customization.html"
+      ],
+      [
+        "04-timeline",
+        "template.html?slide=timeline"
+      ],
+      [
+        "05-kanban",
+        "template.html?slide=kanban"
+      ],
+      [
+        "06-priority-matrix",
+        "template.html?slide=priority"
+      ],
+      [
+        "07-voice-process",
+        "voice.html"
+      ],
+      [
+        "08-search",
+        "template.html?slide=search"
+      ],
+      [
+        "09-projects-labels",
+        "template.html?slide=projects"
+      ],
+      [
+        "10-reports",
+        "template.html?slide=reports"
+      ]
+    ]
+  },
+  "captureThemes": {
+    "iphone": [
+      "dark",
+      "light"
+    ],
+    "mac": [
+      "dark",
+      "light"
+    ],
+    "ipad": [
+      "dark",
+      "light",
+      "sepia",
+      "ocean",
+      "graphite",
+      "forest"
+    ]
   }
 }

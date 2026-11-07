@@ -29,6 +29,8 @@ typedef QuickAddDetailsState = ({
   DateTime day,
   FocusPresetItem? focusPreset,
 });
+final quickAddNowProvider = Provider((ref) => ref.watch(clockProvider).now);
+
 final quickAddDetailsViewModelProvider =
     NotifierProvider.autoDispose<
       QuickAddDetailsViewModel,

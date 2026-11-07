@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pomodoist — Upcoming Planner</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .copy { left: 140px; width: 1060px; }
+    .eyebrow { display: inline-block; margin-bottom: 44px; padding: 16px 24px; border: 2px solid #1111112e; border-radius: 999px; background: #ffefdaC7; font: 760 25px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: .11em; text-transform: uppercase; }
+    h1 { white-space: normal; font-size: 136px; }
+    .description { max-width: 1020px; margin-top: 46px; font: 470 42px/1.38 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -.018em; opacity: .84; }
+    .description strong { font-weight: 760; }
+    .screen { left: 1240px; top: 480px; width: 1620px; height: 1016.25px; overflow: visible; border-radius: 34px; transform: rotate(-.8deg); }
+    .screen::before { content: ""; position: absolute; inset: -24px 20px 18px -20px; border-radius: 42px; background: #ffefdab8; transform: rotate(1.7deg); }
+    .screen-clip { position: absolute; inset: 0; overflow: hidden; border-radius: 30px; }
+    .dark { clip-path: inset(0 0 0 50%); }
+    .seam { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #f24a3f; }
+    .handle { position: absolute; left: 50%; top: 52%; width: 64px; height: 64px; border: 5px solid #f24a3f; border-radius: 50%; background: linear-gradient(90deg, white 50%, #0a0a0a 50%); transform: translate(-50%, -50%); }
+    .theme-label { position: absolute; padding: 12px 17px; border-radius: 999px; font: 760 20px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: .08em; }
+    .light-label { left: 24px; top: -78px; background: #ffefdae0; }
+    .dark-label { right: 24px; top: -78px; color: white; background: #171717db; }
+    .voice { position: absolute; left: 140px; top: 990px; width: 980px; height: 422.625px; overflow: hidden; border-radius: 27px; outline: 2px solid #ffffff47; box-shadow: 0 32px 76px #4e09084d; }
+    .voice img { position: absolute; width: 2646px; height: 1659.875px; left: -833px; top: -1212.75px; }
+    .voice-caption { position: absolute; left: 144px; top: 897px; margin: 0; font: 530 40px/1.2 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -.02em; }
+    .flow { position: absolute; left: 140px; top: 1535px; display: flex; align-items: center; gap: 16px; }
+    .feature { display: flex; align-items: center; gap: 13px; padding: 19px 23px; border: 2px solid #11111126; border-radius: 999px; background: #fff2e0d6; font: 680 27px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -.015em; }
+    .index { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; color: #f24a3f; background: #111; font-size: 18px; }
+    .arrow { font: 500 36px/1 Georgia, serif; opacity: .6; }
+    .copy { width: 840px; }
+    h1 { font-size: 100px; }
+    .description { font-size: 38px; }
+    .screen { left: 1000px; top: 720px; width: 1860px; height: 1166.8px; }
+    .voice { top: 1100px; width: 760px; height: 327.75px; }
+    .voice img { position:static; width:100%; height:100%; object-fit:contain; }
+    .voice-caption { top: 1000px; }
+    .flow { top: 1970px; }
+  </style>
+</head>
+<body>
+  <main class="slide">
+    <header class="copy">
+      <div class="eyebrow">Upcoming Planner</div>
+      <h1>Turn thoughts<br>into tasks —<br>and get them done</h1>
+      <p class="description"><strong>Voice input</strong> creates tasks. Plan them in the <strong>Google Calendar</strong> you already use. Stay focused with <strong>Pomodoro</strong>.</p>
+    </header>
+    <p class="voice-caption">Say it before you forget it.</p>
+    <div class="voice"><img src="../assets/ipad-hero-voice.png" alt="Actual Pomodoist Voice add recording panel with Smart mode enabled"></div>
+    <div class="flow" aria-label="Voice input to Google Calendar to Pomodoro">
+      <div class="feature"><span class="index">01</span>Voice input</div><span class="arrow">→</span>
+      <div class="feature"><span class="index">02</span>Google Calendar</div><span class="arrow">→</span>
+      <div class="feature"><span class="index">03</span>Pomodoro</div>
+    </div>
+    <div class="screen"><div class="screen-clip">
+      <img src="../macos_new/screenshots/01-upcoming-planner-light.png" alt="Actual Pomodoist Upcoming Planner in light mode">
+      <img class="dark" src="../macos_new/screenshots/01-upcoming-planner-dark.png" alt="Actual Pomodoist Upcoming Planner in dark mode">
+      <div class="seam"></div><div class="handle"></div>
+    </div><div class="theme-label light-label">Light</div><div class="theme-label dark-label">Dark</div></div>
+  </main>
+</body>
+</html>

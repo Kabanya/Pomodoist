@@ -9,8 +9,86 @@
   <main class="slide">
     <header class="copy"><h1 id="title"></h1><p class="subtitle" id="subtitle"></p></header>
     <div class="screen"><img id="screenshot" alt=""></div>
-    <figure class="focus-inset"><figcaption>In your menu bar</figcaption><img src="screenshots/02-focusappleslidebar-pomodoro.png" alt="Actual macOS menu bar Pomodoro timer with playback controls and timer color options"></figure>
+    <figure class="focus-inset"><figcaption>In your menu bar</figcaption><img src="../assets/02-focusappleslidebar-pomodoro.png" alt="Actual macOS menu bar Pomodoro timer with playback controls and timer color options"></figure>
   </main>
-  
+  <script>
+    const slides = {
+      focus: {
+        title: "Pomodoro Focus",
+        subtitle: "Stay in rhythm with focused work intervals.",
+        image: "02-focus-dark.png"
+      },
+      calendar: {
+        title: "Calendar",
+        subtitle: "See your schedule and make room for what matters.",
+        image: "03-calendar-dark.png"
+      },
+      timeline: {
+        title: "Timeline",
+        subtitle: "Give every task its time and place.",
+        image: "04-timeline-dark.png"
+      },
+      priority: {
+        title: "Priority Matrix",
+        subtitle: "Decide what matters before everything feels urgent.",
+        image: "05-priority-matrix-dark.png"
+      },
+      kanban: {
+        title: "Kanban Boards",
+        subtitle: "Move work from idea to done.",
+        image: "06-kanban-dark.png"
+      },
+      voice: {
+        title: "Speak your mind",
+        subtitle: "Turn thoughts into tasks. Review the details.",
+        image: "07-voice-process-light-2.png"
+      },
+      habits: {
+        title: "Habits",
+        subtitle: "Keep your habits and daily work in one place.",
+        image: "08-habits-dark.png"
+      },
+      projects: {
+        title: "Projects and Labels",
+        subtitle: "Keep every goal and next step together.",
+        image: "x-projects-dark.png"
+      },
+      search: {
+        title: "Search",
+        subtitle: "Find a task. Start an action. Keep your flow.",
+        image: "09-search-dark.png"
+      },
+      reports: {
+        title: "Productivity Reports",
+        subtitle: "See where your time and focus go.",
+        image: "10-reports-dark.png"
+      }
+    };
+    const key = new URLSearchParams(location.search).get("slide") || "focus";
+    const slide = slides[key];
+    if (!slide) throw new Error(`Unknown slide: ${key}`);
+    document.querySelector(".slide").dataset.slide = key;
+    document.title = `Pomodoist — ${slide.title}`;
+    document.getElementById("title").textContent = slide.title;
+    document.getElementById("subtitle").textContent = slide.subtitle;
+    const screenshot = document.getElementById("screenshot");
+    screenshot.src = `screenshots/${slide.image}`;
+    screenshot.alt = `Actual Pomodoist ${slide.title} screenshot`;
+    if (key === "calendar") {
+      screenshot.src = "screenshots/03-calendar-light.png";
+      screenshot.alt = "Actual Pomodoist Calendar in light mode";
+      document.querySelector(".screen").insertAdjacentHTML("beforeend", `
+        <img class="calendar-dark" src="screenshots/03-calendar-dark.png" alt="Actual Pomodoist Calendar in dark mode">
+        <div class="calendar-forest">
+          <img class="calendar-forest-background" src="../assets/calendar-forest-background.png" alt="Evergreen forest background">
+          <img class="calendar-forest-ui" src="screenshots/03-calendar-dark.png" alt="Forest background preview composited with the real Calendar interface">
+        </div>
+        <div class="calendar-seam" style="left:33.333333%"></div>
+        <div class="calendar-seam" style="left:66.666667%"></div>
+      `);
+      document.querySelector(".slide").insertAdjacentHTML("beforeend", '<div class="calendar-themes"><span>Light</span><span>Dark</span><span>Forest</span></div>');
+    }
+    if (key !== "focus") document.querySelector(".focus-inset").remove();
+  </script>
 </body>
 </html>

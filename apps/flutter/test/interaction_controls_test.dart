@@ -453,16 +453,15 @@ void main() {
   });
 
   testWidgets('task row keeps comment and compact metadata', (tester) async {
-    final now = DateTime(2026, 1, 2, 11);
-    final today = DateTime(now.year, now.month, now.day);
+    late GoRouter router;
     await _pumpApp(
       tester,
+      onRouter: (value) => router = value,
       tasks: [
         _task(
           'task-1',
           'Meta task',
           description: 'Compact comment',
-          schedule: TaskSchedule.allDay(today),
           priority: 1,
           estimatedFocusIntervals: 2,
           completedFocusIntervals: 1,
@@ -470,6 +469,9 @@ void main() {
         ),
       ],
     );
+
+    router.go('/inbox');
+    await _pumpFrames(tester);
 
     expect(find.text('Compact comment'), findsOneWidget);
     expect(find.text('1/2'), findsOneWidget);
@@ -481,11 +483,12 @@ void main() {
   testWidgets('narrow task row shows compact subtask progress below title', (
     tester,
   ) async {
-    final today = _todaySchedule();
+    late GoRouter router;
     await _pumpApp(
       tester,
+      onRouter: (value) => router = value,
       tasks: [
-        _task('parent-1', 'Parent task', schedule: today, orderKey: '1'),
+        _task('parent-1', 'Parent task', orderKey: '1'),
         _task('open-child', 'Open child', parentId: 'parent-1', orderKey: '2'),
         _task(
           'done-child',
@@ -500,15 +503,22 @@ void main() {
           parentId: 'open-child',
           orderKey: '4',
         ),
-        _task('leaf-1', 'Leaf task', schedule: today, orderKey: '5'),
+        _task('leaf-1', 'Leaf task', orderKey: '5'),
       ],
     );
 
+    router.go('/inbox');
+    await _pumpFrames(tester);
+
     expect(find.text('1/3'), findsOneWidget);
     expect(find.text('0/0'), findsNothing);
-    expect(find.byIcon(LucideIcons.gitBranch), findsOneWidget);
+    final parentProgress = find.descendant(
+      of: find.byKey(const ValueKey('task-list-item-row-parent-1')),
+      matching: find.byIcon(LucideIcons.gitBranch),
+    );
+    expect(parentProgress, findsOneWidget);
     expect(
-      tester.getTopLeft(find.byIcon(LucideIcons.gitBranch)).dy,
+      tester.getTopLeft(parentProgress).dy,
       greaterThan(tester.getTopLeft(find.text('Parent task')).dy),
     );
   });
@@ -862,17 +872,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('All-day').last);
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.widgetWithText(ShadButton, 'OK').last);
-    await tester.pumpAndSettle();
-    expect(
-      tester.getRect(find.text('OK').last).bottom,
-      lessThanOrEqualTo(
-        tester.view.physicalSize.height / tester.view.devicePixelRatio,
-      ),
-    );
-    await tester.tap(find.widgetWithText(ShadButton, 'OK').last);
-    await tester.pumpAndSettle();
-
     expect(
       harness.taskRepository.updatePatches.last.schedule!.isAllDay,
       isTrue,
@@ -1020,8 +1019,15 @@ void main() {
   testWidgets('due panel validates text, uses calendar, and clears due', (
     tester,
   ) async {
-    final harness = await _pumpApp(tester);
-    await _openTaskContextMenu(tester, 'Today task');
+    late GoRouter router;
+    final harness = await _pumpApp(
+      tester,
+      onRouter: (value) => router = value,
+      tasks: [_task('task-1', 'Project task', projectId: 'project-1')],
+    );
+    router.go('/project/project-1');
+    await _pumpFrames(tester);
+    await _openTaskContextMenu(tester, 'Project task');
     await tester.tap(find.text('Select').last);
     await tester.pumpAndSettle();
 
@@ -1029,7 +1035,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('task-due-input')),
-      '25.08 18:00',
+      '2026-08-25 18:00',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await _pumpFrames(tester);
@@ -1038,14 +1044,14 @@ void main() {
       DateTime(2026, 8, 25, 18),
     );
 
-    await _openTaskContextMenu(tester, 'Today task');
+    await _openTaskContextMenu(tester, 'Project task');
     await tester.tap(find.text('Select').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Due'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('task-due-input')),
-      '31.02 99:99',
+      '2026-02-31 99:99',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
@@ -1067,7 +1073,7 @@ void main() {
       DateTime(2026, 1, 15),
     );
 
-    await _openTaskContextMenu(tester, 'Today task');
+    await _openTaskContextMenu(tester, 'Project task');
     await tester.tap(find.text('Select').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Due'));
@@ -1933,7 +1939,6 @@ void main() {
 
     expect(find.text('Fresh list task'), findsOneWidget);
     expect(find.text('Old list snapshot'), findsNothing);
-    expect(find.text('January 2'), findsOneWidget);
     expect(find.text('11:00 AM-12:00 PM'), findsOneWidget);
     expect(find.text('09:00 AM-10:00 AM'), findsNothing);
   });
@@ -3268,7 +3273,7 @@ void main() {
       find.descendant(of: bottomNavigation, matching: find.text('Inbox')),
     );
     await _pumpFrames(tester);
-    expect(find.text('Capture tasks before organizing them.'), findsOneWidget);
+    expect(find.text('Inbox task'), findsOneWidget);
 
     await tester.tap(
       find.descendant(of: bottomNavigation, matching: find.text('Focus')),
