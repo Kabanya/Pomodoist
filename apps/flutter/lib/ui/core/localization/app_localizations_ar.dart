@@ -2678,6 +2678,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeColorOnError => 'النص على تعبئة الخطأ';
 
   @override
+  String get todayShowTaskDetails => 'إظهار تفاصيل المهام';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     return 'المهام: $tasks · الجلسات المخططة: $planned · التركيز: $time';
   }

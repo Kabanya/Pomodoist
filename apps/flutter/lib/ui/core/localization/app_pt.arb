@@ -1415,6 +1415,7 @@
   "themeColorOverdue": "Atrasado",
   "themeColorOnAccent": "Texto sobre destaque",
   "themeColorOnError": "Texto sobre erro",
+  "todayShowTaskDetails": "Mostrar detalhes das tarefas",
   "todayTaskSummary": "{tasks, plural, one{1 tarefa} other{{tasks} tarefas}} · {planned, plural, one{1 sessão planejada} other{{planned} sessões planejadas}} · {time} de foco",
   "@todayTaskSummary": {
     "placeholders": {

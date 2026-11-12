@@ -1415,6 +1415,7 @@
   "themeColorOverdue": "기한 지남",
   "themeColorOnAccent": "강조 배경 위 텍스트",
   "themeColorOnError": "오류 배경 위 텍스트",
+  "todayShowTaskDetails": "작업 세부정보 표시",
   "todayTaskSummary": "{tasks, plural, one{작업 1개} other{작업 {tasks}개}} · {planned, plural, one{계획된 세션 1회} other{계획된 세션 {planned}회}} · 집중 {time}",
   "@todayTaskSummary": {
     "placeholders": {

@@ -2717,6 +2717,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get themeColorOnError => 'Texto sobre erro';
 
   @override
+  String get todayShowTaskDetails => 'Mostrar detalhes das tarefas';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     String _temp0 = intl.Intl.pluralLogic(
       tasks,
@@ -5372,6 +5375,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get taskChangeProject => 'Alterar projeto';
+
+  @override
+  String get todayShowTaskDetails => 'Mostrar detalhes das tarefas';
 
   @override
   String get projectInfoTitle => 'Sobre o projeto';

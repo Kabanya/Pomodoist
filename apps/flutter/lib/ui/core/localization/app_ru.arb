@@ -859,6 +859,7 @@
   "themeColorOverdue": "Просрочка",
   "themeColorOnAccent": "Текст на акцентной заливке",
   "themeColorOnError": "Текст на заливке ошибки",
+  "todayShowTaskDetails": "Детали задач",
   "todayTaskSummary": "{tasks, plural, one{{tasks} задача} few{{tasks} задачи} many{{tasks} задач} other{{tasks} задачи}} · в плане: {planned} · фокус: {time}",
   "todayFocusingOn": "В фокусе",
   "openFocus": "Открыть Focus",

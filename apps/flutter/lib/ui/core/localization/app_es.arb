@@ -859,6 +859,7 @@
   "themeColorOverdue": "Vencido",
   "themeColorOnAccent": "Texto sobre relleno de acento",
   "themeColorOnError": "Texto sobre relleno de error",
+  "todayShowTaskDetails": "Mostrar detalles de las tareas",
   "todayTaskSummary": "{tasks, plural, one{1 tarea} other{{tasks} tareas}} · Sesiones previstas: {planned} · Concentración: {time}",
   "todayFocusingOn": "Concentrándote en",
   "openFocus": "Abrir Focus",

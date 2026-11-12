@@ -2637,6 +2637,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get themeColorOnError => 'エラー背景の文字';
 
   @override
+  String get todayShowTaskDetails => 'タスクの詳細を表示';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     String _temp0 = intl.Intl.pluralLogic(
       tasks,

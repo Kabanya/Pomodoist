@@ -58,9 +58,10 @@ import 'package:pomodoist/ui/core/widgets/app_context_menu_region.dart';
 import 'package:pomodoist/ui/core/widgets/task_details_host.dart';
 import 'package:pomodoist/ui/pomo/widgets/pomo_toggle_button.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_editor.dart';
+import 'package:pomodoist/ui/habits/widgets/habits_screen.dart'
+    show HabitsShellTitle;
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
-import 'package:pomodoist/routing/habit_detail_navigation.dart';
 import 'package:pomodoist/ui/onboarding/widgets/learning_tour_overlay.dart';
 import 'package:pomodoist/ui/onboarding/view_models/learning_tour_view_model.dart';
 
@@ -336,7 +337,10 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
             widget.location.startsWith('/task/'));
     final focusLocation = _isFocusLocation(widget.location);
     final pageOwnsCompactHeader =
-        pageTitle != null && (focusLocation || widget.location == '/projects');
+        pageTitle != null &&
+        (focusLocation ||
+            widget.location == '/projects' ||
+            widget.location == '/calendar');
     final showShellTopBar =
         !compactDetailsOpen && !mapFullscreen && !pageOwnsCompactHeader;
     final navigation =
@@ -1104,6 +1108,7 @@ class _ShellTopBar extends ConsumerWidget {
         MediaQuery.sizeOf(context).width < compactShellBreakpoint;
     final title =
         pageTitle ?? (compactKanban ? context.l10n.kanbanTitle : null);
+    final habitsHeader = pageTitle != null && location.startsWith('/habits');
     final sideSpace = pageTitle == null ? 0.0 : (compactKanban ? 100.0 : 48.0);
     final content = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: _shellTopBarHeight),
@@ -1124,9 +1129,16 @@ class _ShellTopBar extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: sideSpace, vertical: 8),
+              padding: EdgeInsetsDirectional.fromSTEB(
+                sideSpace,
+                habitsHeader ? 4 : 8,
+                habitsHeader ? 0 : sideSpace,
+                habitsHeader ? 4 : 8,
+              ),
               child: title == null
                   ? null
+                  : habitsHeader
+                  ? const HabitsShellTitle()
                   : location == '/today'
                   ? const TodayShellTitle()
                   : Semantics(
@@ -1152,25 +1164,6 @@ class _ShellTopBar extends ConsumerWidget {
               top: 0,
               bottom: 0,
               child: Center(child: TodayOptionsButton()),
-            ),
-          if (pageTitle != null && location.startsWith('/habits'))
-            PositionedDirectional(
-              end: 0,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: IconButton(
-                  tooltip: context.l10n.habitNew,
-                  onPressed:
-                      ref.watch(
-                        habitsViewModelProvider.select((view) => view.saving),
-                      )
-                      ? null
-                      : () => openHabitDetails(context, null),
-                  icon: const Icon(LucideIcons.plus),
-                  color: context.appColors.accent,
-                ),
-              ),
             ),
           if (compactKanban)
             PositionedDirectional(

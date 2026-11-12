@@ -1415,6 +1415,7 @@
   "themeColorOverdue": "期限切れ",
   "themeColorOnAccent": "アクセント背景の文字",
   "themeColorOnError": "エラー背景の文字",
+  "todayShowTaskDetails": "タスクの詳細を表示",
   "todayTaskSummary": "{tasks, plural, one{タスク1件} other{タスク{tasks}件}} · {planned, plural, one{予定セッション1回} other{予定セッション{planned}回}} · 集中{time}",
   "@todayTaskSummary": {
     "placeholders": {

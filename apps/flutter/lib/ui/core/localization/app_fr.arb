@@ -859,6 +859,7 @@
   "themeColorOverdue": "En retard",
   "themeColorOnAccent": "Texte sur remplissage d’accent",
   "themeColorOnError": "Texte sur remplissage d’erreur",
+  "todayShowTaskDetails": "Afficher les détails des tâches",
   "todayTaskSummary": "{tasks, plural, one{{tasks} tâche} other{{tasks} tâches}} · Sessions prévues : {planned} · Concentration : {time}",
   "todayFocusingOn": "Concentration sur",
   "openFocus": "Ouvrir Focus",

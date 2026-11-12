@@ -2711,6 +2711,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get themeColorOnError => 'Texto sobre relleno de error';
 
   @override
+  String get todayShowTaskDetails => 'Mostrar detalles de las tareas';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     String _temp0 = intl.Intl.pluralLogic(
       tasks,

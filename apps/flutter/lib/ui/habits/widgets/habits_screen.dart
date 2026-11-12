@@ -5,6 +5,7 @@ import 'package:pomodoist/domain/models/habits/habit_models.dart';
 import 'package:pomodoist/routing/habit_detail_navigation.dart';
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
+import 'package:pomodoist/ui/core/widgets/today_date_button.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/ui/habits/view_models/habits_view_model.dart';
 import 'package:pomodoist/ui/habits/widgets/habit_icon.dart';
@@ -13,6 +14,80 @@ import 'package:pomodoist/ui/habits/widgets/habit_presentation.dart';
 import 'package:pomodoist/ui/habits/widgets/habits_progress_view.dart';
 import 'package:pomodoist/ui/habits/view_models/habit_presentation_view_model.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+
+class HabitsShellTitle extends ConsumerWidget {
+  const HabitsShellTitle({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final today = ref.watch(
+      habitsViewModelProvider.select((view) => view.today),
+    );
+    final saving = ref.watch(
+      habitsViewModelProvider.select((view) => view.saving),
+    );
+    final vm = ref.read(habitsViewModelProvider.notifier);
+    final l = context.l10n, colors = context.appColors;
+    return IconButtonTheme(
+      data: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size(44, 44),
+          padding: const EdgeInsets.all(6),
+          foregroundColor: colors.secondaryText,
+        ),
+      ),
+      child: Row(
+        children: [
+          TodayDateButton(
+            key: const Key('habits-shell-today'),
+            today: today,
+            onPressed: vm.selectToday,
+          ),
+          Expanded(
+            child: Semantics(
+              header: true,
+              label: l.navHabits,
+              excludeSemantics: true,
+              child: Text(
+                l.navHabits,
+                key: const Key('shell-page-title'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: l.habitPreviousWeek,
+            onPressed: () => vm.moveWeek(-1),
+            icon: const Icon(LucideIcons.chevronLeft, size: 20),
+          ),
+          IconButton(
+            tooltip: l.habitNextWeek,
+            onPressed: () => vm.moveWeek(1),
+            icon: const Icon(LucideIcons.chevronRight, size: 20),
+          ),
+          SizedBox(
+            height: 24,
+            child: VerticalDivider(
+              width: 8,
+              thickness: 1,
+              color: colors.border,
+            ),
+          ),
+          IconButton(
+            tooltip: l.habitNew,
+            onPressed: saving ? null : () => openHabitDetails(context, null),
+            icon: Icon(LucideIcons.plus, color: saving ? null : colors.accent),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class HabitsScreen extends ConsumerStatefulWidget {
   const HabitsScreen({super.key});
@@ -490,6 +565,7 @@ class _WeekStrip extends ConsumerWidget {
     final vm = ref.read(habitsViewModelProvider.notifier);
     final l = context.l10n, colors = context.appColors;
     final compact = usesCompactMobileLayout(context);
+    final navigationInHeader = CompactShellHeading.isShown(context);
     final previousWeek = IconButton.outlined(
       tooltip: l.habitPreviousWeek,
       onPressed: () => vm.moveWeek(-1),
@@ -503,23 +579,31 @@ class _WeekStrip extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ShadButton.ghost(
-              onPressed: vm.selectToday,
-              child: Text(
-                l.today,
-                style: compact ? TextStyle(color: colors.accent) : null,
+        if (!navigationInHeader)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ShadButton.ghost(
+                onPressed: vm.selectToday,
+                child: Text(
+                  l.today,
+                  style: compact ? TextStyle(color: colors.accent) : null,
+                ),
               ),
-            ),
-            if (compact) ...[previousWeek, const SizedBox(width: 8), nextWeek],
-          ],
-        ),
-        if (compact) const SizedBox(height: 8),
+              if (compact) ...[
+                previousWeek,
+                const SizedBox(width: 8),
+                nextWeek,
+              ],
+            ],
+          ),
+        if (compact && !navigationInHeader) const SizedBox(height: 8),
         Row(
           children: [
-            if (!compact) ...[previousWeek, const SizedBox(width: 8)],
+            if (!compact && !navigationInHeader) ...[
+              previousWeek,
+              const SizedBox(width: 8),
+            ],
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -642,7 +726,10 @@ class _WeekStrip extends ConsumerWidget {
                 },
               ),
             ),
-            if (!compact) ...[const SizedBox(width: 8), nextWeek],
+            if (!compact && !navigationInHeader) ...[
+              const SizedBox(width: 8),
+              nextWeek,
+            ],
           ],
         ),
       ],

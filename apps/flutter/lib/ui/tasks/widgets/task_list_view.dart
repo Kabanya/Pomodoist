@@ -39,12 +39,14 @@ class TaskListView extends ConsumerWidget {
     this.titleTrailing,
     this.showHeader = true,
     this.quietToday = false,
+    this.showTodayDetails = false,
     this.isActive = true,
     super.key,
   });
 
   final bool showHeader;
   final bool quietToday;
+  final bool showTodayDetails;
   final bool isActive;
   final String title;
   final String? subtitle;
@@ -311,6 +313,9 @@ class TaskListView extends ConsumerWidget {
                             branchScope: branchScope,
                             progress: progressById[row.task.id],
                             quietDay: quietDay,
+                            presentation: showTodayDetails
+                                ? TaskListItemPresentation.agenda
+                                : TaskListItemPresentation.standard,
                           );
                         },
                         separatorBuilder: (context, index) {
@@ -320,7 +325,7 @@ class TaskListView extends ConsumerWidget {
                             previousRow: rows[index],
                             nextDepth: rows[index + 1].depth,
                             nextRow: rows[index + 1],
-                            quietDay: quietDay,
+                            quietDay: showTodayDetails ? null : quietDay,
                           );
                           if (!supportsRootDrop) {
                             return divider;

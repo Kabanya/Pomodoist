@@ -32,6 +32,17 @@ class TodayViewModel extends Notifier<TodayState> {
   }
 }
 
+final todayTaskDetailsProvider = NotifierProvider<TodayTaskDetails, bool>(
+  TodayTaskDetails.new,
+);
+
+class TodayTaskDetails extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setVisible(bool visible) => state = visible;
+}
+
 typedef TodayContextState = ({
   bool showSummary,
   int tasks,

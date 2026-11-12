@@ -2715,6 +2715,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themeColorOnError => 'Текст на заливке ошибки';
 
   @override
+  String get todayShowTaskDetails => 'Детали задач';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     String _temp0 = intl.Intl.pluralLogic(
       tasks,

@@ -859,6 +859,7 @@
   "themeColorOverdue": "Überfällig",
   "themeColorOnAccent": "Text auf Akzentfüllung",
   "themeColorOnError": "Text auf Fehlerfüllung",
+  "todayShowTaskDetails": "Aufgabendetails anzeigen",
   "todayTaskSummary": "{tasks, plural, one{1 Aufgabe} other{{tasks} Aufgaben}} · Geplante Sitzungen: {planned} · Fokus: {time}",
   "todayFocusingOn": "Im Fokus",
   "openFocus": "Focus öffnen",

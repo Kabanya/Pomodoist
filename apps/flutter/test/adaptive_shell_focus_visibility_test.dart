@@ -116,6 +116,10 @@ void main() {
       await tester.tap(options);
       await _pumpShellFrame(tester);
       expect(summary, findsOneWidget);
+      final sheet = tester.getRect(find.byType(BottomSheet));
+      expect(sheet.left, 0);
+      expect(sheet.right, width);
+      expect(sheet.bottom, 850);
       expect(
         find.byKey(const ValueKey('task-priority-cascade')),
         findsOneWidget,
@@ -221,6 +225,29 @@ void main() {
             .quietDay,
         day,
       );
+      final done = find.byKey(const ValueKey('done'));
+      expect(
+        tester.widget<TaskListItem>(done).presentation,
+        TaskListItemPresentation.standard,
+      );
+      final parent = find.byKey(const ValueKey('parent'));
+      final progress = find.descendant(of: parent, matching: find.text('0/1'));
+      expect(progress, findsNothing);
+      final options = find.byKey(const Key('today-options'));
+      await tester.tap(options);
+      await _pumpShellFrame(tester);
+      await tester.tap(find.text(l10n.todayShowTaskDetails));
+      await _pumpShellFrame(tester);
+      expect(progress, findsOneWidget);
+      expect(timing('parent'), findsNothing);
+      expect(tester.widget<Column>(timing('midnight')).children, hasLength(3));
+      expect(
+        tester.widget<TaskListItem>(done).presentation,
+        TaskListItemPresentation.agenda,
+      );
+      await tester.tap(find.text(l10n.todayShowTaskDetails));
+      await _pumpShellFrame(tester);
+      expect(progress, findsNothing);
       expect(tester.takeException(), isNull);
     },
     variant: TargetPlatformVariant({TargetPlatform.iOS}),

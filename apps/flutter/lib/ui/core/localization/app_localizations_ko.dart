@@ -2645,6 +2645,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themeColorOnError => '오류 배경 위 텍스트';
 
   @override
+  String get todayShowTaskDetails => '작업 세부정보 표시';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     String _temp0 = intl.Intl.pluralLogic(
       tasks,

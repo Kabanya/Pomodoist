@@ -1425,6 +1425,7 @@
   "themeColorOverdue": "Overdue",
   "themeColorOnAccent": "Text on accent fill",
   "themeColorOnError": "Text on error fill",
+  "todayShowTaskDetails": "Show task details",
   "todayTaskSummary": "{tasks, plural, one{1 task} other{{tasks} tasks}} · {planned, plural, one{1 planned session} other{{planned} planned sessions}} · {time} focused",
   "todayFocusingOn": "Focusing on",
   "openFocus": "Open Focus",

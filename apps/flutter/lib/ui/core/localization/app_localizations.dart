@@ -4781,6 +4781,12 @@ abstract class AppLocalizations {
   /// **'Text on error fill'**
   String get themeColorOnError;
 
+  /// No description provided for @todayShowTaskDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show task details'**
+  String get todayShowTaskDetails;
+
   /// No description provided for @todayTaskSummary.
   ///
   /// In en, this message translates to:

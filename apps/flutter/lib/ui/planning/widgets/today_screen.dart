@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons;
+import 'package:shadcn_ui/shadcn_ui.dart' show LucideIcons, ShadSwitch;
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_blocking_controls.dart';
@@ -28,6 +28,7 @@ class TodayScreen extends ConsumerWidget {
     final query = TaskQuery(kind: TaskQueryKind.today, now: today);
     final hasCompleted = viewState.hasCompleted;
     final compact = usesCompactMobileLayout(context);
+    final showDetails = compact && ref.watch(todayTaskDetailsProvider);
     final shellHeading = compact && CompactShellHeading.isShown(context);
     final dates = MaterialLocalizations.of(context);
     return Center(
@@ -48,11 +49,16 @@ class TodayScreen extends ConsumerWidget {
               : null,
           showQuickAdd: !compact,
           quietToday: compact,
+          showTodayDetails: showDetails,
           titleTrailing: compact && !CompactShellHeading.isShown(context)
               ? const TodayOptionsButton()
               : null,
           headerAddon: compact ? null : _TodayContext(query: query),
-          footerAddon: _CompletedToday(day: today, quiet: compact),
+          footerAddon: _CompletedToday(
+            day: today,
+            compact: compact,
+            showDetails: showDetails,
+          ),
         ),
       ),
     );
@@ -162,8 +168,15 @@ class TodayOptionsButton extends StatelessWidget {
       icon: const Icon(LucideIcons.ellipsis),
       onPressed: () => showModalBottomSheet<void>(
         context: context,
+        useRootNavigator: true,
         useSafeArea: true,
         isScrollControlled: true,
+        showDragHandle: true,
+        constraints: const BoxConstraints(minWidth: double.infinity),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          side: BorderSide(color: context.appColors.border),
+        ),
         backgroundColor: context.appColors.surface,
         sheetAnimationStyle: AnimationStyle(
           duration: AppMotion.duration(context, AppMotion.panel),
@@ -172,7 +185,7 @@ class TodayOptionsButton extends StatelessWidget {
         builder: (context) => SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
             child: Consumer(
               builder: (context, ref, child) {
                 final day = ref.watch(
@@ -189,6 +202,17 @@ class TodayOptionsButton extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     const TaskPriorityCascadeControl(),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: ShadSwitch(
+                        key: const Key('today-task-details'),
+                        label: Text(l10n.todayShowTaskDetails),
+                        value: ref.watch(todayTaskDetailsProvider),
+                        onChanged: ref
+                            .read(todayTaskDetailsProvider.notifier)
+                            .setVisible,
+                      ),
+                    ),
                   ],
                 );
               },
@@ -229,9 +253,14 @@ class _TodayContext extends ConsumerWidget {
 }
 
 class _CompletedToday extends ConsumerStatefulWidget {
-  const _CompletedToday({required this.day, required this.quiet});
+  const _CompletedToday({
+    required this.day,
+    required this.compact,
+    required this.showDetails,
+  });
   final DateTime day;
-  final bool quiet;
+  final bool compact;
+  final bool showDetails;
   @override
   ConsumerState<_CompletedToday> createState() => _CompletedTodayState();
 }
@@ -278,7 +307,7 @@ class _CompletedTodayState extends ConsumerState<_CompletedToday> {
                 previousRow: rows[index - 1],
                 nextDepth: rows[index].depth,
                 nextRow: rows[index],
-                quietDay: widget.quiet ? day : null,
+                quietDay: widget.compact && !widget.showDetails ? day : null,
               ),
             TaskListItem(
               key: ValueKey(rows[index].task.id),
@@ -286,7 +315,10 @@ class _CompletedTodayState extends ConsumerState<_CompletedToday> {
               hierarchy: rows[index],
               branchScope: scope,
               depth: rows[index].displayDepth,
-              quietDay: widget.quiet ? day : null,
+              quietDay: widget.compact ? day : null,
+              presentation: widget.showDetails
+                  ? TaskListItemPresentation.agenda
+                  : TaskListItemPresentation.standard,
             ),
           ],
         ],

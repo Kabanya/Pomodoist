@@ -481,14 +481,20 @@ into narrow lanes. Month shows date cells with task indicators and a full-width
 agenda for the selected day; its month grid collapses to a week strip. Rhythm
 shows only the selected day's configurable, collapsible periods, plus all-day
 and outside-period tasks. Scroll the mode switch, date controls and content
-in one scroll view; the mode switch is not pinned. Keep the contextual footer
-reachable independently of the scroll position.
+in one scroll view; the mode switch is not pinned. On compact mobile/web shells,
+Calendar owns its pinned header and reuses the shell's drawer callback. In one
+row, show the drawer, `TodayDateButton`, centered Calendar title, calendar-plus
+Schedule action and overflow. Reuse the same current-day tile as Habits, including
+its accent tint, full-date tooltip and 44 px target. Schedule uses the selected
+calendar date. Remove the duplicate bottom action panel on these shells. Keep
+the title and drawer while selection hides the date, Schedule and overflow
+actions. Compact calendars outside these shells retain their contextual footer.
 
 On these compact layouts, card taps open an action sheet and long presses enter
 selection. Date and time edits share a sheet with explicit Save/Cancel; duration
 edits change the end date/time and preserve recurrence. Keep the existing shared
 bulk toolbar and Focus mini-player. Hide the shell's floating plus on Calendar;
-use a labeled Schedule action bound to the selected date, hidden during
+use an accessibly labeled Schedule action bound to the selected date, hidden during
 selection. Overflow exposes overview, unscheduled tasks and project filters;
 overview opens as a bottom sheet with the existing live Focus information.
 The unscheduled sheet owns its own selection region and bulk toolbar, so Select
@@ -820,7 +826,8 @@ the local completion day.
 Below the 820 px shell breakpoint on iOS, Android, and web, show the localized
 weekday and stacked day/month beside the centered shell title, omitting the
 duplicate date from the list. Standalone compact lists retain their date. Open the daily summary
-and priority order control from the overflow button in the shell header. Use the
+and priority order control in a full-width, safe-area-aware bottom sheet from the
+overflow button in the shell header. Use the
 shell's floating Add task button as the single visible entry point, including
 empty states. Both the button and the Quick Add shortcut default to the current
 local day. Reserve enough scroll clearance for the button.
@@ -831,6 +838,9 @@ Descriptions, projects and progress counts are available in task details. Omit
 the current date from the row, keep earlier dates and cross-midnight end dates,
 and retain recurrence and time display preferences. Use text and semantic color
 for overdue schedules. The expanded completed section uses the same compact rows.
+The same bottom sheet has a Show task details switch, off at launch. It applies
+immediately for the app session, adding the Upcoming row's project, Focus and
+descendant progress to open and completed tasks while retaining Today timing.
 Use the platform's existing task gestures and preserve the bottom chrome and
 full-screen task details behavior.
 
@@ -2278,11 +2288,16 @@ week navigation and a Today action, and scrolls horizontally rather than
 shrinking 44 px targets. Below it, show the selected date and fully completed /
 planned habit summary.
 
-On compact mobile/web shells below 820 px, keep Habits centered in the shared
-header and move New habit to a trailing accent plus icon with its localized
-tooltip. Omit the body title, subtitle and creation button. Put Today and both
-week arrows in one trailing toolbar above the full-width seven-day strip, with
-no week-range caption. Compact day tiles show only the weekday and day number;
+On compact mobile/web shells below 820 px, use one shared header row with the
+drawer, a Today date tile, the Habits title, previous/next week arrows, a subtle
+vertical divider and the accent New habit plus. The tile shows the current local
+day number in accent text on `accentTint`, with 8 px corners; pressing it selects
+today. Use the view model's current date so it refreshes across midnight. Center
+the title in the remaining space, allow two lines with text scaling, and retain
+44 px action targets and localized tooltips, including the tile's full date.
+Omit the body title, subtitle, creation button and duplicate date toolbar; keep
+the full-width seven-day strip without a week-range caption.
+Compact day tiles show only the weekday and day number;
 keep full dates in semantics and preserve 44 px targets and horizontal scrolling
 for larger text. Habit summaries, filters and rhythm rows remain unchanged.
 

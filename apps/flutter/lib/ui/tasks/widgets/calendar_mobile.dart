@@ -151,6 +151,63 @@ class _CalendarMobileState extends ConsumerState<_CalendarMobile> {
     final periodLabel = mode == CalendarMobileMode.month && _monthExpanded
         ? MaterialLocalizations.of(context).formatMonthYear(widget.day)
         : intl.DateFormat.MMMEd(locale).format(widget.day);
+    final onMenuPressed = CompactShellHeading.menuActionOf(context);
+    final overflow = AppActionMenu(
+      tooltip: l10n.taskMore,
+      items: [
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: widget.onOverview,
+          child: Text(l10n.calendarOverview),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          enabled: selection.visibleTasks.isNotEmpty,
+          onPressed: () => selection.begin(),
+          child: Text(l10n.taskSelect),
+        ),
+        ShadContextMenuItem(
+          height: 44,
+          onPressed: () => unawaited(_unscheduled()),
+          child: Text(
+            '${l10n.calendarUnscheduled} · ${widget.presentation.unscheduled.length}',
+          ),
+        ),
+        if (mode == CalendarMobileMode.routine)
+          ShadContextMenuItem(
+            height: 44,
+            onPressed: _configure,
+            child: Text(l10n.calendarEditRoutine),
+          ),
+        Divider(height: 8, color: colors.border),
+        ShadContextMenuItem(
+          height: 44,
+          leading: Icon(
+            widget.state.projectId == null ? LucideIcons.check : null,
+            size: 16,
+          ),
+          onPressed: () => vm.setProject(null),
+          child: Semantics(
+            selected: widget.state.projectId == null,
+            child: Text(l10n.calendarAllProjects),
+          ),
+        ),
+        for (final project in widget.presentation.projectsById.values)
+          ShadContextMenuItem(
+            height: 44,
+            leading: Icon(
+              widget.state.projectId == project.id ? LucideIcons.check : null,
+              size: 16,
+            ),
+            onPressed: () => vm.setProject(project.id),
+            child: Semantics(
+              selected: widget.state.projectId == project.id,
+              child: Text(project.displayName(l10n)),
+            ),
+          ),
+      ],
+      child: Icon(LucideIcons.ellipsis, color: colors.secondaryText),
+    );
     final footer = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
@@ -167,69 +224,73 @@ class _CalendarMobileState extends ConsumerState<_CalendarMobile> {
               child: Text(l10n.taskSchedule, textAlign: TextAlign.center),
             ),
           ),
-          AppActionMenu(
-            tooltip: l10n.taskMore,
-            items: [
-              ShadContextMenuItem(
-                height: 44,
-                onPressed: widget.onOverview,
-                child: Text(l10n.calendarOverview),
-              ),
-              ShadContextMenuItem(
-                height: 44,
-                enabled: selection.visibleTasks.isNotEmpty,
-                onPressed: () => selection.begin(),
-                child: Text(l10n.taskSelect),
-              ),
-              ShadContextMenuItem(
-                height: 44,
-                onPressed: () => unawaited(_unscheduled()),
-                child: Text(
-                  '${l10n.calendarUnscheduled} · ${widget.presentation.unscheduled.length}',
-                ),
-              ),
-              if (mode == CalendarMobileMode.routine)
-                ShadContextMenuItem(
-                  height: 44,
-                  onPressed: _configure,
-                  child: Text(l10n.calendarEditRoutine),
-                ),
-              Divider(height: 8, color: colors.border),
-              ShadContextMenuItem(
-                height: 44,
-                leading: Icon(
-                  widget.state.projectId == null ? LucideIcons.check : null,
-                  size: 16,
-                ),
-                onPressed: () => vm.setProject(null),
-                child: Semantics(
-                  selected: widget.state.projectId == null,
-                  child: Text(l10n.calendarAllProjects),
-                ),
-              ),
-              for (final project in widget.presentation.projectsById.values)
-                ShadContextMenuItem(
-                  height: 44,
-                  leading: Icon(
-                    widget.state.projectId == project.id
-                        ? LucideIcons.check
-                        : null,
-                    size: 16,
-                  ),
-                  onPressed: () => vm.setProject(project.id),
-                  child: Semantics(
-                    selected: widget.state.projectId == project.id,
-                    child: Text(project.displayName(l10n)),
-                  ),
-                ),
-            ],
-          ),
+          overflow,
         ],
       ),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (onMenuPressed != null)
+          SafeArea(
+            bottom: false,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 52),
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: colors.border)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    key: const Key('shell-menu-button'),
+                    tooltip: l10n.menuTooltip,
+                    onPressed: onMenuPressed,
+                    icon: Icon(
+                      LucideIcons.panelLeft,
+                      color: colors.secondaryText,
+                    ),
+                  ),
+                  if (!selection.active)
+                    TodayDateButton(
+                      key: const Key('calendar-shell-today'),
+                      today: widget.state.now,
+                      onPressed: () => widget.onDate(widget.state.now),
+                    ),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      label: l10n.navCalendar,
+                      excludeSemantics: true,
+                      child: Text(
+                        l10n.navCalendar,
+                        key: const Key('shell-page-title'),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!selection.active) ...[
+                    IconButton(
+                      key: const Key('calendar-shell-schedule'),
+                      tooltip: l10n.taskSchedule,
+                      onPressed: loading || failed
+                          ? null
+                          : () => widget.actions.onAdd(widget.day),
+                      color: colors.accent,
+                      icon: const Icon(LucideIcons.calendarPlus),
+                    ),
+                    overflow,
+                  ] else
+                    const SizedBox(width: 48),
+                ],
+              ),
+            ),
+          ),
         Expanded(
           child: CustomScrollView(
             controller: _scroll,
@@ -409,7 +470,7 @@ class _CalendarMobileState extends ConsumerState<_CalendarMobile> {
             ],
           ),
         ),
-        if (!selection.active)
+        if (onMenuPressed == null && !selection.active)
           MediaQuery.sizeOf(context).width < 820
               ? BottomPanelSurface(child: footer)
               : DecoratedBox(

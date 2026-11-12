@@ -2581,6 +2581,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeColorOnError => '错误填充上的文字';
 
   @override
+  String get todayShowTaskDetails => '显示任务详情';
+
+  @override
   String todayTaskSummary(int tasks, int planned, String time) {
     return '$tasks 个任务 · 计划 $planned 次专注 · 已专注 $time';
   }
