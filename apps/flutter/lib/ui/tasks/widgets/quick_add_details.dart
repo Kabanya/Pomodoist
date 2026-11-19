@@ -37,6 +37,7 @@ class QuickAddDetails extends ConsumerWidget {
     this.defaultDate,
     this.defaultSchedule,
     this.projectId,
+    this.showWhenEmpty = false,
     this.inheritedProjectName,
     this.priority,
     this.enabled = true,
@@ -52,6 +53,7 @@ class QuickAddDetails extends ConsumerWidget {
   final DateTime? defaultDate;
   final TaskSchedule? defaultSchedule;
   final String? projectId;
+  final bool showWhenEmpty;
   final String? inheritedProjectName;
   final int? priority;
   final bool enabled;
@@ -74,7 +76,8 @@ class QuickAddDetails extends ConsumerWidget {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
-        if (value.text.trim().isEmpty && onNaturalWidthChanged == null) {
+        final hideToolbar = !showWhenEmpty && value.text.trim().isEmpty;
+        if (hideToolbar && onNaturalWidthChanged == null) {
           return const SizedBox.shrink();
         }
         final now = viewModel.now();
@@ -262,7 +265,7 @@ class QuickAddDetails extends ConsumerWidget {
             (_) => onNaturalWidthChanged?.call(width),
           );
         }
-        if (value.text.trim().isEmpty) return const SizedBox.shrink();
+        if (hideToolbar) return const SizedBox.shrink();
         final inlineEstimate =
             !desktop && MediaQuery.sizeOf(context).width < 820;
         Widget toolbar(Widget estimateControl) => Wrap(

@@ -10,6 +10,7 @@ import 'package:pomodoist/ui/planning/widgets/today_screen.dart'
     show TodayOptionsButton, TodayShellTitle;
 
 import 'package:pomodoist/ui/tasks/widgets/project_localizations.dart';
+import 'package:pomodoist/ui/tasks/view_models/project_view_model.dart';
 import 'dart:async';
 import 'package:pomodoist/utils/startup_diagnostics.dart';
 import 'dart:math' as math;
@@ -317,6 +318,19 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final wide = MediaQuery.sizeOf(context).width >= compactShellBreakpoint;
     final mapFullscreen = widget.mapFullscreen;
     final mobileLayout = usesCompactMobileLayout(context);
+    final compactProjectId = switch (Uri.parse(widget.location).pathSegments) {
+      ['project', final id] when mobileLayout && widget.dataReady => id,
+      _ => null,
+    };
+    final compactProject = compactProjectId == null
+        ? null
+        : ref.watch(projectViewModelProvider(compactProjectId));
+    final hideProjectAdd =
+        compactProjectId != null &&
+        (compactProject == null ||
+            !compactProject.canEdit ||
+            compactProject.isArchived ||
+            compactProject.isDeleted);
     final pageTitle = widget.dataReady && mobileLayout
         ? compactShellTitle(context, ref, widget.location)
         : null;
@@ -340,7 +354,9 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         pageTitle != null &&
         (focusLocation ||
             widget.location == '/projects' ||
-            widget.location == '/calendar');
+            widget.location.startsWith('/project/') ||
+            widget.location == '/calendar' ||
+            widget.location == '/timeline');
     final showShellTopBar =
         !compactDetailsOpen && !mapFullscreen && !pageOwnsCompactHeader;
     final navigation =
@@ -562,6 +578,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                             !widget.dataReady ||
                             navigationDraft != null ||
                             mapFullscreen ||
+                            hideProjectAdd ||
                             voiceActive ||
                             widget.location == '/calendar' ||
                             widget.location == '/blocking' ||
@@ -599,7 +616,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                                   elevation: 3,
                                   shape: const CircleBorder(),
                                   onPressed: () => unawaited(
-                                    showLearningTourQuickAdd(context, ref),
+                                    showLearningTourQuickAdd(
+                                      context,
+                                      ref,
+                                      projectId: compactProjectId,
+                                    ),
                                   ),
                                   child: const Icon(LucideIcons.plus, size: 24),
                                 ),

@@ -34,32 +34,31 @@ class PriorityMatrixScreen extends ConsumerWidget {
             visibleTasks: matrix.tasks.value ?? const <TaskItem>[],
             child: CustomScrollView(
               slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (!CompactShellHeading.isShown(context)) ...[
+                if (!CompactShellHeading.isShown(context))
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
                             l10n.navPriorityMatrix,
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
                           const SizedBox(height: 4),
+                          Text(
+                            l10n.priorityMatrixSubtitle,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
                         ],
-                        Text(
-                          l10n.priorityMatrixSubtitle,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
                 matrix.tasks.when(
                   data: (_) => SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),

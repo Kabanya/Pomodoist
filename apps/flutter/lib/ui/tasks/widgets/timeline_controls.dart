@@ -1,52 +1,145 @@
 part of 'timeline_screen.dart';
 
+class _TimelineShellHeader extends StatelessWidget {
+  const _TimelineShellHeader({
+    required this.today,
+    required this.onMenuPressed,
+    required this.presentation,
+  });
+
+  final DateTime today;
+  final VoidCallback onMenuPressed;
+  final TimelineDayPresentation? presentation;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 52),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.border)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox.square(
+            dimension: 48,
+            child: IconButton(
+              key: const Key('shell-menu-button'),
+              tooltip: l10n.menuTooltip,
+              onPressed: onMenuPressed,
+              icon: Icon(LucideIcons.panelLeft, color: colors.secondaryText),
+            ),
+          ),
+          SizedBox.square(
+            dimension: 48,
+            child: TodayDateButton(
+              key: const Key('timeline-shell-today'),
+              today: today,
+              onPressed: () => _goToTimelineDate(context, today),
+            ),
+          ),
+          Expanded(
+            child: Semantics(
+              header: true,
+              label: l10n.navTimeline,
+              excludeSemantics: true,
+              child: Text(
+                l10n.navTimeline,
+                key: const Key('shell-page-title'),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          const SizedBox(width: 48),
+          SizedBox.square(
+            dimension: 48,
+            child: _TimelineControlsPopover(
+              inShell: true,
+              compact: true,
+              presentation: presentation,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TimelineHeader extends StatelessWidget {
   const _TimelineHeader({
     required this.day,
     required this.today,
     required this.compact,
+    required this.inShell,
     required this.presentation,
   });
 
   final DateTime day;
   final DateTime today;
   final bool compact;
+  final bool inShell;
   final TimelineDayPresentation? presentation;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final rtl = Directionality.of(context) == TextDirection.rtl;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final height = inShell ? math.max(44.0, textScaler.scale(36)) : 44.0;
+    final colors = context.appColors;
+    final foreground = inShell ? colors.primaryText : null;
+    final iconButton = inShell
+        ? ShadIconButton.ghost
+        : ShadIconButton.secondary;
+    final dateButton = inShell ? ShadButton.ghost : ShadButton.secondary;
+    final separator = inShell
+        ? SizedBox(
+            height: height,
+            width: 1,
+            child: ColoredBox(color: colors.border),
+          )
+        : const SizedBox(width: 6);
     final dateControls = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Tooltip(
           message: l10n.timelinePreviousDay,
-          child: ShadIconButton.secondary(
-            onPressed: () =>
-                _goToDate(context, DateTime(day.year, day.month, day.day - 1)),
+          child: iconButton(
+            onPressed: () => _goToTimelineDate(
+              context,
+              DateTime(day.year, day.month, day.day - 1),
+            ),
             icon: Icon(
               rtl ? LucideIcons.chevronRight : LucideIcons.chevronLeft,
             ),
-            width: 44,
-            height: 44,
+            width: inShell ? 64 : 44,
+            height: height,
+            foregroundColor: foreground,
           ),
         ),
-        const SizedBox(width: 6),
+        separator,
         Flexible(
           fit: compact ? FlexFit.tight : FlexFit.loose,
           child: AppDateTimePicker(
-            builder: (context, picker) => ShadButton.secondary(
+            builder: (context, picker) => dateButton(
               focusNode: picker.focusNode,
-              height: 44,
+              height: height,
               width: compact ? null : 176,
               padding: const EdgeInsets.symmetric(horizontal: 8),
+              foregroundColor: foreground,
               onPressed: () => _pickDate(context, picker),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (MediaQuery.textScalerOf(context).scale(16) <= 20 &&
+                  if (textScaler.scale(16) <= 20 &&
                       (!compact ||
                           MediaQuery.sizeOf(context).width >= 360)) ...[
                     const Icon(LucideIcons.calendar, size: 20),
@@ -64,26 +157,41 @@ class _TimelineHeader extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        separator,
         Tooltip(
           message: l10n.timelineNextDay,
-          child: ShadIconButton.secondary(
-            onPressed: () =>
-                _goToDate(context, DateTime(day.year, day.month, day.day + 1)),
+          child: iconButton(
+            onPressed: () => _goToTimelineDate(
+              context,
+              DateTime(day.year, day.month, day.day + 1),
+            ),
             icon: Icon(
               rtl ? LucideIcons.chevronLeft : LucideIcons.chevronRight,
             ),
-            width: 44,
-            height: 44,
+            width: inShell ? 64 : 44,
+            height: height,
+            foregroundColor: foreground,
           ),
         ),
       ],
     );
+    if (inShell) {
+      return Container(
+        key: const Key('timeline-day-navigator'),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: dateControls,
+      );
+    }
     final settings = _TimelineControlsPopover(
       compact: compact,
       onToday: isSameLocalDay(day, today)
           ? null
-          : () => _goToDate(context, today),
+          : () => _goToTimelineDate(context, today),
       presentation: presentation,
     );
     if (compact) {
@@ -131,24 +239,26 @@ class _TimelineHeader extends StatelessWidget {
       lastDate: DateTime(now.year + 10),
       helpText: context.l10n.timelinePickDate,
     );
-    if (picked != null && context.mounted) _goToDate(context, picked);
+    if (picked != null && context.mounted) _goToTimelineDate(context, picked);
   }
+}
 
-  void _goToDate(BuildContext context, DateTime date) {
-    context.go('/timeline?date=${_formatRouteDate(timelineDateOnly(date))}');
-  }
+void _goToTimelineDate(BuildContext context, DateTime date) {
+  context.go('/timeline?date=${_formatRouteDate(timelineDateOnly(date))}');
 }
 
 class _TimelineControlsPopover extends ConsumerStatefulWidget {
   const _TimelineControlsPopover({
     this.rangeOnly = false,
     this.compact = false,
+    this.inShell = false,
     this.onToday,
     this.presentation,
   });
 
   final bool rangeOnly;
   final bool compact;
+  final bool inShell;
   final VoidCallback? onToday;
   final TimelineDayPresentation? presentation;
 
@@ -224,15 +334,16 @@ class _TimelineControlsPopoverState
                 if (!widget.rangeOnly) ...[
                   if (widget.compact) const SizedBox(height: 12),
                   const _TimelineZoomControls(),
-                  ShadButton.ghost(
-                    onPressed: widget.onToday == null
-                        ? null
-                        : () {
-                            _popover.hide();
-                            widget.onToday!();
-                          },
-                    child: Text(l10n.today),
-                  ),
+                  if (!widget.inShell)
+                    ShadButton.ghost(
+                      onPressed: widget.onToday == null
+                          ? null
+                          : () {
+                              _popover.hide();
+                              widget.onToday!();
+                            },
+                      child: Text(l10n.today),
+                    ),
                   if (presentation != null)
                     _TimelineProjectsButton(
                       presentation: presentation,
@@ -261,6 +372,14 @@ class _TimelineControlsPopoverState
                   ).textTheme.labelLarge?.merge(AppTheme.monoTextStyle),
                 ),
               ),
+            )
+          : widget.inShell
+          ? IconButton(
+              key: const Key('timeline-settings'),
+              tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+              onPressed: _toggle,
+              color: context.appColors.primaryText,
+              icon: const Icon(LucideIcons.ellipsis),
             )
           : Tooltip(
               message: MaterialLocalizations.of(context).moreButtonTooltip,

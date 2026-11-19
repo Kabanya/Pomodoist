@@ -179,6 +179,7 @@ void main() {
       tester,
       location: '/upcoming?date=2026-11-13',
       defaultDate: DateTime(2026, 11, 20),
+      clock: FixedClock(DateTime(2026, 11, 6)),
     );
     expect(
       tester

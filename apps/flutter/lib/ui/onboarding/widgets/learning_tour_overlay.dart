@@ -260,10 +260,15 @@ Future<void> showLearningTourQuickAdd(
   BuildContext context,
   WidgetRef ref, {
   DateTime? defaultDate,
+  String? projectId,
 }) async {
   ref.read(learningTourProvider.notifier).quickAddOpened();
   try {
-    await showQuickAddDialog(context, defaultDate: defaultDate);
+    await showQuickAddDialog(
+      context,
+      defaultDate: defaultDate,
+      projectId: projectId,
+    );
   } finally {
     if (context.mounted) {
       ref.read(learningTourProvider.notifier).quickAddClosed();

@@ -24,6 +24,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:pomodoist/ui/core/localization/app_l10n.dart';
 import 'package:pomodoist/ui/core/widgets/compact_shell_layout.dart';
+import 'package:pomodoist/ui/core/widgets/today_date_button.dart';
 import 'package:pomodoist/routing/task_detail_navigation.dart';
 import 'package:pomodoist/ui/core/themes/app_motion.dart';
 import 'package:pomodoist/ui/tasks/view_models/timeline_view_model.dart';
@@ -68,6 +69,7 @@ class _TimelineScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final onMenuPressed = CompactShellHeading.menuActionOf(context);
     final viewState = ref.watch(timelineViewModelProvider);
     final today = timelineDateOnly(viewState.now);
     final day = timelineDateOnly(selectedDate ?? today);
@@ -96,82 +98,72 @@ class _TimelineScreen extends ConsumerWidget {
                     )),
                   )
                 : null;
-            return SafeArea(
-              bottom: false,
-              child: CustomScrollView(
-                key: const Key('timeline-page-scroll'),
-                slivers: [
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      padding,
-                      compact ? 24 : 40,
-                      padding,
-                      24,
-                    ),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (!CompactShellHeading.isShown(context)) ...[
-                            Text(
-                              l10n.navTimeline,
-                              style: Theme.of(context).textTheme.headlineLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            SizedBox(height: compact ? 24 : 32),
-                          ],
-                          _TimelineHeader(
-                            day: day,
-                            today: today,
-                            compact: compact,
-                            presentation: presentation,
+            final content = CustomScrollView(
+              key: const Key('timeline-page-scroll'),
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    padding,
+                    onMenuPressed != null ? 20 : (compact ? 24 : 40),
+                    padding,
+                    24,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!CompactShellHeading.isShown(context)) ...[
+                          Text(
+                            l10n.navTimeline,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
+                          SizedBox(height: compact ? 24 : 32),
                         ],
-                      ),
+                        _TimelineHeader(
+                          day: day,
+                          today: today,
+                          compact: compact,
+                          inShell: onMenuPressed != null,
+                          presentation: presentation,
+                        ),
+                      ],
                     ),
                   ),
-                  tasks.when(
-                    data: (_) => projects.when(
-                      data: (_) => SliverPadding(
-                        padding: EdgeInsets.fromLTRB(padding, 0, padding, 32),
-                        sliver: SliverToBoxAdapter(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _TimelineDay(
-                                day: day,
-                                presentation: presentation!,
-                                visibleHours: visibleHours,
-                                compact: compact,
-                              ),
-                              if (!compact) ...[
-                                const SizedBox(height: 40),
-                                Align(
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  child: ShadButton(
-                                    key: const Key('timeline-add-task'),
-                                    onPressed: () => unawaited(
-                                      showQuickAddDialog(
-                                        context,
-                                        defaultDate: day,
-                                      ),
+                ),
+                tasks.when(
+                  data: (_) => projects.when(
+                    data: (_) => SliverPadding(
+                      padding: EdgeInsets.fromLTRB(padding, 0, padding, 32),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _TimelineDay(
+                              day: day,
+                              presentation: presentation!,
+                              visibleHours: visibleHours,
+                              compact: compact,
+                            ),
+                            if (!compact) ...[
+                              const SizedBox(height: 40),
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: ShadButton(
+                                  key: const Key('timeline-add-task'),
+                                  onPressed: () => unawaited(
+                                    showQuickAddDialog(
+                                      context,
+                                      defaultDate: day,
                                     ),
-                                    height: 48,
-                                    leading: const Icon(LucideIcons.plus),
-                                    child: Text(l10n.addTask),
                                   ),
+                                  height: 48,
+                                  leading: const Icon(LucideIcons.plus),
+                                  child: Text(l10n.addTask),
                                 ),
-                              ],
+                              ),
                             ],
-                          ),
-                        ),
-                      ),
-                      loading: () => const SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (error, _) => SliverFillRemaining(
-                        child: Center(
-                          child: Text(l10n.projectsUnavailable(error)),
+                          ],
                         ),
                       ),
                     ),
@@ -179,9 +171,31 @@ class _TimelineScreen extends ConsumerWidget {
                       child: Center(child: CircularProgressIndicator()),
                     ),
                     error: (error, _) => SliverFillRemaining(
-                      child: Center(child: Text(l10n.failedToLoadTasks(error))),
+                      child: Center(
+                        child: Text(l10n.projectsUnavailable(error)),
+                      ),
                     ),
                   ),
+                  loading: () => const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, _) => SliverFillRemaining(
+                    child: Center(child: Text(l10n.failedToLoadTasks(error))),
+                  ),
+                ),
+              ],
+            );
+            return SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  if (onMenuPressed != null)
+                    _TimelineShellHeader(
+                      today: today,
+                      onMenuPressed: onMenuPressed,
+                      presentation: presentation,
+                    ),
+                  Expanded(child: content),
                 ],
               ),
             );

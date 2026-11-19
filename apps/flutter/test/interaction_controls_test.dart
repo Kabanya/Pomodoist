@@ -53,7 +53,7 @@ import 'package:pomodoist/domain/models/tasks/task_models.dart';
 import 'package:pomodoist/ui/tasks/widgets/browse_screen.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_motion.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_bar.dart'
-    show QuickAddComposer;
+    show QuickAddBar, QuickAddComposer;
 import 'package:pomodoist/ui/tasks/view_models/task_selection_view_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_selection_region.dart';
 import 'package:pomodoist/data/repositories/calendar/google_calendar_repository.dart';
@@ -775,19 +775,72 @@ void main() {
     expect(patch.dueDate, isNull);
   });
 
-  testWidgets('project quick add assigns the active project', (tester) async {
+  testWidgets('wide project keeps inline quick add', (tester) async {
     late GoRouter router;
-    final harness = await _pumpApp(tester, onRouter: (value) => router = value);
+    final harness = await _pumpApp(
+      tester,
+      size: const Size(1200, 900),
+      onRouter: (value) => router = value,
+    );
 
     router.go('/project/project-1');
     await _pumpFrames(tester);
 
+    expect(find.byType(QuickAddBar), findsOneWidget);
     await tester.enterText(find.byType(TextField).first, 'Task in project');
     await tester.tap(find.byTooltip('Add'));
     await _pumpFrames(tester);
 
     expect(harness.taskRepository.createdInputs.single.projectId, 'project-1');
   });
+
+  testWidgets(
+    'compact project quick add starts with the active project selected',
+    (tester) async {
+      late GoRouter router;
+      final harness = await _pumpApp(
+        tester,
+        onRouter: (value) => router = value,
+      );
+
+      router.go('/project/project-1');
+      await _pumpFrames(tester);
+      expect(find.byType(QuickAddBar), findsNothing);
+
+      final add = find.byKey(const Key('compact-add-task'));
+      await tester.tap(add);
+      await _pumpFrames(tester);
+      final input = find.byKey(const Key('sidebar-quick-add-input'));
+      final l10n = AppLocalizations.of(tester.element(input));
+      expect(tester.widget<TextField>(input).controller!.text, isEmpty);
+      final project = find.byTooltip('${l10n.kanbanProjectField}: Work');
+      expect(project, findsOneWidget);
+
+      await tester.tap(project);
+      await _pumpFrames(tester);
+      await tester.tap(find.text(l10n.navInbox).hitTestable());
+      await _pumpFrames(tester);
+      expect(
+        find.byTooltip('${l10n.kanbanProjectField}: ${l10n.navInbox}'),
+        findsOneWidget,
+      );
+
+      await tester.enterText(input, 'Task in project');
+      await tester.tap(find.byKey(const Key('sidebar-quick-add-submit')));
+      await _pumpFrames(tester);
+      final task = harness.taskRepository.createdInputs.single;
+      expect(task.content, 'Task in project');
+      expect(task.projectId, 'project-1');
+
+      router.go('/project/missing');
+      await _pumpFrames(tester);
+      expect(add, findsNothing);
+    },
+    variant: TargetPlatformVariant({
+      TargetPlatform.iOS,
+      TargetPlatform.android,
+    }),
+  );
 
   testWidgets('task detail comment edits and clears inline', (tester) async {
     late GoRouter router;
@@ -2240,6 +2293,62 @@ void main() {
     expect(find.byKey(const Key('timeline-zoom-in')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'timeline mobile keeps Today and options in the heading',
+    (tester) async {
+      _setTimelineVisibleHourPrefs();
+      late GoRouter router;
+      final today = _testToday();
+      final tomorrow = DateTime(today.year, today.month, today.day + 1);
+      await _pumpApp(
+        tester,
+        onRouter: (value) => router = value,
+        tasks: const <TaskItem>[],
+        locale: const Locale('ru'),
+      );
+      router.go('/timeline?date=${_routeDate(tomorrow)}');
+      await _pumpFrames(tester);
+
+      final title = find.byKey(const Key('shell-page-title'));
+      final todayButton = find.byKey(const Key('timeline-shell-today'));
+      final settings = find.byKey(const Key('timeline-settings'));
+      final navigator = find.byKey(const Key('timeline-day-navigator'));
+      final l10n = AppLocalizations.of(tester.element(title));
+      expect(tester.widget<Text>(title).data, l10n.navTimeline);
+      expect(tester.getCenter(title).dx, 195);
+      expect(tester.getCenter(todayButton).dy, tester.getCenter(title).dy);
+      expect(tester.getCenter(settings).dy, tester.getCenter(title).dy);
+      expect(
+        tester.getBottomLeft(settings).dy,
+        lessThan(tester.getTopLeft(navigator).dy),
+      );
+
+      await tester.tap(todayButton);
+      await _pumpFrames(tester);
+      expect(_routerUri(router), '/timeline?date=${_routeDate(today)}');
+      await tester.tap(find.byTooltip(l10n.timelineNextDay));
+      await _pumpFrames(tester);
+      expect(_routerUri(router), '/timeline?date=${_routeDate(tomorrow)}');
+      await tester.tap(find.byTooltip(l10n.timelinePreviousDay));
+      await _pumpFrames(tester);
+      expect(_routerUri(router), '/timeline?date=${_routeDate(today)}');
+
+      await tester.tap(navigator);
+      await _pumpFrames(tester);
+      expect(find.text(l10n.timelinePickDate), findsOneWidget);
+      await tester.tap(find.text(l10n.commonCancel));
+      await _pumpFrames(tester);
+      await _openTimelineSettings(tester);
+      expect(find.byKey(const Key('timeline-start-minutes')), findsOneWidget);
+      expect(find.byKey(const Key('timeline-zoom-in')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant({
+      TargetPlatform.iOS,
+      TargetPlatform.android,
+    }),
+  );
 
   testWidgets('timeline mobile moves and resizes within the same project', (
     tester,

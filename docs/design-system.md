@@ -519,6 +519,15 @@ identify them. Preserve the existing completion, creation, drag and resize
 interactions. Vertical drag changes the time within the current project.
 Project changes remain available in task details.
 
+On compact mobile and web, pin the Timeline title in the shell header between
+equal wings. Place the drawer and shared Today date tile at the leading edge
+and the existing settings popover behind an overflow button at the trailing
+edge. Pressing the tile returns to the current day. Below the
+heading, group previous day, the anchored date picker and next day on one
+rounded surface with subtle dividers. Keep all three targets at least 44 px
+tall, retain directional arrows and localized labels, and allow the selected
+date to wrap to two lines. Keep the standard floating Add task action.
+
 ### Mobile bottom panels
 
 Below the 820 px shell breakpoint, contextual calendar actions, bulk task
@@ -626,6 +635,12 @@ and label names. Omit the duplicate body heading while keeping its controls
 and supporting text. Standalone screens keep their own headings. Fullscreen
 task and habit details and the fullscreen map keep their own chrome.
 
+Individual project pages keep the live project name centered between equal-width
+header wings. A trailing button shows the current List, Map or Files icon and a
+down chevron. It opens the existing segmented tabs in an anchored popover.
+The separate project actions button retains its own menu. Keep the drawer at
+the leading edge and hide the header in fullscreen map mode.
+
 The Projects catalog owns its compact shell header, reusing the shell's drawer
 callback. Keep the Projects title geometrically centered between equal 144 px
 wings: drawer plus icon-only Projects / Labels tabs on the leading side, and
@@ -671,6 +686,12 @@ Keep it available on shell routes, including Focus, Settings and task details;
 Calendar uses its labeled Schedule action instead.
 It opens the existing Quick Add dialog; modal surfaces retain their normal input
 barriers. Give the button the localized Add task label and a visible focus state.
+
+On compact mobile/web project pages, use the floating Add task button in place
+of the inline composer across List, Map and Files. Open Quick Add with an empty
+task title and the current project selected. Show the existing project control
+immediately so the selection can be inspected or changed before typing. Hide the
+floating action while the project is loading, missing, archived or read-only.
 
 Hide it for the entire voice Quick Add session in the same root overlay, including
 recording, transcription, draft review and the collapsed panel. Restore it when

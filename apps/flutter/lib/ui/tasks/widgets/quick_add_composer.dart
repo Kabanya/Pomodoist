@@ -215,6 +215,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       controller: _controller,
       defaultDate: _textDefaultDate,
       projectId: widget.projectId,
+      showWhenEmpty: widget.compact && widget.projectId != null,
       enabled: !_busy,
       touchTargets: widget.compact,
       desktop: !widget.compact,

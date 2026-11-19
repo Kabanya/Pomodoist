@@ -227,6 +227,28 @@ void main() {
     variant: TargetPlatformVariant({TargetPlatform.iOS}),
   );
 
+  testWidgets(
+    'project view picker switches views while keeping the name centered',
+    (tester) async {
+      await _pumpApp(tester, size: const Size(390, 800));
+      final title = find.byKey(const Key('shell-page-title'));
+      GoRouter.of(tester.element(title)).go('/project/work');
+      await _pumpFrames(tester);
+      final picker = find.byKey(const Key('project-view-picker'));
+      for (final label in ['Map', 'Files', 'List']) {
+        expect(tester.getCenter(title).dx, 195);
+        await tester.tap(picker);
+        await _pumpFrames(tester);
+        await tester.tap(find.text(label).hitTestable().first);
+        await _pumpFrames(tester);
+        expect(tester.widget<IconButton>(picker).tooltip, label);
+        expect(tester.getCenter(title).dx, 195);
+      }
+      await _disposeApp(tester);
+    },
+    variant: TargetPlatformVariant({TargetPlatform.iOS}),
+  );
+
   testWidgets('sidebar keyboard shortcut toggles wide layout', (tester) async {
     await _pumpWideApp(tester);
 
