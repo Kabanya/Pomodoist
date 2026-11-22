@@ -583,6 +583,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
                             hideProjectAdd ||
                             voiceActive ||
                             widget.location == '/calendar' ||
+                            widget.location == '/priority-matrix' ||
                             widget.location == '/blocking' ||
                             _isFocusLocation(widget.location)
                         ? const SizedBox.shrink()

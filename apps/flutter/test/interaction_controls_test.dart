@@ -1646,7 +1646,7 @@ void main() {
     await _pumpFrames(tester);
 
     expect(find.text('Priority Matrix'), findsOneWidget);
-    expect(find.text('Do now'), findsOneWidget);
+    expect(find.text('Do now'), findsNWidgets(2));
     expect(find.text('Schedule'), findsOneWidget);
     expect(find.text('Delegate'), findsOneWidget);
     expect(find.text('Drop'), findsOneWidget);
@@ -1694,27 +1694,54 @@ void main() {
     expect(find.byKey(const Key('priority-matrix-meaning-p1')), findsNothing);
   });
 
-  testWidgets('priority matrix shows meanings inside narrow quadrants', (
-    tester,
-  ) async {
-    late GoRouter router;
-    await _pumpApp(tester, onRouter: (value) => router = value);
-
-    router.go('/priority-matrix');
-    await _pumpFrames(tester);
-
-    expect(find.byKey(const Key('priority-matrix-axis-urgent')), findsNothing);
-    for (final priority in [1, 2, 3, 4]) {
-      expect(
-        find.byKey(Key('priority-matrix-meaning-p$priority')),
-        findsOneWidget,
+  testWidgets(
+    'priority matrix switches the narrow task list and adds to the selected priority',
+    (tester) async {
+      late GoRouter router;
+      final harness = await _pumpApp(
+        tester,
+        onRouter: (value) => router = value,
+        tasks: [
+          _task('urgent', 'Sign contract', priority: 1),
+          _task('planned', 'Plan next week', priority: 2),
+        ],
       );
-    }
-    expect(find.text('Important / Urgent'), findsOneWidget);
-    expect(find.text('Important / Not urgent'), findsOneWidget);
-    expect(find.text('Not important / Urgent'), findsOneWidget);
-    expect(find.text('Not important / Not urgent'), findsOneWidget);
-  });
+
+      router.go('/priority-matrix');
+      await _pumpFrames(tester);
+
+      expect(
+        find.byKey(const Key('priority-matrix-axis-urgent')),
+        findsNothing,
+      );
+      for (final priority in [1, 2, 3, 4]) {
+        expect(
+          find.byKey(Key('priority-matrix-meaning-p$priority')),
+          findsOneWidget,
+        );
+      }
+      expect(find.text('Important / Urgent'), findsOneWidget);
+      expect(find.text('Important / Not urgent'), findsOneWidget);
+      expect(find.text('Not important / Urgent'), findsOneWidget);
+      expect(find.text('Not important / Not urgent'), findsOneWidget);
+      expect(find.text('Sign contract'), findsOneWidget);
+      expect(find.text('Plan next week'), findsNothing);
+      expect(find.byKey(const Key('compact-add-task')), findsNothing);
+      await tester.tap(find.byKey(const Key('priority-matrix-quadrant-p2')));
+      await _pumpFrames(tester);
+      expect(find.text('Sign contract'), findsNothing);
+      expect(find.text('Plan next week'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('priority-matrix-add')));
+      await _pumpFrames(tester);
+      await tester.enterText(
+        find.byKey(const Key('sidebar-quick-add-input')),
+        'Review plan',
+      );
+      await tester.tap(find.byKey(const Key('sidebar-quick-add-submit')));
+      await _pumpFrames(tester);
+      expect(harness.taskRepository.createdInputs.single.priority, 2);
+    },
+  );
 
   testWidgets('priority matrix mirrors Arabic axes with their quadrants', (
     tester,

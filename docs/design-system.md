@@ -911,6 +911,16 @@ inline Quick Add bar and its preceding gap from Upcoming. Use the existing
 floating Add task action. Desktop layouts retain inline creation, including
 narrow desktop windows where the mobile floating action is unavailable.
 
+### Compact Priority Matrix
+
+Arrange P1–P4 in a two-by-two selector above the selected priority's task list.
+Each tile shows its action, meaning and open-task count. Outline the selected
+tile in its priority color and expose its selected state to assistive technology.
+Allow titles and meanings to wrap on narrow screens and at larger text sizes.
+The list header owns the Add task button and supplies the selected priority to
+Quick Add. Scope bulk selection to that list. Each tile accepts drops from
+tasks in other priorities.
+
 ### Browse
 
 Center Browse content within 1120 px. Keep the header, account settings link and

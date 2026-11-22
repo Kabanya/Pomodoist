@@ -23,6 +23,7 @@ class _SidebarQuickAddDialog extends StatefulWidget {
     required this.initialText,
     required this.dateInText,
     this.defaultDate,
+    this.defaultPriority,
     this.projectId,
     this.labelId,
     super.key,
@@ -34,6 +35,7 @@ class _SidebarQuickAddDialog extends StatefulWidget {
   final String initialText;
   final bool dateInText;
   final DateTime? defaultDate;
+  final int? defaultPriority;
   final String? projectId;
   final String? labelId;
 
@@ -154,6 +156,7 @@ class _SidebarQuickAddDialogState extends State<_SidebarQuickAddDialog> {
       initialText: widget.initialText,
       dateInText: widget.dateInText,
       defaultDate: widget.defaultDate,
+      defaultPriority: widget.defaultPriority,
       projectId: widget.projectId,
       labelId: widget.labelId,
       onCompleted: widget.onClose,
@@ -274,6 +277,7 @@ Future<void> showQuickAddDialog(
   BuildContext context, {
   String initialText = '',
   DateTime? defaultDate,
+  int? defaultPriority,
   String? projectId,
   String? labelId,
 }) {
@@ -335,6 +339,7 @@ Future<void> showQuickAddDialog(
       initialText: initialText,
       dateInText: dateInText,
       defaultDate: defaultDate,
+      defaultPriority: defaultPriority,
       projectId: projectId,
       labelId: labelId,
     ),

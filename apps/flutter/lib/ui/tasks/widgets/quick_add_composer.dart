@@ -6,6 +6,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
     required this.onCancel,
     this.initialText = '',
     this.defaultDate,
+    this.defaultPriority,
     this.dateInText = false,
     this.projectId,
     this.labelId,
@@ -26,6 +27,7 @@ class QuickAddComposer extends ConsumerStatefulWidget {
   final VoidCallback onCancel;
   final String initialText;
   final DateTime? defaultDate;
+  final int? defaultPriority;
   final bool dateInText;
   final String? projectId;
   final String? labelId;
@@ -214,8 +216,11 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       key: _detailsKey,
       controller: _controller,
       defaultDate: _textDefaultDate,
+      priority: widget.defaultPriority,
       projectId: widget.projectId,
-      showWhenEmpty: widget.compact && widget.projectId != null,
+      showWhenEmpty:
+          widget.compact &&
+          (widget.projectId != null || widget.defaultPriority != null),
       enabled: !_busy,
       touchTargets: widget.compact,
       desktop: !widget.compact,
@@ -588,6 +593,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
         title: _controller,
         description: _commentController,
         defaultDate: _textDefaultDate,
+        priority: widget.defaultPriority,
         projectId: widget.projectId,
         labelId: widget.labelId,
       );
@@ -612,6 +618,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
         .read(quickAddViewModelProvider(_identity).notifier)
         .submit(
           defaultDate: _textDefaultDate,
+          priority: widget.defaultPriority,
           projectId: widget.projectId,
           labelId: widget.labelId,
         );
@@ -631,6 +638,7 @@ class _QuickAddComposerState extends ConsumerState<QuickAddComposer> {
       context,
       ref,
       defaultDate: widget.defaultDate,
+      defaultPriority: widget.defaultPriority,
       projectId: widget.projectId,
       labelId: widget.labelId,
       onExpandedChanged: (expanded) {
