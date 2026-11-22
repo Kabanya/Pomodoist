@@ -8,7 +8,7 @@ where n.nspname='public' and p.proname in
   and not p.prosecdef and not has_function_privilege('anon',p.oid,'EXECUTE')
   and has_function_privilege('authenticated',p.oid,'EXECUTE')
   and has_function_privilege('service_role',p.oid,'EXECUTE');
-select is(count(*), 13::bigint, 'only twelve private RPCs and the session predicate are executable by authenticated')
+select is(count(*), 14::bigint, 'only thirteen private RPCs and the session predicate are executable by authenticated')
 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
 where n.nspname='private' and has_function_privilege('authenticated',p.oid,'EXECUTE');
 select ok(not exists (
@@ -17,7 +17,7 @@ select ok(not exists (
     and p.proname not in ('ensure_profile','get_account_overview','get_apple_app_account_token',
       'get_usage_period','consume_quota','push_changes','pull_changes','pomodoist_files',
       'pomodoist_collaboration','pomodoist_session_is_active','pomodoist_focus',
-      'pomodoist_resource_classification','pomodoist_app_settings_device')
+      'pomodoist_resource_classification','pomodoist_app_settings_device','pomodoist_custom_model_access')
 ), 'authenticated private execution matches the explicit RPC allowlist');
 select is(count(*), 2::bigint, 'Focus and resource classification expose authenticated invoker wrappers only')
 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
