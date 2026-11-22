@@ -18,6 +18,7 @@ class NativeAssetsTests(unittest.TestCase):
                 (source / "flutter").mkdir(parents=True)
                 (source / "runner").mkdir()
                 shutil.copyfile(ROOT / "apps/flutter/windows/CMakeLists.txt", source / "CMakeLists.txt")
+                shutil.copytree(ROOT / "apps/flutter/desktop", source.parent / "desktop")
                 assets = root / "app/build/native_assets/windows"
                 assets.mkdir(parents=True)
                 for name in ("thermion_dart.dll", "thermion_dart.lib"):
