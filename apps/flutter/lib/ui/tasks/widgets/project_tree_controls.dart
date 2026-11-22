@@ -154,11 +154,13 @@ class ProjectTreeRow extends ConsumerStatefulWidget {
     required this.row,
     required this.child,
     this.dragEnabled = true,
+    this.toggleWidth,
     super.key,
   });
   final ProjectListRow row;
   final Widget child;
   final bool dragEnabled;
+  final double? toggleWidth;
   @override
   ConsumerState<ProjectTreeRow> createState() => _ProjectTreeRowState();
 }
@@ -224,18 +226,21 @@ class _ProjectTreeRowState extends ConsumerState<ProjectTreeRow>
           Semantics(
             expanded: !tree.collapsedIds.contains(row.project.id),
             label: row.project.displayName(context.l10n),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              tooltip: tree.collapsedIds.contains(row.project.id)
-                  ? context.l10n.expandProjects
-                  : context.l10n.collapseProjects,
-              onPressed: () => tree.toggle(row.project.id),
-              icon: Icon(
-                tree.collapsedIds.contains(row.project.id)
-                    ? LucideIcons.chevronRight
-                    : LucideIcons.chevronDown,
-                size: 16,
+            child: SizedBox(
+              width: widget.toggleWidth,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: tree.collapsedIds.contains(row.project.id)
+                    ? context.l10n.expandProjects
+                    : context.l10n.collapseProjects,
+                onPressed: () => tree.toggle(row.project.id),
+                icon: Icon(
+                  tree.collapsedIds.contains(row.project.id)
+                      ? LucideIcons.chevronRight
+                      : LucideIcons.chevronDown,
+                  size: 16,
+                ),
               ),
             ),
           ),

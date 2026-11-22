@@ -774,6 +774,11 @@ Use `textTheme.titleMedium` for destination labels, Add task, and project names
 and their header, matching task titles. Group captions, counts, and shortcut
 hints keep their smaller text styles.
 
+In the sidebar and compact drawer, right-align the Projects header count and
+project task counts in one column. Use a separate trailing column for section
+and branch toggles so rows with and without a toggle align. Keep the header
+count in its badge and positive task counts as plain text.
+
 The sidebar's desktop scrollbar is 4 px wide in every state. Use `secondaryText`
 at 25% opacity normally, 40% on hover and 55% while dragging; preserve Flutter's
 standard scrolling, hit targets and fade behavior. Scope this treatment to the

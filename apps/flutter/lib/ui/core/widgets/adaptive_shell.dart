@@ -72,6 +72,8 @@ const double _wideSidebarMaxWidth = 380;
 const double _wideSidebarCollapseThreshold = 180;
 const double _wideSidebarResizeHandleWidth = 12;
 const double _wideSidebarEdgeHandleWidth = 16;
+const double _sidebarProjectToggleWidth = 48;
+const double _sidebarProjectCountInset = 8;
 const double _shellTopBarHeight = 52;
 const Duration _wideSidebarAnimationDuration = AppMotion.panel;
 const Curve _wideSidebarAnimationCurve = Curves.easeOutCubic;
@@ -1572,8 +1574,10 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                                           'sidebar-tree-${row.project.id}',
                                         ),
                                         row: row,
+                                        toggleWidth: _sidebarProjectToggleWidth,
                                         child: _SidebarProjectTile(
                                           project: row.project,
+                                          hasChildren: row.hasChildren,
                                           count:
                                               projectTaskCounts[row
                                                   .project
@@ -1760,6 +1764,7 @@ class _ProjectsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const badgeHorizontalPadding = 5.0;
     final colors = context.appColors;
     final foreground = selected ? colors.accent : colors.secondaryText;
     final l10n = context.l10n;
@@ -1782,7 +1787,12 @@ class _ProjectsHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 onTap: onTitleTap,
                 child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 4, 10),
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    10,
+                    10,
+                    _sidebarProjectCountInset - badgeHorizontalPadding,
+                    10,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -1801,7 +1811,7 @@ class _ProjectsHeader extends StatelessWidget {
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
+                            horizontal: badgeHorizontalPadding,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
@@ -1827,21 +1837,22 @@ class _ProjectsHeader extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 2),
-        IconButton(
-          key: const Key('sidebar-projects-toggle'),
-          tooltip: expanded ? l10n.collapseProjects : l10n.expandProjects,
-          onPressed: onToggle,
-          icon: Icon(
-            expanded ? LucideIcons.chevronDown : LucideIcons.chevronRight,
-          ),
-          iconSize: 24,
-          style: IconButton.styleFrom(
-            foregroundColor: colors.secondaryText,
-            fixedSize: const Size(30, 34),
-            minimumSize: const Size(34, 34),
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        SizedBox(
+          width: _sidebarProjectToggleWidth,
+          child: IconButton(
+            key: const Key('sidebar-projects-toggle'),
+            tooltip: expanded ? l10n.collapseProjects : l10n.expandProjects,
+            onPressed: onToggle,
+            icon: Icon(
+              expanded ? LucideIcons.chevronDown : LucideIcons.chevronRight,
+            ),
+            iconSize: 24,
+            style: IconButton.styleFrom(
+              foregroundColor: colors.secondaryText,
+              minimumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
           ),
         ),
       ],
@@ -1941,12 +1952,14 @@ class _SidebarDestinationTile extends StatelessWidget {
 class _SidebarProjectTile extends StatelessWidget {
   const _SidebarProjectTile({
     required this.project,
+    required this.hasChildren,
     required this.selected,
     required this.onTap,
     required this.count,
   });
 
   final ProjectItem project;
+  final bool hasChildren;
   final bool selected;
   final VoidCallback onTap;
   final int count;
@@ -1965,7 +1978,13 @@ class _SidebarProjectTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: EdgeInsetsDirectional.fromSTEB(
+              8,
+              6,
+              _sidebarProjectCountInset +
+                  (hasChildren || count <= 0 ? 0 : _sidebarProjectToggleWidth),
+              6,
+            ),
             child: Row(
               children: [
                 ProjectIconView(project: project, size: 18),
