@@ -73,7 +73,6 @@ const double _wideSidebarCollapseThreshold = 180;
 const double _wideSidebarResizeHandleWidth = 12;
 const double _wideSidebarEdgeHandleWidth = 16;
 const double _sidebarProjectToggleWidth = 48;
-const double _sidebarProjectCountInset = 8;
 const double _shellTopBarHeight = 52;
 const Duration _wideSidebarAnimationDuration = AppMotion.panel;
 const Curve _wideSidebarAnimationCurve = Curves.easeOutCubic;
@@ -1374,11 +1373,6 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
     final displayName = _displayName(context, sidebar.displayName);
     final projects = sidebar.projects;
     final projectTaskCounts = sidebar.projectTaskCounts;
-    final projectCount = projects.value
-        ?.where(
-          (project) => project.id != inboxProjectId && !project.isArchived,
-        )
-        .length;
     final counts = <String, int>{
       if (widget.dataReady) ...{
         '/inbox': sidebar.inboxCount,
@@ -1522,7 +1516,6 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                         LearningTourAnchor(
                           id: LearningTourAnchorId.projectsDesktop,
                           child: _ProjectsHeader(
-                            count: projectCount,
                             expanded: _projectsExpanded,
                             selected: widget.location == '/projects',
                             onTitleTap: () =>
@@ -1578,7 +1571,6 @@ class _TodoistSidebarState extends ConsumerState<_TodoistSidebar> {
                                         toggleWidth: _sidebarProjectToggleWidth,
                                         child: _SidebarProjectTile(
                                           project: row.project,
-                                          hasChildren: row.hasChildren,
                                           count:
                                               projectTaskCounts[row
                                                   .project
@@ -1748,7 +1740,6 @@ class _AddTaskTile extends StatelessWidget {
 
 class _ProjectsHeader extends StatelessWidget {
   const _ProjectsHeader({
-    required this.count,
     required this.expanded,
     required this.selected,
     required this.onTitleTap,
@@ -1756,7 +1747,6 @@ class _ProjectsHeader extends StatelessWidget {
     required this.onAdd,
   });
 
-  final int? count;
   final bool expanded;
   final bool selected;
   final VoidCallback onTitleTap;
@@ -1765,7 +1755,6 @@ class _ProjectsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const badgeHorizontalPadding = 5.0;
     final colors = context.appColors;
     final foreground = selected ? colors.accent : colors.secondaryText;
     final l10n = context.l10n;
@@ -1788,50 +1777,15 @@ class _ProjectsHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 onTap: onTitleTap,
                 child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                    10,
-                    10,
-                    _sidebarProjectCountInset - badgeHorizontalPadding,
-                    10,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.navProjects,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: foreground,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                      ),
-                      if (count != null) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: badgeHorizontalPadding,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            '$count',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: foreground,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ],
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    l10n.navProjects,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
@@ -1953,14 +1907,12 @@ class _SidebarDestinationTile extends StatelessWidget {
 class _SidebarProjectTile extends StatelessWidget {
   const _SidebarProjectTile({
     required this.project,
-    required this.hasChildren,
     required this.selected,
     required this.onTap,
     required this.count,
   });
 
   final ProjectItem project;
-  final bool hasChildren;
   final bool selected;
   final VoidCallback onTap;
   final int count;
@@ -1979,16 +1931,10 @@ class _SidebarProjectTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              8,
-              6,
-              _sidebarProjectCountInset +
-                  (hasChildren || count <= 0 ? 0 : _sidebarProjectToggleWidth),
-              6,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: Row(
               children: [
-                ProjectIconView(project: project, size: 18),
+                _SidebarProjectIcon(project: project, count: count),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Row(
@@ -1996,7 +1942,7 @@ class _SidebarProjectTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           project.displayName(context.l10n),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
@@ -2012,19 +1958,56 @@ class _SidebarProjectTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (count > 0)
-                  Text(
-                    '$count',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.mutedText,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SidebarProjectIcon extends StatelessWidget {
+  const _SidebarProjectIcon({required this.project, required this.count});
+
+  final ProjectItem project;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 34),
+      child: Stack(
+        children: [
+          ProjectIconView(project: project, size: 20),
+          if (count > 0)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 10, top: 12),
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: colors.surfaceHover,
+                  shape: const StadiumBorder(),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: 1,
+                  ),
+                  child: Text(
+                    '$count',
+                    semanticsLabel: context.l10n.upcomingTaskCount(count),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: colors.primaryText,
+                      fontSize: 10,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

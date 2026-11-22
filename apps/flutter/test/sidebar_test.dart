@@ -133,7 +133,7 @@ void main() {
         of: find.byKey(const Key('sidebar-projects-link')),
         matching: find.text('1'),
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.text('Work'), findsOneWidget);
     expect(
@@ -1422,6 +1422,7 @@ void main() {
     _expectBadgeFollowsName(
       tester,
       row: find.byKey(ValueKey('sidebar-project-${harness.workProjectId}')),
+      countOnIcon: true,
       name: 'Work',
       count: '1',
     );
@@ -1461,7 +1462,7 @@ void main() {
       row: sidebarRow,
       name: _longProjectName,
       count: '1',
-      nameFits: false,
+      countOnIcon: true,
     );
 
     await tester.tap(find.byKey(const Key('sidebar-projects-link')));
@@ -1504,7 +1505,7 @@ void _expectBadgeFollowsName(
   required Finder row,
   required String name,
   required String count,
-  bool nameFits = true,
+  bool countOnIcon = false,
 }) {
   final badge = find.descendant(
     of: row,
@@ -1529,10 +1530,14 @@ void _expectBadgeFollowsName(
   // fits or is ellipsized.
   expect(badgeRect.left - nameRect.right, closeTo(4, 0.1));
   expect(badgeRect.center.dy, closeTo(nameRect.center.dy, 1));
-  // Once the name fills the row, the badge still precedes the count, which
-  // keeps its trailing position; a name that fits leaves the count far away.
-  expect(badgeRect.right, lessThanOrEqualTo(countRect.left));
-  if (nameFits) {
+  if (countOnIcon) {
+    expect(countRect.right, lessThan(nameRect.left));
+    final title = tester.widget<Text>(
+      find.descendant(of: row, matching: find.text(name)),
+    );
+    expect(title.maxLines, 2);
+  } else {
+    expect(badgeRect.right, lessThanOrEqualTo(countRect.left));
     expect(countRect.left - badgeRect.right, greaterThan(20));
   }
   // The badge stays inside the row instead of being pushed out of it.

@@ -774,10 +774,10 @@ Use `textTheme.titleMedium` for destination labels, Add task, and project names
 and their header, matching task titles. Group captions, counts, and shortcut
 hints keep their smaller text styles.
 
-In the sidebar and compact drawer, right-align the Projects header count and
-project task counts in one column. Use a separate trailing column for section
-and branch toggles so rows with and without a toggle align. Keep the header
-count in its badge and positive task counts as plain text.
+In the sidebar and compact drawer, show each positive task count once, in a
+neutral pill overlapping the lower trailing corner of its project icon. Allow
+project names to wrap to two lines before truncating. The section header shows
+the title and disclosure control, and branches keep a trailing disclosure control.
 
 The sidebar's desktop scrollbar is 4 px wide in every state. Use `secondaryText`
 at 25% opacity normally, 40% on hover and 55% while dragging; preserve Flutter's
@@ -795,7 +795,7 @@ cannot be archived. Sidebar
 rows show no menu button; the Projects screen keeps its ellipsis button for
 keyboard and touch access. Project icons are synchronized project data;
 existing projects retain the hash icon until changed. The shared-project badge
-follows the project name in both rows, before the task count. It always uses the
+follows the project name in both rows. It always uses the
 users icon. Keep sync conflicts internal: do not show conflict badges, tooltips,
 messages or resolution controls in the interface. Preserve sync conflict storage
 and processing independently of presentation.
