@@ -134,6 +134,25 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   late final AnimationController _analysisProgressController;
   final _draftControllers = <_VoiceTaskDraftController>[];
   bool _expanded = true;
+  bool _modelDialogOpen = false;
+
+  Future<void> _startVoice() =>
+      _voiceActions.start(offerDownload: _offerDownload);
+
+  Future<void> _offerDownload(WhisperModel model) async {
+    if (!mounted || _modelDialogOpen) return;
+    setState(() => _modelDialogOpen = true);
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => WhisperDownloadDialog(model: model),
+      );
+    } finally {
+      if (mounted) setState(() => _modelDialogOpen = false);
+    }
+  }
+
   _VoiceTaskDraftController? _openReviewDraft;
   late final DateTime _reviewDate = widget.defaultDate ?? DateTime.now();
   LocalHistoryEntry? _backEntry;
@@ -269,6 +288,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       null => null,
       VoiceQuickAddError.general => l10n.voiceStatusError,
       VoiceQuickAddError.settings => l10n.voiceSettingsFailed,
+      VoiceQuickAddError.preference => l10n.settingsSaveError,
       VoiceQuickAddError.restricted => l10n.voiceAccessRestricted,
       VoiceQuickAddError.microphoneDenied => l10n.voiceMicrophoneDenied,
       VoiceQuickAddError.speechDenied => l10n.voiceSpeechDenied,
@@ -336,6 +356,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   @override
   Widget build(BuildContext context) {
     ref.watch(voiceQuickAddViewModelProvider(widget._session));
+    if (_modelDialogOpen) return const SizedBox.shrink();
     final colors = Theme.of(context).colorScheme;
     final processing =
         _voice.isTranscribing || _voice.analyzing || _voice.saving;
@@ -483,8 +504,14 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       'microphone_restricted' ||
       'speech_authorization_restricted' => l10n.voiceAccessRestricted,
       'speech_dictation_disabled' => l10n.voiceDictationDisabled,
-      'speech_unavailable' ||
-      'speech_recognition_failed' => l10n.voiceServiceUnavailable,
+      'speech_system_unavailable' => l10n.voiceSystemRecognitionUnavailable,
+      'voice_model_download_failed' => l10n.voiceModelDownloadFailed,
+      'empty_recording' || 'empty_transcript' => l10n.voiceNoSpeechRecognized,
+      'speech_unavailable' || 'speech_recognition_failed' =>
+        _voice.usesDownloadableVoiceModel ||
+                Theme.of(context).platform == TargetPlatform.android
+            ? l10n.voiceStatusError
+            : l10n.voiceServiceUnavailable,
       'speech_locale_unsupported' => l10n.voiceLocaleUnsupported,
       'speech_network_unavailable' => l10n.voiceNetworkUnavailable,
       _ => l10n.voiceStatusError,

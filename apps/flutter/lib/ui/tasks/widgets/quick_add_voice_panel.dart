@@ -57,6 +57,8 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
               _panelHeader(context),
               if (!_reviewReady) ...[
                 const SizedBox(height: 14),
+                if (_voice.transcriptionModeSelectable)
+                  _transcriptionModeRow(context),
                 _voiceSmartModeRow(context),
                 const SizedBox(height: 10),
                 _VoiceProcessingSteps(activeIndex: _processingStepIndex),
@@ -149,6 +151,69 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
     );
   }
 
+  Widget _transcriptionModeRow(BuildContext context) {
+    final l10n = context.l10n;
+    final mode = _voice.transcriptionMode;
+    String label(VoiceTranscriptionMode option) =>
+        option == VoiceTranscriptionMode.system
+        ? l10n.settingsVoiceTranscriptionSystem
+        : l10n.settingsVoiceTranscriptionCloud;
+    IconData icon(VoiceTranscriptionMode option) =>
+        option == VoiceTranscriptionMode.system
+        ? LucideIcons.mic
+        : LucideIcons.cloud;
+
+    if (!_voice.transcriptionModeSelectable) {
+      return ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(icon(mode), size: 20),
+        title: Text(l10n.settingsVoiceTranscriptionTitle),
+        subtitle: Text(label(mode)),
+      );
+    }
+    return Column(
+      key: const Key('voice-transcription-mode'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.settingsVoiceTranscriptionTitle,
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final option in VoiceTranscriptionMode.values)
+              ChoiceChip(
+                key: ValueKey('voice-transcription-${option.name}'),
+                avatar: Icon(icon(option), size: 16),
+                label: Text(label(option)),
+                tooltip: option == VoiceTranscriptionMode.cloud
+                    ? _voice.cloudTranscriptionAvailable
+                          ? l10n.settingsVoiceTranscriptionCloudDescription
+                          : l10n.settingsVoiceTranscriptionCloudRequiresSignIn
+                    : null,
+                selected: option == mode,
+                onSelected:
+                    _voice.canStart &&
+                        (option == VoiceTranscriptionMode.system ||
+                            _voice.cloudTranscriptionAvailable)
+                    ? (selected) {
+                        if (selected) {
+                          _voiceActions.setTranscriptionMode(option);
+                        }
+                      }
+                    : null,
+              ),
+          ],
+        ),
+        if (_voice.usesDownloadableVoiceModel &&
+            mode == VoiceTranscriptionMode.system &&
+            !_voice.motionActive)
+          const WhisperModelStatus(),
+      ],
+    );
+  }
+
   Widget _voiceSmartModeRow(BuildContext context) {
     final l10n = context.l10n;
     return Row(
@@ -192,7 +257,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
-              onPressed: _voice.canStart ? _voiceActions.start : null,
+              onPressed: _voice.canStart ? _startVoice : null,
               icon: const Icon(LucideIcons.mic),
               label: Text(l10n.voiceAgain),
             ),
@@ -223,7 +288,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
       runSpacing: 8,
       children: [
         FilledButton.icon(
-          onPressed: _voice.canStart ? _voiceActions.start : null,
+          onPressed: _voice.canStart ? _startVoice : null,
           icon: const Icon(LucideIcons.mic),
           label: Text(
             _voice.transcript.isEmpty &&

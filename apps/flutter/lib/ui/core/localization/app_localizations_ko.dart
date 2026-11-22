@@ -9,10 +9,48 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => '음성 입력';
+  String get whisperDefault => '기본값 (Tiny)';
 
   @override
-  String get voiceRecorderSource => '내장 마이크';
+  String get whisperFast => '빠름';
+
+  @override
+  String get whisperBalanced => '속도와 정확도의 균형';
+
+  @override
+  String get whisperAccuracy => '높은 정확도';
+
+  @override
+  String get whisperReady => '녹음 준비 완료';
+
+  @override
+  String get whisperNeedsDownload => '다운로드 필요';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return '$model 모델을 다운로드할까요?';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return '기기에서 음성을 인식하려면 $size MB를 다운로드해야 합니다. 이후에는 오프라인으로 받아쓸 수 있습니다.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return '$size MB 다운로드';
+  }
+
+  @override
+  String get whisperNotNow => '나중에';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => '음성 입력';
 
   @override
   String get voiceRecorderTap => '탭하여 녹음';
@@ -1144,7 +1182,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 기기에서 녹음을 텍스트로 변환하는 방식을 선택하세요.';
 
   @override
-  String get settingsVoiceTranscriptionSystem => '시스템(Apple)';
+  String get settingsVoiceTranscriptionSystem => '내장';
 
   @override
   String get settingsVoiceTranscriptionCloud => '클라우드';
@@ -1155,7 +1193,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      '클라우드 받아쓰기를 사용하려면 로그인하세요. 그전까지 시스템 받아쓰기가 활성화됩니다.';
+      '클라우드 받아쓰기를 사용하려면 로그인하세요. 그전까지 내장 받아쓰기가 활성화됩니다.';
 
   @override
   String get settingsThemeTitle => '테마';
@@ -1391,6 +1429,17 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       '음성 인식을 이용할 수 없습니다. 연결을 확인하세요. Mac에서는 시스템 설정 → 키보드 → 받아쓰기 및 언어도 확인하세요.';
+
+  @override
+  String get voiceSystemRecognitionUnavailable =>
+      '이 기기에서 시스템 음성 인식을 사용할 수 없습니다.';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      '음성 인식 모델을 다운로드하지 못했습니다. 연결을 확인하고 다시 시도하세요.';
+
+  @override
+  String get voiceNoSpeechRecognized => '음성을 인식하지 못했습니다. 다시 녹음해 보세요.';
 
   @override
   String get voiceCloudServiceUnavailable =>

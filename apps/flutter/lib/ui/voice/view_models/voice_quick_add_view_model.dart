@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,7 @@ import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 
 final voiceQuickAddViewModelProvider = NotifierProvider.autoDispose
     .family<VoiceQuickAddViewModel, VoiceQuickAddState, Object>(
@@ -35,6 +37,7 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   Object? _analysisError;
   bool _analyzing = false;
   bool _saving = false;
+  bool _changingMode = false;
   int? _accountGeneration;
 
   @override
@@ -47,13 +50,32 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
       _smartMode = next;
       _emit();
     });
-    ref.listen(accountSessionProvider, (_, next) {
+    ref.listen(voiceTranscriptionModeProvider, (_, _) => _emit());
+    ref.listen(accountClientProvider, (_, _) => _emit());
+    ref.listen(accountSessionProvider, (previous, next) {
       _accountGeneration = next.value?.generation;
+      if (previous != null) _emit();
     }, fireImmediately: true);
     _capture = capture;
     _captureState = captureState;
     _smartMode = ref.read(voiceSmartModeProvider);
     return _state;
+  }
+
+  bool get _cloudAvailable =>
+      ref.read(accountClientProvider)?.currentUserId != null;
+  bool get _modeSelectable =>
+      ref.read(voiceTranscriptionModeSelectionSupportedProvider);
+  VoiceTranscriptionMode get _displayMode {
+    if (_captureState.motionActive || _analyzing) {
+      return _captureState.cloudMode
+          ? VoiceTranscriptionMode.cloud
+          : VoiceTranscriptionMode.system;
+    }
+    if (!_modeSelectable) return VoiceTranscriptionMode.cloud;
+    return _cloudAvailable
+        ? ref.read(voiceTranscriptionModeProvider)
+        : VoiceTranscriptionMode.system;
   }
 
   VoiceQuickAddState get _state => VoiceQuickAddState(
@@ -73,13 +95,18 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
     recordingSecondsRemaining: _captureState.recordingSecondsRemaining,
     isCapturing: _captureState.isCapturing,
     isTranscribing: _captureState.isTranscribing,
-    canStart: _captureState.canStart && !_analyzing && !_saving,
+    canStart:
+        _captureState.canStart && !_analyzing && !_saving && !_changingMode,
     motionActive: _captureState.motionActive || _analyzing,
     canUseCloudFallback: _captureState.canUseCloudFallback,
     needsPermissionRequest: _captureState.needsPermissionRequest,
     settingsDestination: _captureState.settingsDestination,
     canRetryTranscription: _captureState.canRetryTranscription,
     cloudMode: _captureState.cloudMode,
+    transcriptionMode: _displayMode,
+    transcriptionModeSelectable: _modeSelectable,
+    cloudTranscriptionAvailable: _cloudAvailable,
+    usesDownloadableVoiceModel: ref.read(downloadableVoiceModelProvider),
     drafts: _drafts,
     draftRevision: _draftRevision,
   );
@@ -138,9 +165,58 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   Future<void> restoreRecording() =>
       _capture.restore().then((result) => result.getOrThrow());
 
-  Future<void> start({bool retry = false}) => _capture
-      .start(_locale, retry: retry)
-      .then((result) => result.getOrThrow());
+  Future<void> setTranscriptionMode(VoiceTranscriptionMode mode) async {
+    if (!state.canStart ||
+        !_modeSelectable ||
+        (mode == VoiceTranscriptionMode.cloud && !_cloudAvailable)) {
+      return;
+    }
+    _changingMode = true;
+    if (_analysisError == VoiceQuickAddError.preference) _analysisError = null;
+    _emit();
+    try {
+      (await ref.read(voicePreferencesRepositoryProvider).setMode(mode))
+          .getOrThrow();
+    } catch (_) {
+      _analysisError = VoiceQuickAddError.preference;
+    } finally {
+      _changingMode = false;
+      _emit();
+    }
+  }
+
+  bool _preparingCapture = false;
+
+  Future<void> start({
+    bool retry = false,
+    Future<void> Function(WhisperModel)? offerDownload,
+  }) async {
+    if (_changingMode || _preparingCapture) return;
+    _preparingCapture = true;
+    try {
+      if (!retry && ref.read(downloadableVoiceModelProvider)) {
+        final preferences = ref.read(voicePreferencesRepositoryProvider);
+        (await preferences.ready).getOrThrow();
+        if (!ref.mounted) return;
+        if (_displayMode == VoiceTranscriptionMode.system) {
+          final model = preferences.state.whisper.model;
+          final ready = await ref.read(checkWhisperModelProvider)(model);
+          if (!ref.mounted ||
+              _displayMode != VoiceTranscriptionMode.system ||
+              model != preferences.state.whisper.model) {
+            return;
+          }
+          if (!ready) {
+            await offerDownload?.call(model);
+            return;
+          }
+        }
+      }
+      (await _capture.start(_locale, retry: retry)).getOrThrow();
+    } finally {
+      _preparingCapture = false;
+    }
+  }
 
   Future<void> stop() => _capture.stop().then((result) => result.getOrThrow());
 

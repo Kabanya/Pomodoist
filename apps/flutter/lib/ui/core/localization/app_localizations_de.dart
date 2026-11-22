@@ -9,10 +9,48 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => 'Spracheingabe';
+  String get whisperDefault => 'Standard (Tiny)';
 
   @override
-  String get voiceRecorderSource => 'Integriertes Mikrofon';
+  String get whisperFast => 'Schnell';
+
+  @override
+  String get whisperBalanced => 'Ausgewogenes Tempo und Genauigkeit';
+
+  @override
+  String get whisperAccuracy => 'Höhere Genauigkeit';
+
+  @override
+  String get whisperReady => 'Aufnahmebereit';
+
+  @override
+  String get whisperNeedsDownload => 'Download erforderlich';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return '$model herunterladen?';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return 'Für die Erkennung auf diesem Gerät werden $size MB heruntergeladen. Anschließend kannst du offline diktieren.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return '$size MB herunterladen';
+  }
+
+  @override
+  String get whisperNotNow => 'Nicht jetzt';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => 'Spracheingabe';
 
   @override
   String get voiceRecorderTap => 'Zum Aufnehmen tippen';
@@ -1211,7 +1249,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wähle aus, wie Aufnahmen auf diesem Gerät in Text umgewandelt werden.';
 
   @override
-  String get settingsVoiceTranscriptionSystem => 'System (Apple)';
+  String get settingsVoiceTranscriptionSystem => 'Integriert';
 
   @override
   String get settingsVoiceTranscriptionCloud => 'Cloud';
@@ -1222,7 +1260,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Melde dich an, um die Cloud-Transkription zu verwenden. Bis dahin ist die Systemtranskription aktiv.';
+      'Melde dich für die Cloud-Transkription an. Bis dahin bleibt die integrierte Transkription aktiv.';
 
   @override
   String get settingsThemeTitle => 'Design';
@@ -1467,6 +1505,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'Die Spracherkennung ist nicht verfügbar. Prüfen Sie Ihre Verbindung. Prüfen Sie auf dem Mac auch Systemeinstellungen → Tastatur → Diktierfunktion und Ihre Sprache.';
+
+  @override
+  String get voiceSystemRecognitionUnavailable =>
+      'Die Systemspracherkennung ist auf diesem Gerät nicht verfügbar.';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      'Das Sprachmodell konnte nicht heruntergeladen werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get voiceNoSpeechRecognized =>
+      'Keine Sprache erkannt. Versuche eine neue Aufnahme.';
 
   @override
   String get voiceCloudServiceUnavailable =>

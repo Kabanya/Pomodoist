@@ -1163,6 +1163,140 @@ void main() {
   });
 
   testWidgets(
+    'phone recorder switches modes for the next recording',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 844);
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues({
+        voiceTranscriptionModePreferenceKey: 'system',
+      });
+      var modelReady = false;
+      var downloads = 0;
+      final completeDownload = Completer<void>();
+      final recognizers = {
+        for (final mode in VoiceTranscriptionMode.values)
+          mode: _FakeRecordedRecognizer(
+            transcript: const VoiceRecognitionTranscript(text: ''),
+          ),
+      };
+      final controllers = {
+        for (final mode in VoiceTranscriptionMode.values)
+          mode: VoiceRecognitionController(
+            recordedRecognizer: recognizers[mode],
+            platformSupport: const VoicePlatformSupport(
+              supportsRecordedSystem: true,
+            ),
+          ),
+      };
+      for (final controller in controllers.values) {
+        addTearDown(controller.dispose);
+      }
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...proVoiceOverrides,
+            checkWhisperModelProvider.overrideWithValue(
+              (_) async => modelReady,
+            ),
+            downloadWhisperModelProvider.overrideWithValue((_, progress) async {
+              downloads++;
+              if (downloads == 1) throw StateError('Interrupted');
+              progress(.5);
+              await completeDownload.future;
+              modelReady = true;
+              progress(1);
+            }),
+            accountClientProvider.overrideWithValue(
+              _VoiceAccountClient(userId: 'user'),
+            ),
+            applePurchasesSupportedProvider.overrideWithValue(false),
+            voiceRecognitionControllerProvider.overrideWith(
+              (ref) => controllers[ref.read(voiceTranscriptionModeProvider)]!,
+            ),
+          ],
+          child: const MaterialApp(
+            builder: testAppBuilder,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: QuickAddBar()),
+          ),
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(QuickAddBar)),
+      );
+      await container.read(voicePreferencesRepositoryProvider).ready;
+      await tester.tap(find.byTooltip('Voice quick add'));
+      await tester.pumpAndSettle();
+      final selector = find.byKey(const Key('voice-transcription-mode'));
+      final record = find.byKey(const Key('voice-recorder-action'));
+      Finder choice(VoiceTranscriptionMode mode) => find.descendant(
+        of: selector,
+        matching: find.byKey(ValueKey('voice-transcription-${mode.name}')),
+      );
+      expect(
+        tester
+            .widget<ChoiceChip>(choice(VoiceTranscriptionMode.system))
+            .selected,
+        isTrue,
+      );
+      for (final mode in VoiceTranscriptionMode.values.reversed) {
+        final chip = choice(mode);
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+        expect(
+          (await SharedPreferences.getInstance()).getString(
+            voiceTranscriptionModePreferenceKey,
+          ),
+          mode.storageValue,
+        );
+        expect(tester.widget<ChoiceChip>(chip).selected, isTrue);
+        if (mode == VoiceTranscriptionMode.system &&
+            defaultTargetPlatform != TargetPlatform.android) {
+          await tester.tap(record);
+          await tester.pumpAndSettle();
+          expect(find.text('Download Whisper Tiny?'), findsOneWidget);
+          await tester.tap(find.text('Not now'));
+          await tester.pumpAndSettle();
+          expect(downloads, 0);
+          expect(recognizers[mode]!.startCalls, 0);
+
+          await tester.tap(record);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Download 104 MB'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Retry'));
+          await tester.pump();
+          expect(find.text('50%'), findsOneWidget);
+          completeDownload.complete();
+          await tester.pumpAndSettle();
+          expect(downloads, 2);
+          expect(recognizers[mode]!.startCalls, 0);
+          expect(find.text('Whisper Tiny · Ready to record'), findsOneWidget);
+        }
+        await tester.tap(record);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(
+          recognizers[mode]!.startCalls,
+          1,
+          reason: 'Record starts with the selected mode: ${mode.name}',
+        );
+        expect(tester.widget<ChoiceChip>(chip).onSelected, isNull);
+        await tester.tap(record);
+        await tester.pumpAndSettle();
+        expect(recognizers[mode]!.stopCalls, 1);
+      }
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.android,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }),
+  );
+
+  testWidgets(
     'mobile review edits and saves a batch of fifteen dictated tasks',
     (tester) async {
       tester.view.devicePixelRatio = 1;
@@ -1232,7 +1366,7 @@ void main() {
       final smart = find.byKey(const Key('voice-smart-mode'));
       expect(find.text('Голосовой ввод'), findsOneWidget);
       expect(find.text('Шаг 1 из 3'), findsOneWidget);
-      expect(find.text('Встроенный микрофон'), findsOneWidget);
+      expect(find.text('Транскрибация голоса'), findsOneWidget);
       expect(find.text('Нажмите для записи'), findsOneWidget);
       expect(tester.getCenter(action).dx, 195);
       expect(tester.widget<ShadSwitch>(smart).enabled, isTrue);

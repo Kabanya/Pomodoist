@@ -122,9 +122,14 @@ Browser retries retain independent audio bytes **only in the current page's
 memory**, including across overlay/controller disposal. Reloading/closing the tab
 loses that pending recording; audio is never written to browser localStorage.
 Record in a secure context (HTTPS or localhost) and grant the site's microphone
-permission. Browsers on Apple devices use this backend path as well. The production
-CSP explicitly permits `blob:` in `connect-src` so recorded audio can be read before
-the recorder revokes its object URL.
+permission. The production CSP explicitly permits `blob:` in `connect-src` so
+recorded audio can be read before the recorder revokes its object URL.
+
+On Windows, Linux, and the web, built-in transcription uses Sherpa-ONNX with
+multilingual Whisper Tiny (default), Base, or Small. After explicit confirmation,
+the client downloads and verifies the selected model files and stores them in the device cache or browser Cache Storage. Only the model
+download uses the allowed Hugging Face origins in the web CSP. This mode keeps
+audio in memory and transcribes it without calling this edge function.
 
 Linux requires the `record_linux` runtime tools: `parecord`, `pactl`, and `ffmpeg`
 (for example, `pulseaudio-utils ffmpeg` on Debian/Ubuntu, or `libpulse ffmpeg` on

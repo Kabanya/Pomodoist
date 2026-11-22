@@ -1,0 +1,11 @@
+{
+  "name": "pomodoist-voice-capture-studies",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test gallery.test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

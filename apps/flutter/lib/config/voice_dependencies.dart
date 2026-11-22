@@ -11,6 +11,7 @@ import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 import 'package:pomodoist/domain/use_cases/quick_add/voice_quick_add_use_case.dart';
 
 /// The recognizer handle for the current account. Composition keeps a live
@@ -32,6 +33,8 @@ final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
       ),
       ownerId: () => account?.currentUserId,
       invoke: backend.call,
+      selectedModel: () =>
+          ref.read(voicePreferencesRepositoryProvider).state.whisper.model,
     );
     ref.onDispose(() {
       backend.dispose();
@@ -43,10 +46,14 @@ final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
 
 final voiceCaptureRepositoryProvider = Provider.autoDispose
     .family<VoiceCaptureRepository, Object>((ref, session) {
+      final controller = ref.read(voiceRecognitionControllerProvider);
       final repository = CapturedVoiceRepository(
-        initialController: AppVoiceCaptureService(
-          ref.read(voiceRecognitionControllerProvider),
-        ),
+        initialController: AppVoiceCaptureService(controller),
+        initialMode:
+            controller is BackendVoiceController ||
+                !ref.read(voiceTranscriptionModeSelectionSupportedProvider)
+            ? VoiceTranscriptionMode.cloud
+            : VoiceTranscriptionMode.system,
         waitForMode: () => ref
             .read(voicePreferencesRepositoryProvider)
             .ready

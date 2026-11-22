@@ -129,7 +129,7 @@ extension _MobileVoiceReview on _VoiceQuickAddHostState {
                           44,
                         ),
                       ),
-                      onPressed: _voice.canStart ? _voiceActions.start : null,
+                      onPressed: _voice.canStart ? _startVoice : null,
                       icon: const Icon(LucideIcons.mic, size: 19),
                       label: Text(l10n.voiceAgain),
                     ),

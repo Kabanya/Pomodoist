@@ -9,10 +9,48 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => '语音输入';
+  String get whisperDefault => '默认（Tiny）';
 
   @override
-  String get voiceRecorderSource => '内置麦克风';
+  String get whisperFast => '快速';
+
+  @override
+  String get whisperBalanced => '兼顾速度与准确度';
+
+  @override
+  String get whisperAccuracy => '更高准确度';
+
+  @override
+  String get whisperReady => '可以录音';
+
+  @override
+  String get whisperNeedsDownload => '需要下载';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return '下载 $model？';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return '设备端语音识别需要下载 $size MB。下载后即可离线听写。';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return '下载 $size MB';
+  }
+
+  @override
+  String get whisperNotNow => '暂时不用';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => '语音输入';
 
   @override
   String get voiceRecorderTap => '轻点录音';
@@ -1110,7 +1148,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsVoiceTranscriptionSubtitle => '选择如何在此设备上将录音转换为文字。';
 
   @override
-  String get settingsVoiceTranscriptionSystem => '系统 (Apple)';
+  String get settingsVoiceTranscriptionSystem => '内置';
 
   @override
   String get settingsVoiceTranscriptionCloud => '云端';
@@ -1121,7 +1159,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      '登录后可使用云端转写。在此之前将使用系统转写。';
+      '登录后可使用云端转写。在此之前将使用内置转写。';
 
   @override
   String get settingsThemeTitle => '主题';
@@ -1351,6 +1389,15 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       '语音识别暂不可用。请检查网络连接。在 Mac 上，还请检查“系统设置 → 键盘 → 听写”和所选语言。';
+
+  @override
+  String get voiceSystemRecognitionUnavailable => '此设备不支持系统语音识别。';
+
+  @override
+  String get voiceModelDownloadFailed => '无法下载语音识别模型。请检查网络连接后重试。';
+
+  @override
+  String get voiceNoSpeechRecognized => '未识别到语音，请重新录音。';
 
   @override
   String get voiceCloudServiceUnavailable => '云端转写失败。请检查网络连接，然后重试转写已保存的录音。';

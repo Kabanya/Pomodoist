@@ -1118,10 +1118,19 @@ with no animation under Reduce Motion. Each new opening starts compact; desktop,
 the separate Quick Add window and voice panels keep their existing behavior.
 
 Below 600 logical pixels, voice capture opens full-screen. Center the primary
-microphone action between the three-step progress header and the microphone
-source and smart-mode settings. During recording the same control stops capture;
-show elapsed time and input level alongside it. Respect Reduce Motion for the
-recording halo, level bars and processing transitions.
+microphone action between the three-step progress header and the transcription
+mode and smart-mode settings. Offer built-in and cloud transcription on Android,
+iOS, macOS, Windows, Linux, and the web. Built-in transcription on Windows,
+Linux, and the web uses a locally cached Whisper model. Settings offer Default
+(Tiny), Tiny, Base, and Small, with a shared Tiny cache. Save the device's
+selection independently of download consent. Before recording with a missing
+model, show its name and download size, offer Download and Not now, and display
+progress or Retry. After installation return to the recorder for an explicit
+tap to begin capture.
+Disable the control during recording and processing. The cloud option explains
+that it sends audio to Pomodoist and requires sign-in. During recording the same
+control stops capture and shows elapsed time and input level. Respect Reduce
+Motion for the recording halo, level bars and processing transitions.
 
 Voice draft titles start at one line and grow with their text up to three lines;
 do not reserve blank lines for short tasks. Keep metadata and comments editable.

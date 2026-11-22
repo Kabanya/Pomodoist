@@ -1,3 +1,5 @@
+import 'package:pomodoist/domain/models/voice/whisper_model.dart';
+import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'support/test_app.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +31,7 @@ void main() {
     expect(disabled.onSelected, isNull);
     expect(
       find.text(
-        'Sign in to use cloud transcription. System transcription is active until then.',
+        'Sign in to use cloud transcription. Until then, built-in transcription is active.',
       ),
       findsOneWidget,
     );
@@ -58,19 +60,48 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('non-Apple settings do not show transcription choice', (
+  testWidgets('Windows settings show both transcription choices', (
     tester,
   ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     await tester.pumpWidget(_app(signedIn: true));
 
-    expect(find.text('Voice transcription'), findsNothing);
+    expect(find.text('Voice transcription'), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Built-in'), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Cloud'), findsOneWidget);
+    final picker = find.byType(DropdownButton<WhisperPreference>);
+    expect(
+      tester.widget<DropdownButton<WhisperPreference>>(picker).value,
+      WhisperPreference.automatic,
+    );
+    for (final choice in [
+      ...WhisperPreference.values.skip(1),
+      WhisperPreference.automatic,
+    ]) {
+      await tester.tap(picker);
+      await tester.pumpAndSettle();
+      final label = choice == WhisperPreference.automatic
+          ? 'Default (Tiny)'
+          : '${choice.model.label} · ${choice.model.megabytes} MB';
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+      final reloaded = ProviderContainer();
+      final repository = reloaded.read(voicePreferencesRepositoryProvider);
+      await repository.ready;
+      expect(repository.state.whisper, choice);
+      reloaded.dispose();
+    }
     debugDefaultTargetPlatformOverride = null;
   });
 }
 
 Widget _app({required bool signedIn}) => ProviderScope(
+  overrides: [
+    checkWhisperModelProvider.overrideWithValue(
+      (model) async => model == WhisperModel.tiny,
+    ),
+  ],
   child: MaterialApp(
     builder: testAppBuilder,
     localizationsDelegates: AppLocalizations.localizationsDelegates,

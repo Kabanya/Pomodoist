@@ -9,10 +9,48 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => 'Voice input';
+  String get whisperDefault => 'Default (Tiny)';
 
   @override
-  String get voiceRecorderSource => 'Built-in microphone';
+  String get whisperFast => 'Fast';
+
+  @override
+  String get whisperBalanced => 'Balanced speed and accuracy';
+
+  @override
+  String get whisperAccuracy => 'Higher accuracy';
+
+  @override
+  String get whisperReady => 'Ready to record';
+
+  @override
+  String get whisperNeedsDownload => 'Download required';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return 'Download $model?';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return 'On-device recognition needs a $size MB download. Once downloaded, you can dictate offline.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return 'Download $size MB';
+  }
+
+  @override
+  String get whisperNotNow => 'Not now';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => 'Voice input';
 
   @override
   String get voiceRecorderTap => 'Tap to record';
@@ -1195,7 +1233,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose how recordings are converted to text on this device.';
 
   @override
-  String get settingsVoiceTranscriptionSystem => 'System (Apple)';
+  String get settingsVoiceTranscriptionSystem => 'Built-in';
 
   @override
   String get settingsVoiceTranscriptionCloud => 'Cloud';
@@ -1206,7 +1244,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Sign in to use cloud transcription. System transcription is active until then.';
+      'Sign in to use cloud transcription. Until then, built-in transcription is active.';
 
   @override
   String get settingsThemeTitle => 'Theme';
@@ -1449,6 +1487,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'Speech recognition is unavailable. Check your connection. On Mac, also check System Settings → Keyboard → Dictation and your language.';
+
+  @override
+  String get voiceSystemRecognitionUnavailable =>
+      'System speech recognition is unavailable on this device.';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      'Could not download the speech model. Check your connection and try again.';
+
+  @override
+  String get voiceNoSpeechRecognized =>
+      'No speech recognized. Try recording again.';
 
   @override
   String get voiceCloudServiceUnavailable =>

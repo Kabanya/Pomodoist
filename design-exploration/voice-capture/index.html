@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Голосовой ввод · Pomodoist</title>
+    <style>
+      :root {
+        --ink: #201e1c;
+        --muted: #726f6a;
+        --red: #d83b2e;
+        --red-dark: #b82e23;
+        --wash: #fcece8;
+        --line: #e6e3df;
+        --tint: #f6f5f3;
+        --paper: #fff;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        font-family:
+          Geist,
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        color: var(--ink);
+        background: #eeeae4;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      button,
+      a,
+      select {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        border: 0;
+        background: none;
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: default;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      select:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--red);
+        outline-offset: 2px;
+      }
+      button:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+      svg {
+        width: 21px;
+        height: 21px;
+        flex: none;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      button,
+      .switch .track,
+      .record-circle,
+      a {
+        transition:
+          background 0.16s,
+          color 0.16s,
+          transform 0.16s;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: minmax(220px, 296px) minmax(0, 1fr);
+        min-height: 100dvh;
+      }
+      .rail {
+        background: #faf9f6;
+        border-inline-end: 1px solid #d8d4cd;
+        padding: 32px 23px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 29px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 18px;
+        font-weight: 720;
+        letter-spacing: -0.65px;
+      }
+      .brand b {
+        display: grid;
+        place-items: center;
+        background: var(--red);
+        color: white;
+        width: 27px;
+        height: 27px;
+        border-radius: 8px;
+      }
+      .brand b svg {
+        width: 17px;
+      }
+      .rail h1 {
+        font-size: 25px;
+        line-height: 1.12;
+        letter-spacing: -1px;
+      }
+      .rail nav {
+        display: grid;
+        gap: 4px;
+      }
+      .rail a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 10px;
+        min-height: 44px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #4b4845;
+        font-size: 14px;
+      }
+      .rail a span {
+        font:
+          12px ui-monospace,
+          monospace;
+        color: #807b74;
+      }
+      .rail a:hover {
+        background: #f0ede7;
+      }
+      .rail a[aria-current] {
+        background: #f9e6df;
+        color: #9f2d20;
+        font-weight: 650;
+      }
+      .rail a[aria-current] span {
+        color: #a23b2a;
+      }
+      .demo-note {
+        margin-top: auto;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .mobile-select {
+        display: none;
+      }
+      .stage {
+        min-width: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      .phone {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: min(390px, 100%);
+        height: clamp(540px, calc(100dvh - 48px), 844px);
+        background: var(--paper);
+        border: 1px solid #cecbc7;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px #32251b13;
+      }
+      .screen {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: white;
+      }
+      .page {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+      }
+      .today {
+        padding: 26px 20px 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .today h2,
+      .main-title {
+        font-size: 29px;
+        letter-spacing: -1.1px;
+        line-height: 1.15;
+      }
+      .today-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .today-head span {
+        color: var(--muted);
+        letter-spacing: 2px;
+      }
+      .tasks-bg {
+        overflow: auto;
+        min-height: 0;
+        flex: 1;
+      }
+      .bg-task {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        min-height: 54px;
+        padding: 9px 1px;
+        font-size: 16px;
+      }
+      .bg-task i {
+        width: 18px;
+        height: 18px;
+        border: 1.5px solid #aaa59e;
+        border-radius: 50%;
+        flex: none;
+      }
+      .bg-task small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 3px;
+      }
+      .today-nav {
+        display: flex;
+        justify-content: space-around;
+        border-top: 1px solid var(--line);
+        padding: 13px 0;
+        color: #88837e;
+      }
+      .today-nav svg:first-child {
+        color: var(--red);
+      }
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: #29262360;
+        animation: fade 0.2s both;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        pointer-events: none;
+      }
+      .panel {
+        background: #fff;
+        pointer-events: auto;
+        width: 100%;
+        padding: 16px 19px 21px;
+        border-radius: 18px 18px 0 0;
+        max-height: 98%;
+        overflow: auto;
+        animation: rise 0.27s var(--ease) both;
+      }
+      .grab {
+        width: 40px;
+        height: 4px;
+        border-radius: 4px;
+        background: #cfcdca;
+        margin: 0 auto 13px;
+      }
+      .centered {
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+      }
+      .centered .panel {
+        border-radius: 12px;
+        padding: 18px;
+        animation: pop 0.22s var(--ease) both;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-bottom: 10px;
+      }
+      .header h2 {
+        flex: 1;
+        font-size: 23px;
+        letter-spacing: -0.8px;
+        line-height: 1.14;
+      }
+      .icon-btn {
+        width: 40px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        color: var(--muted);
+        flex: none;
+      }
+      .icon-btn:hover {
+        background: var(--tint);
+      }
+      .primary {
+        min-height: 48px;
+        width: 100%;
+        border-radius: 8px;
+        background: var(--red);
+        color: white;
+        font-weight: 650;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 10px;
+      }
+      .primary:hover,
+      .record-circle:hover {
+        background: var(--red-dark);
+      }
+      .switch {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-height: 54px;
+        text-align: left;
+        padding: 8px 0;
+        border-block: 1px solid var(--line);
+      }
+      .switch span:first-child,
+      .source {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .switch svg,
+      .source svg {
+        color: var(--muted);
+      }
+      .track {
+        display: block;
+        background: #dfdeda;
+        border-radius: 20px;
+        width: 40px;
+        height: 24px;
+        position: relative;
+        flex: none;
+      }
+      .track:after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.18s;
+      }
+      .switch[aria-checked="true"] .track {
+        background: var(--red);
+      }
+      .switch[aria-checked="true"] .track:after {
+        transform: translateX(16px);
+      }
+      .switch:disabled {
+        opacity: 0.65;
+      }
+      .source {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 14px 0;
+      }
+      .trail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 16px 0 20px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .trail .active,
+      .active {
+        color: var(--red);
+      }
+      .trail svg {
+        width: 13px;
+      }
+      .quiet {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .full {
+        padding: 20px;
+        overflow: auto;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .orb-header h2 {
+        text-align: center;
+        font-size: 18px;
+      }
+      .progress-track {
+        display: flex;
+        gap: 6px;
+        margin: 6px 0 9px;
+      }
+      .progress-track i {
+        height: 3px;
+        background: var(--line);
+        flex: 1;
+        border-radius: 3px;
+      }
+      .progress-track i.active {
+        background: var(--red);
+      }
+      .orb-area {
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 25px;
+        flex: 1;
+        min-height: 155px;
+        padding: 15px 0;
+      }
+      .orb-btn {
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 23px;
+        font-size: 20px;
+        font-weight: 570;
+        padding: 12px;
+      }
+      .record-circle {
+        width: 94px;
+        height: 94px;
+        border-radius: 50%;
+        background: var(--red);
+        color: white;
+        display: grid;
+        place-items: center;
+        position: relative;
+        box-shadow: 0 0 0 13px var(--wash);
+      }
+      .record-circle svg {
+        width: 36px;
+        height: 36px;
+      }
+      .recording .record-circle:before {
+        content: "";
+        position: absolute;
+        inset: -12px;
+        border: 1px solid #df5544;
+        border-radius: 100%;
+        animation: ripple 1.55s ease-out infinite;
+      }
+      .vertical {
+        padding: 9px 0 16px;
+      }
+      .vstep {
+        display: flex;
+        align-items: flex-start;
+        position: relative;
+        gap: 11px;
+        min-height: 45px;
+        color: var(--muted);
+      }
+      .vstep:not(:last-child):before {
+        content: "";
+        position: absolute;
+        top: 17px;
+        bottom: 0;
+        left: 8px;
+        width: 1px;
+        background: var(--line);
+      }
+      .vstep i {
+        display: block;
+        width: 17px;
+        height: 17px;
+        margin-top: 2px;
+        border: 1.5px solid currentColor;
+        border-radius: 50%;
+      }
+      .vstep.active {
+        color: var(--red);
+      }
+      .vstep.active i {
+        box-shadow: inset 0 0 0 3px white;
+        background: var(--red);
+      }
+      .vstep small {
+        display: block;
+        margin: 4px 0 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .centered .primary {
+        margin-top: 14px;
+      }
+      .inline-panel {
+        padding: 10px 14px 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin: 0 -6px 12px;
+        animation: rise 0.24s var(--ease) both;
+        flex: none;
+      }
+      .inline-panel .header {
+        margin-bottom: 0;
+      }
+      .inline-panel .header h2 {
+        font-size: 17px;
+      }
+      .inline-trigger {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 12px 0;
+        text-align: left;
+        width: 100%;
+        border-top: 1px solid var(--line);
+      }
+      .inline-trigger .record-circle {
+        width: 52px;
+        height: 52px;
+        box-shadow: none;
+      }
+      .inline-trigger .record-circle svg {
+        width: 23px;
+        height: 23px;
+      }
+      .inline-trigger strong,
+      .inline-trigger small {
+        display: block;
+      }
+      .inline-trigger small {
+        margin-top: 3px;
+        color: var(--muted);
+      }
+      .inline-panel .quiet {
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      .guided h3 {
+        font-size: 31px;
+        line-height: 1.08;
+        letter-spacing: -1.4px;
+        margin: 20px 0 8px;
+      }
+      .example {
+        margin: 24px 0;
+      }
+      .example p {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .example blockquote {
+        margin: 0;
+        padding: 14px 16px;
+        background: var(--tint);
+        border-radius: 9px;
+        font-size: 17px;
+        line-height: 1.4;
+        font-style: italic;
+      }
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 13px;
+      }
+      .dots i {
+        width: 6px;
+        height: 6px;
+        border-radius: 100%;
+        background: var(--line);
+      }
+      .dots .active {
+        background: var(--red);
+      }
+      .console .clock {
+        text-align: center;
+        font-size: clamp(46px, 7vh, 62px);
+        line-height: 1.1;
+        font-weight: 450;
+        letter-spacing: -2px;
+        margin: 14px 0;
+      }
+      .clock,
+      .timer {
+        font-variant-numeric: tabular-nums;
+      }
+      .ruler {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .ruler:before {
+        content: "";
+        flex: 1;
+        height: 10px;
+        background: repeating-linear-gradient(
+          90deg,
+          #c6c4c0 0 1px,
+          transparent 1px 8px
+        );
+      }
+      .console .source {
+        justify-content: center;
+      }
+      .disc-btn {
+        display: grid;
+        justify-items: center;
+        margin: 14px auto 0;
+        gap: 8px;
+        color: var(--red);
+        font-weight: 650;
+      }
+      .disc {
+        display: grid;
+        place-items: center;
+        border: 1.5px solid #bdbab5;
+        border-radius: 100%;
+        width: 56px;
+        height: 56px;
+      }
+      .disc:after {
+        content: "";
+        width: 31px;
+        height: 31px;
+        border-radius: 50%;
+        background: var(--red);
+        transition: border-radius 0.18s;
+      }
+      .recording .disc:after {
+        border-radius: 5px;
+        width: 23px;
+        height: 23px;
+      }
+      .steps-page .header {
+        margin-bottom: 21px;
+      }
+      .steps-page {
+        padding-inline: 15px;
+      }
+      .fold {
+        border-top: 1px solid var(--line);
+      }
+      .fold-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 5px;
+      }
+      .fold-head .num {
+        font:
+          13px ui-monospace,
+          monospace;
+        color: var(--muted);
+        border-right: 1px solid var(--line);
+        padding-right: 10px;
+      }
+      .fold-head strong {
+        flex: 1;
+        font-size: 18px;
+        font-weight: 550;
+      }
+      .fold-head svg {
+        color: var(--muted);
+        width: 17px;
+      }
+      .fold-body {
+        margin: 0 0 14px;
+        padding: 13px;
+        background: var(--tint);
+        border-radius: 9px;
+        animation: unfold 0.24s var(--ease) both;
+      }
+      .fold-body .source {
+        margin: 3px 0 15px;
+      }
+      .fold-body .switch {
+        margin-bottom: 12px;
+      }
+      .signal {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        justify-content: center;
+        color: var(--red);
+        height: 30px;
+      }
+      .signal i {
+        width: 3px;
+        height: 20px;
+        background: currentColor;
+        border-radius: 3px;
+        animation: wave 0.7s ease-in-out infinite alternate;
+        animation-delay: var(--delay);
+      }
+      .live {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 9px 0;
+        font-size: 14px;
+      }
+      .live .timer {
+        margin-inline-start: auto;
+      }
+      .processing {
+        padding: 12px 0 8px;
+        display: grid;
+        gap: 13px;
+      }
+      .loadbar {
+        height: 3px;
+        border-radius: 3px;
+        background: #e5e1dd;
+        overflow: hidden;
+      }
+      .loadbar:before {
+        content: "";
+        display: block;
+        height: 100%;
+        background: var(--red);
+        transform-origin: left;
+        animation: analyze 1.15s var(--ease) both;
+      }
+      .orb-area .processing {
+        text-align: center;
+        min-width: 190px;
+      }
+      .page.review {
+        padding: 0;
+      }
+      .review-list {
+        animation: fade 0.24s var(--ease) both;
+      }
+      .review-top {
+        padding: 20px 16px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .review-top .header {
+        margin: 0 0 4px;
+      }
+      .review-list {
+        overflow: auto;
+        flex: 1;
+        min-height: 0;
+        padding: 0 12px;
+      }
+      .review-row {
+        border-bottom: 1px solid var(--line);
+      }
+      .review-row summary {
+        list-style: none;
+        min-height: 45px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+      }
+      .review-row summary::-webkit-details-marker {
+        display: none;
+      }
+      .review-row summary span:first-child {
+        color: var(--muted);
+        font-size: 12px;
+        border-right: 1px solid var(--line);
+        padding-right: 8px;
+      }
+      .review-row summary strong {
+        flex: 1;
+        font-size: 15px;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+      }
+      .review-row summary svg {
+        width: 16px;
+      }
+      .review-row[open] {
+        background: var(--tint);
+        border-radius: 8px;
+      }
+      .review-row[open] summary svg {
+        transform: rotate(180deg);
+        color: var(--red);
+      }
+      .review-edit {
+        display: grid;
+        gap: 7px;
+        padding: 4px 10px 12px;
+      }
+      .review-edit label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .review-edit input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: white;
+      }
+      .footer {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid var(--line);
+      }
+      .secondary {
+        min-height: 44px;
+        padding: 8px 13px;
+        border-radius: 8px;
+        background: var(--tint);
+        color: var(--red);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .capsule {
+        position: absolute;
+        bottom: 58px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 7px 5px 12px;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: 0 3px 16px #32251b24;
+        animation: pop 0.18s var(--ease);
+      }
+      .capsule .signal {
+        width: 24px;
+      }
+      .capsule span {
+        font-size: 13px;
+      }
+      .open-btn {
+        position: absolute;
+        bottom: 61px;
+        right: 15px;
+        width: auto;
+        padding-inline: 15px;
+      }
+      .saved-message {
+        background: var(--wash);
+        padding: 12px;
+        font-size: 14px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .recording .ruler:before {
+        display: none;
+      }
+      .ruler .signal {
+        flex: 1;
+        justify-content: space-around;
+      }
+      .recording .vstep.active i {
+        animation: breathe 1.4s ease-in-out infinite;
+      }
+      .progress-track i.active {
+        transition: background 0.2s;
+      }
+
+      .recording .inline-trigger .record-circle:before {
+        inset: -3px;
+      }
+      .review-row[open] .review-edit {
+        animation: unfold 0.2s var(--ease) both;
+      }
+      @keyframes breathe {
+        50% {
+          box-shadow:
+            0 0 0 3px var(--wash),
+            inset 0 0 0 3px white;
+        }
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes rise {
+        from {
+          transform: translateY(18px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes pop {
+        from {
+          transform: scale(0.96);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes unfold {
+        from {
+          transform: translateY(-6px);
+          opacity: 0;
+        }
+        to {
+          transform: none;
+          opacity: 1;
+        }
+      }
+      @keyframes ripple {
+        from {
+          transform: scale(0.9);
+          opacity: 0.7;
+        }
+        to {
+          transform: scale(1.35);
+          opacity: 0;
+        }
+      }
+      @keyframes wave {
+        from {
+          transform: scaleY(0.22);
+        }
+        to {
+          transform: scaleY(1);
+        }
+      }
+      @keyframes analyze {
+        from {
+          transform: scaleX(0.04);
+        }
+        to {
+          transform: scaleX(1);
+        }
+      }
+      @media (max-width: 680px) {
+        .gallery {
+          display: flex;
+          flex-direction: column;
+          height: 100dvh;
+          min-height: 0;
+        }
+        .rail {
+          flex-direction: row;
+          align-items: center;
+          padding: 5px 12px;
+          min-height: 48px;
+          gap: 12px;
+          border: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .rail h1,
+        .rail nav,
+        .rail .demo-note,
+        .brand b {
+          display: none;
+        }
+        .brand {
+          font-size: 13px;
+          letter-spacing: -0.3px;
+        }
+        .mobile-select {
+          display: block;
+          margin-left: auto;
+          max-width: 72%;
+          min-width: 0;
+          background: white;
+          border: 1px solid var(--line);
+          border-radius: 6px;
+          padding: 7px 4px;
+          font-size: 13px;
+        }
+        .stage {
+          display: flex;
+          justify-content: center;
+          align-items: stretch;
+          min-height: 0;
+          flex: 1;
+          padding: 0;
+        }
+        .phone {
+          height: 100%;
+          width: min(100%, 470px);
+          border-radius: 0;
+          border: 0;
+        }
+        .phone:before {
+          content: "Демо · без доступа к микрофону";
+          display: block;
+          position: absolute;
+          z-index: 4;
+          top: 0;
+          inset-inline: 0;
+          background: #f7f5f2;
+          text-align: center;
+          font-size: 10px;
+          line-height: 18px;
+          color: #635e59;
+        }
+        .screen {
+          top: 18px;
+        }
+      }
+      @media (max-height: 590px) {
+        .full {
+          padding-top: 9px;
+        }
+        .orb-btn {
+          gap: 12px;
+          font-size: 15px;
+        }
+        .record-circle {
+          width: 62px;
+          height: 62px;
+        }
+        .orb-area {
+          min-height: 120px;
+        }
+        .example {
+          margin: 12px 0;
+        }
+        .panel {
+          padding-top: 10px;
+        }
+        .console .clock {
+          margin: 5px 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="gallery">
+      <aside class="rail">
+        <div class="brand"><b id="brand-icon"></b>Pomodoist</div>
+        <h1>Голосовой ввод</h1>
+        <nav aria-label="Варианты оформления"></nav>
+        <select class="mobile-select" aria-label="Вариант оформления"></select>
+        <p class="demo-note">
+          Интерактивное демо.<br />Запись имитируется, микрофон выключен.
+        </p>
+      </aside>
+      <section class="stage" aria-label="Предпросмотр">
+        <div class="phone"><div class="screen" id="screen"></div></div>
+      </section>
+    </main>
+    <div class="sr" id="announce" aria-live="polite"></div>
+    <script>
+      const names = [
+        "Нижняя панель",
+        "Микрофон по центру",
+        "Окно с этапами",
+        "Встроенный ввод",
+        "Пример диктовки",
+        "Диктофон",
+        "Раскрывающиеся этапы",
+      ];
+      const examples = [
+        "Купить продукты",
+        "Позвонить маме",
+        "Забрать заказ",
+        "Поделать домашку",
+        "Отправить отчёт",
+        "Разобрать почту",
+        "Оплатить счета",
+        "Сделать зарядку",
+        "Купить билеты",
+        "Заказать книгу",
+        "Полить цветы",
+        "Подготовить презентацию",
+        "Запланировать неделю",
+        "Зарядить наушники",
+        "Вынести мусор",
+      ];
+      const phases = ["Запись", "Разбор", "Проверка"];
+      const paths = {
+        mic: '<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2m-7 9v3"/>',
+        down: '<path d="m6 9 6 6 6-6"/>',
+        up: '<path d="m6 15 6-6 6 6"/>',
+        next: '<path d="m9 6 6 6-6 6"/>',
+        close: '<path d="m6 6 12 12M18 6 6 18"/>',
+        check: '<path d="m4 12 5 5L20 6"/>',
+        stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
+        calendar:
+          '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18"/>',
+        inbox: '<path d="m3 14 3-9h12l3 9v5H3zm0 0h5l2 3h4l2-3h5"/>',
+        plus: '<path d="M12 4v16M4 12h16"/>',
+        search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>',
+        spark:
+          '<path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3z"/>',
+      };
+      const icon = (name) =>
+        `<svg aria-hidden="true" viewBox="0 0 24 24">${paths[name]}</svg>`;
+      const escape = (s) =>
+        s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      const pad = (n) => String(n).padStart(2, "0");
+      const screen = document.querySelector("#screen"),
+        select = document.querySelector("select"),
+        nav = document.querySelector("nav"),
+        notice = document.querySelector("#announce");
+      const newState = () => ({
+        phase: "idle",
+        smart: false,
+        mini: false,
+        started: 0,
+        elapsed: 0,
+        added: 0,
+        drafts: [],
+        saved: [],
+      });
+      let variant = 0,
+        state = newState(),
+        tick,
+        analysis;
+      document.querySelector("#brand-icon").innerHTML = icon("check");
+      names.forEach((name, i) => {
+        nav.insertAdjacentHTML(
+          "beforeend",
+          `<a href="#${i + 1}"><span>${pad(i + 1)}</span>${name}</a>`,
+        );
+        select.add(new Option(`${pad(i + 1)} · ${name}`, i + 1));
+      });
+      select.addEventListener("change", () => (location.hash = select.value));
+      function clearTimers() {
+        clearInterval(tick);
+        clearTimeout(analysis);
+      }
+      function choose() {
+        const match = location.hash.match(/^#([1-7])$/);
+        const next = match ? Number(match[1]) : 1;
+        if (next === variant) return;
+        clearTimers();
+        variant = next;
+        state = newState();
+        select.value = String(next);
+        [...nav.children].forEach((a, i) => {
+          if (i === next - 1) a.setAttribute("aria-current", "page");
+          else a.removeAttribute("aria-current");
+        });
+        render();
+        notice.textContent = names[next - 1];
+      }
+      function miniButton() {
+        return actionIcon("mini", "Свернуть", "down");
+      }
+      function actionIcon(action, label, glyph) {
+        return `<button class="icon-btn" data-action="${action}" aria-label="${label}" title="${label}">${icon(glyph)}</button>`;
+      }
+      function header(title, center = false) {
+        const close = actionIcon("close", "Закрыть", "close");
+        return center
+          ? `<div class="header orb-header">${miniButton()}<h2>${title}</h2>${close}</div>`
+          : `<div class="header"><h2>${title}</h2>${miniButton()}${close}</div>`;
+      }
+      function toggle(withIcon = false) {
+        return `<button class="switch" role="switch" aria-checked="${state.smart}" data-action="smart" ${state.phase !== "idle" ? "disabled" : ""}><span>${withIcon ? icon("spark") : ""}Умный режим</span><span class="track" aria-hidden="true"></span></button>`;
+      }
+      function source() {
+        return `<p class="source">${icon("mic")}Встроенный микрофон</p>`;
+      }
+      function seconds() {
+        return Math.min(300, Math.floor((Date.now() - state.started) / 1000));
+      }
+      function clock() {
+        const s = state.phase === "recording" ? seconds() : state.elapsed;
+        return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+      }
+      function signal() {
+        return `<span class="signal" aria-hidden="true">${[-0.3, -0.65, -0.05, -0.4, -0.15, -0.55, -0.24].map((delay) => `<i style="--delay:${delay}s"></i>`).join("")}</span>`;
+      }
+      function live() {
+        return `<div class="live"><b>Идёт запись</b><span data-clock class="timer">${clock()}</span>${signal()}</div>`;
+      }
+      function pending() {
+        return '<div class="processing"><b>Разбираем задачи…</b><div class="loadbar" role="progressbar" aria-label="Разбор задач"></div></div>';
+      }
+      function recordButton(label = "Начать запись") {
+        const rec = state.phase === "recording";
+        return `<button class="primary" data-action="${rec ? "stop" : "record"}">${icon(rec ? "stop" : "mic")}${rec ? "Остановить" : label}</button>`;
+      }
+      function controls() {
+        if (state.phase === "analyzing") return pending();
+        return `${state.phase === "recording" ? live() : ""}${recordButton()}`;
+      }
+      function progress() {
+        return state.phase === "analyzing" ? 1 : 0;
+      }
+      function trail() {
+        return `<div class="trail">${phases.map((name, i) => `${i ? icon("next") : ""}<span class="${i === progress() ? "active" : ""}">${name}</span>`).join("")}</div>`;
+      }
+      function today(inset = "", hidden = false) {
+        const existing = [
+          "Созвониться с командой",
+          "Купить продукты",
+          "Подготовить презентацию",
+          "Разобрать почту",
+          "Оплатить счета",
+          "Запланировать неделю",
+        ];
+        const tasks = [...state.saved, ...existing];
+        return `<div class="today"${hidden ? ' aria-hidden="true" inert' : ""}><div class="today-head"><h2>Сегодня</h2><span aria-hidden="true">•••</span></div>${inset}${state.phase === "saved" ? `<p class="saved-message" role="status">Добавлено задач: ${state.added}</p>` : ""}<div class="tasks-bg">${tasks.map((t, i) => `<div class="bg-task"><i></i><div>${escape(t)}${i === 0 && !state.saved.length ? "<small>11:00</small>" : ""}</div></div>`).join("")}</div><div class="today-nav" aria-hidden="true">${["calendar", "inbox", "plus", "search"].map(icon).join("")}</div></div>`;
+      }
+      function overlay(contents, center = false, extra = "") {
+        return `${today("", true)}<div class="scrim"></div><div class="overlay ${center ? "centered" : ""}"><section class="panel ${extra}" role="dialog" aria-label="Голосовой ввод">${center ? "" : '<div class="grab"></div>'}${contents}</section></div>`;
+      }
+      function sheet() {
+        return overlay(
+          header("Голосовой ввод") + trail() + toggle() + source() + controls(),
+        );
+      }
+      function orb() {
+        const rec = state.phase === "recording";
+        const trigger = `<button class="orb-btn" data-action="${rec ? "stop" : "record"}"><span class="record-circle">${icon(rec ? "stop" : "mic")}</span>${rec ? "Остановить" : "Нажмите для записи"}</button>`;
+        return `<section class="page full">${header("Голосовой ввод", true)}<div class="progress-track">${phases.map((_, i) => `<i class="${i <= progress() ? "active" : ""}"></i>`).join("")}</div><small class="quiet">Шаг ${progress() + 1} из 3</small><div class="orb-area">${state.phase === "analyzing" ? pending() : trigger}${rec ? live() : ""}</div>${source()}${toggle(true)}</section>`;
+      }
+      function dialog() {
+        return overlay(
+          header("Голосовой ввод") +
+            `<div class="vertical">${phases.map((name, i) => `<div class="vstep ${i === progress() ? "active" : ""}"><i></i><div><b>${name}</b>${i === 0 ? "<small>Встроенный микрофон</small>" : ""}</div></div>`).join("")}</div>` +
+            toggle() +
+            controls(),
+          true,
+        );
+      }
+      function inline() {
+        const rec = state.phase === "recording";
+        const trigger = `<button class="inline-trigger" data-action="${rec ? "stop" : "record"}"><span class="record-circle">${icon(rec ? "stop" : "mic")}</span><span><strong>${rec ? "Остановить" : "Начать запись"}</strong><small>Встроенный микрофон</small></span></button>`;
+        return today(
+          `<div class="inline-panel">${header("Добавить голосом")}${state.phase === "analyzing" ? pending() : trigger}${rec ? live() : ""}${toggle()}<p class="quiet">Далее — разбор и проверка</p></div>`,
+        );
+      }
+      function guided() {
+        return `<section class="page full guided">${header("Голосовой ввод")}<h3>Что нужно сделать?</h3><p class="quiet">Можно продиктовать несколько задач подряд.</p><div class="example"><p>Например</p><blockquote>«Завтра купить продукты, а вечером позвонить маме»</blockquote></div>${toggle(true)}<div class="spacer"></div>${source()}${controls()}<div class="dots">${phases.map((_, i) => `<i class="${i === progress() ? "active" : ""}"></i>`).join("")}</div></section>`;
+      }
+      function recorder() {
+        const rec = state.phase === "recording";
+        return overlay(
+          header("Голосовая запись") +
+            `<div class="clock" data-clock>${clock()}</div><div class="ruler">${rec ? signal() : ""}<span>05:00</span></div>${source()}${toggle()}${state.phase === "analyzing" ? pending() : `<button class="disc-btn" data-action="${rec ? "stop" : "record"}"><span class="disc"></span>${rec ? "Остановить" : "Записать"}</button>`}`,
+          false,
+          "console",
+        );
+      }
+      function folds() {
+        return `<section class="page full steps-page">${header("Добавить голосом")}${phases.map((name, i) => `<div class="fold"><div class="fold-head"><span class="num">${pad(i + 1)}</span><strong>${name}</strong>${icon(i === progress() ? "up" : "down")}</div>${i === progress() ? `<div class="fold-body">${i === 0 ? source() + toggle() + controls() : pending()}</div>` : ""}</div>`).join("")}</section>`;
+      }
+      function review() {
+        return `<section class="page review"><div class="review-top">${header("Проверьте задачи")}<p class="quiet">15 задач в порядке диктовки</p></div><div class="review-list">${state.drafts.map((t, i) => `<details class="review-row" name="draft"><summary><span>${pad(i + 1)}</span><strong>${escape(t)}</strong>${icon("down")}</summary><div class="review-edit"><label for="draft-${i}">Название задачи</label><input id="draft-${i}" data-index="${i}" value="${escape(t)}"></div></details>`).join("")}</div><div class="footer"><button class="secondary" data-action="again">${icon("mic")}Заново</button><button class="primary" data-action="save">${icon("check")}<span data-count></span></button></div></section>`;
+      }
+      function updateCount() {
+        const count = state.drafts.filter((t) => t.trim()).length;
+        const save = screen.querySelector("[data-action=save]");
+        if (!save) return;
+        save.disabled = !count;
+        const form = new Intl.PluralRules("ru").select(count);
+        save.querySelector("[data-count]").textContent =
+          `Добавить ${count} ${{ one: "задачу", few: "задачи", many: "задач", other: "задач" }[form]}`;
+      }
+      function capsule() {
+        const rec = state.phase === "recording";
+        return (
+          today() +
+          `<div class="capsule">${rec ? signal() : icon("mic")}<span ${rec ? "data-clock" : ""}>${rec ? clock() : state.phase === "review" ? "15 задач" : state.phase === "analyzing" ? "Разбор…" : "Голосовой ввод"}</span>${rec ? actionIcon("stop", "Остановить", "stop") : ""}${actionIcon("expand", "Развернуть", "up")}</div>`
+        );
+      }
+      function render(focusAction = "") {
+        screen.dataset.variant = variant;
+        screen.dataset.phase = state.phase;
+        screen.className = `screen ${state.phase}`;
+        if (state.mini) screen.innerHTML = capsule();
+        else if (["closed", "saved"].includes(state.phase))
+          screen.innerHTML =
+            today() +
+            `<button class="primary open-btn" data-action="open">${icon("mic")}Добавить голосом</button>`;
+        else if (state.phase === "review") {
+          screen.innerHTML = review();
+          updateCount();
+        } else
+          screen.innerHTML = [
+            sheet,
+            orb,
+            dialog,
+            inline,
+            guided,
+            recorder,
+            folds,
+          ][variant - 1]();
+        if (focusAction)
+          screen
+            .querySelector(`[data-action="${focusAction}"]`)
+            ?.focus({ preventScroll: true });
+      }
+      function processRecording() {
+        if (state.phase !== "recording") return;
+        clearInterval(tick);
+        state.elapsed = seconds();
+        state.phase = "analyzing";
+        render();
+        notice.textContent = "Разбираем задачи";
+        analysis = setTimeout(() => {
+          state.phase = "review";
+          state.drafts = [...examples];
+          render(state.mini ? "expand" : "mini");
+          notice.textContent = "Готовы 15 задач для проверки";
+        }, 1200);
+      }
+      screen.addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-action]");
+        if (!btn || btn.disabled) return;
+        switch (btn.dataset.action) {
+          case "smart":
+            state.smart = !state.smart;
+            btn.setAttribute("aria-checked", String(state.smart));
+            break;
+          case "record":
+            if (state.phase !== "idle") return;
+            state.phase = "recording";
+            state.started = Date.now();
+            render("stop");
+            notice.textContent = "Демонстрационная запись началась";
+            tick = setInterval(() => {
+              if (seconds() >= 300) {
+                processRecording();
+                return;
+              }
+              screen
+                .querySelectorAll("[data-clock]")
+                .forEach((t) => (t.textContent = clock()));
+            }, 200);
+            break;
+          case "stop":
+            processRecording();
+            break;
+          case "mini":
+            state.mini = true;
+            render("expand");
+            break;
+          case "expand":
+            state.mini = false;
+            render(state.phase === "idle" ? "record" : "mini");
+            break;
+          case "close":
+            clearTimers();
+            state.phase = "closed";
+            state.mini = false;
+            render("open");
+            break;
+          case "again":
+          case "open":
+            clearTimers();
+            state.phase = "idle";
+            state.elapsed = 0;
+            state.drafts = [];
+            state.mini = false;
+            render("record");
+            break;
+          case "save": {
+            const added = state.drafts.map((t) => t.trim()).filter(Boolean);
+            state.saved = [...added, ...state.saved];
+            state.added = added.length;
+            state.phase = "saved";
+            render("open");
+            notice.textContent = "Задачи добавлены в демонстрационный список";
+            break;
+          }
+        }
+      });
+      screen.addEventListener("input", (event) => {
+        const field = event.target.closest("input[data-index]");
+        if (!field) return;
+        state.drafts[+field.dataset.index] = field.value;
+        field.closest("details").querySelector("summary strong").textContent =
+          field.value.trim() || "Без названия";
+        updateCount();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (
+          event.key === "Escape" &&
+          !state.mini &&
+          !["closed", "saved"].includes(state.phase)
+        ) {
+          state.mini = true;
+          render("expand");
+        }
+      });
+      window.addEventListener("hashchange", choose);
+      choose();
+    </script>
+  </body>
+</html>

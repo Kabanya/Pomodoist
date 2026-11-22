@@ -12,13 +12,22 @@ class VoiceRecording {
   final String? locale;
 }
 
-abstract interface class VoiceRecorder {
+const voicePcmSampleRate = 16000;
+
+abstract interface class VoiceMicrophone {
   Stream<double> get amplitudeDbfs;
   Future<bool> hasPermission({bool request = true});
-  Future<void> start(String path);
   Future<String?> stop();
   Future<void> cancel();
   Future<void> dispose();
+}
+
+abstract interface class VoiceRecorder implements VoiceMicrophone {
+  Future<void> start(String path);
+}
+
+abstract interface class PcmVoiceRecorder implements VoiceMicrophone {
+  Future<Stream<Uint8List>> startPcm();
 }
 
 abstract interface class VoiceRecordingStore {

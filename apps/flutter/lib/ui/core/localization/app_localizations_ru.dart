@@ -9,10 +9,48 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => 'Голосовой ввод';
+  String get whisperDefault => 'По умолчанию (Tiny)';
 
   @override
-  String get voiceRecorderSource => 'Встроенный микрофон';
+  String get whisperFast => 'Быстрая';
+
+  @override
+  String get whisperBalanced => 'Баланс скорости и точности';
+
+  @override
+  String get whisperAccuracy => 'Повышенная точность';
+
+  @override
+  String get whisperReady => 'Готова к записи';
+
+  @override
+  String get whisperNeedsDownload => 'Требуется загрузка';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return 'Скачать $model?';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return 'Для распознавания речи на устройстве потребуется скачать $size МБ. После загрузки можно диктовать без интернета.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return 'Скачать $size МБ';
+  }
+
+  @override
+  String get whisperNotNow => 'Не сейчас';
+
+  @override
+  String whisperSize(int size) {
+    return '$size МБ';
+  }
+
+  @override
+  String get voiceRecorderTitle => 'Голосовой ввод';
 
   @override
   String get voiceRecorderTap => 'Нажмите для записи';
@@ -1204,7 +1242,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Выберите, как преобразовывать записи в текст на этом устройстве.';
 
   @override
-  String get settingsVoiceTranscriptionSystem => 'Системная (Apple)';
+  String get settingsVoiceTranscriptionSystem => 'Встроенная';
 
   @override
   String get settingsVoiceTranscriptionCloud => 'Облачная';
@@ -1215,7 +1253,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Войдите, чтобы использовать облачную транскрибацию. До этого будет активна системная.';
+      'Войдите, чтобы использовать облачную транскрибацию. До этого будет активна встроенная.';
 
   @override
   String get settingsThemeTitle => 'Тема';
@@ -1462,6 +1500,18 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'Распознавание недоступно. Проверьте подключение к интернету. На Mac также проверьте язык и Диктовку: Системные настройки → Клавиатура → Диктовка.';
+
+  @override
+  String get voiceSystemRecognitionUnavailable =>
+      'Системное распознавание недоступно на этом устройстве.';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      'Не удалось скачать модель распознавания. Проверьте подключение и повторите попытку.';
+
+  @override
+  String get voiceNoSpeechRecognized =>
+      'Речь не распознана. Попробуйте записать ещё раз.';
 
   @override
   String get voiceCloudServiceUnavailable =>

@@ -9,10 +9,48 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => '音声入力';
+  String get whisperDefault => 'デフォルト（Tiny）';
 
   @override
-  String get voiceRecorderSource => '内蔵マイク';
+  String get whisperFast => '高速';
+
+  @override
+  String get whisperBalanced => '速度と精度のバランス';
+
+  @override
+  String get whisperAccuracy => '高精度';
+
+  @override
+  String get whisperReady => '録音できます';
+
+  @override
+  String get whisperNeedsDownload => 'ダウンロードが必要です';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return '$model をダウンロードしますか？';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return '端末での音声認識には $size MB のダウンロードが必要です。完了後はオフラインで音声入力できます。';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return '$size MB をダウンロード';
+  }
+
+  @override
+  String get whisperNotNow => '後で';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => '音声入力';
 
   @override
   String get voiceRecorderTap => 'タップして録音';
@@ -1139,7 +1177,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsVoiceTranscriptionSubtitle => 'このデバイスで録音を文字に変換する方法を選びます。';
 
   @override
-  String get settingsVoiceTranscriptionSystem => 'システム（Apple）';
+  String get settingsVoiceTranscriptionSystem => '内蔵';
 
   @override
   String get settingsVoiceTranscriptionCloud => 'クラウド';
@@ -1150,7 +1188,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'クラウド文字起こしを使うにはログインしてください。それまではシステムの文字起こしが有効です。';
+      'クラウド文字起こしを使うにはログインしてください。それまでは内蔵の文字起こしが有効です。';
 
   @override
   String get settingsThemeTitle => 'テーマ';
@@ -1385,6 +1423,16 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       '音声認識を利用できません。接続を確認してください。Macではシステム設定 → キーボード → 音声入力と言語も確認してください。';
+
+  @override
+  String get voiceSystemRecognitionUnavailable => 'この端末ではシステム音声認識を利用できません。';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      '音声認識モデルをダウンロードできませんでした。接続を確認してもう一度お試しください。';
+
+  @override
+  String get voiceNoSpeechRecognized => '音声を認識できませんでした。もう一度録音してください。';
 
   @override
   String get voiceCloudServiceUnavailable =>

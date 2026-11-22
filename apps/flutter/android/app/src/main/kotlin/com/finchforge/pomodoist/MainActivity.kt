@@ -11,8 +11,17 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var androidSpeech: AndroidSpeechChannel? = null
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        androidSpeech?.dispose()
+        androidSpeech = null
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        androidSpeech = AndroidSpeechChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "pomodoist/app_icon")
             .setMethodCallHandler { call, result ->
                 val pomo = ComponentName(packageName, "com.finchforge.pomodoist.PomoLauncher")

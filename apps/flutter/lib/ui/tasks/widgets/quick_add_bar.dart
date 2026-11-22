@@ -1,9 +1,12 @@
+import 'package:pomodoist/ui/voice/widgets/whisper_model_controls.dart';
+import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_input.dart';
 import 'package:pomodoist/ui/tasks/widgets/task_create_dialog.dart';
 import 'package:pomodoist/ui/core/widgets/shortcut_hints.dart';
 import 'package:pomodoist/ui/voice/view_models/voice_quick_add_view_model.dart';
 import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
 import 'dart:async';

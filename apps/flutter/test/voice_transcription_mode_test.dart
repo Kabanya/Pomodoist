@@ -48,24 +48,23 @@ void main() {
     }
   });
 
-  test('non-Apple runtimes always use cloud transcription', () {
+  test('web and desktop use the selected mode and default to cloud', () {
     for (final platform in TargetPlatform.values) {
       expect(
         effectiveVoiceTranscriptionMode(
           isWeb: true,
           platform: platform,
           preferred: VoiceTranscriptionMode.system,
-          signedIn: false,
+          signedIn: true,
         ),
+        VoiceTranscriptionMode.system,
+      );
+      expect(
+        defaultVoiceTranscriptionMode(isWeb: true, platform: platform),
         VoiceTranscriptionMode.cloud,
       );
     }
-    for (final platform in [
-      TargetPlatform.android,
-      TargetPlatform.linux,
-      TargetPlatform.windows,
-      TargetPlatform.fuchsia,
-    ]) {
+    for (final platform in [TargetPlatform.linux, TargetPlatform.windows]) {
       expect(
         effectiveVoiceTranscriptionMode(
           isWeb: false,
@@ -73,12 +72,16 @@ void main() {
           preferred: VoiceTranscriptionMode.system,
           signedIn: false,
         ),
+        VoiceTranscriptionMode.system,
+      );
+      expect(
+        defaultVoiceTranscriptionMode(isWeb: false, platform: platform),
         VoiceTranscriptionMode.cloud,
       );
     }
   });
 
-  test('cloud fallback is offered only for Apple speech failures', () {
+  test('cloud fallback is offered for system speech failures', () {
     for (final code in [
       'speech_authorization_denied',
       'speech_permission_denied',
@@ -143,15 +146,17 @@ void main() {
         platform: TargetPlatform.android,
         mode: VoiceTranscriptionMode.system,
         signedIn: true,
-        errorCode: 'speech_unavailable',
+        errorCode: 'speech_system_unavailable',
       ),
-      isFalse,
+      isTrue,
     );
   });
 
   test(
     'stored mode is restored and invalid values fall back to system',
     () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
       SharedPreferences.setMockInitialValues({
         voiceTranscriptionModePreferenceKey: 'cloud',
       });
@@ -181,6 +186,38 @@ void main() {
       );
     },
   );
+
+  test('Android defaults to cloud and honors a saved system choice', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final initial = ProviderContainer();
+    addTearDown(initial.dispose);
+    await initial.read(voicePreferencesRepositoryProvider).ready;
+    expect(
+      initial.read(voiceTranscriptionModeProvider),
+      VoiceTranscriptionMode.cloud,
+    );
+
+    SharedPreferences.setMockInitialValues({
+      voiceTranscriptionModePreferenceKey: 'system',
+    });
+    final updated = ProviderContainer();
+    addTearDown(updated.dispose);
+    await updated.read(voicePreferencesRepositoryProvider).ready;
+    expect(
+      updated.read(voiceTranscriptionModeProvider),
+      VoiceTranscriptionMode.system,
+    );
+    expect(
+      effectiveVoiceTranscriptionMode(
+        isWeb: false,
+        platform: TargetPlatform.android,
+        preferred: updated.read(voiceTranscriptionModeProvider),
+        signedIn: true,
+      ),
+      VoiceTranscriptionMode.system,
+    );
+  });
 
   test('selected mode is persisted', () async {
     final container = ProviderContainer();

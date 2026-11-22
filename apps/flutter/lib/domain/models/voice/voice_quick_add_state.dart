@@ -1,9 +1,11 @@
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
+import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 
 enum VoiceQuickAddError {
   general,
   settings,
+  preference,
   restricted,
   microphoneDenied,
   speechDenied,
@@ -37,6 +39,10 @@ class VoiceQuickAddState {
     required this.settingsDestination,
     required this.canRetryTranscription,
     required this.cloudMode,
+    this.transcriptionMode = VoiceTranscriptionMode.cloud,
+    this.transcriptionModeSelectable = false,
+    this.cloudTranscriptionAvailable = false,
+    this.usesDownloadableVoiceModel = false,
     required List<DecomposedTaskDraft> drafts,
     required this.draftRevision,
   }) : drafts = List.unmodifiable(drafts);
@@ -63,6 +69,10 @@ class VoiceQuickAddState {
   final VoiceAccessSettings? settingsDestination;
   final bool canRetryTranscription;
   final bool cloudMode;
+  final VoiceTranscriptionMode transcriptionMode;
+  final bool transcriptionModeSelectable;
+  final bool cloudTranscriptionAvailable;
+  final bool usesDownloadableVoiceModel;
   final List<DecomposedTaskDraft> drafts;
   final int draftRevision;
 }

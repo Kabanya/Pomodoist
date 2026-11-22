@@ -9,10 +9,48 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => 'الإدخال الصوتي';
+  String get whisperDefault => 'الافتراضي (Tiny)';
 
   @override
-  String get voiceRecorderSource => 'الميكروفون المدمج';
+  String get whisperFast => 'سريع';
+
+  @override
+  String get whisperBalanced => 'توازن بين السرعة والدقة';
+
+  @override
+  String get whisperAccuracy => 'دقة أعلى';
+
+  @override
+  String get whisperReady => 'جاهز للتسجيل';
+
+  @override
+  String get whisperNeedsDownload => 'يلزم التنزيل';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return 'تنزيل $model؟';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return 'يتطلب التعرف على الكلام على جهازك تنزيل $size ميغابايت. يمكنك بعد ذلك الإملاء دون اتصال بالإنترنت.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return 'تنزيل $size ميغابايت';
+  }
+
+  @override
+  String get whisperNotNow => 'ليس الآن';
+
+  @override
+  String whisperSize(int size) {
+    return '$size ميغابايت';
+  }
+
+  @override
+  String get voiceRecorderTitle => 'الإدخال الصوتي';
 
   @override
   String get voiceRecorderTap => 'اضغط للتسجيل';
@@ -1172,7 +1210,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر كيفية تحويل التسجيلات إلى نص على هذا الجهاز.';
 
   @override
-  String get settingsVoiceTranscriptionSystem => 'النظام (Apple)';
+  String get settingsVoiceTranscriptionSystem => 'مدمج';
 
   @override
   String get settingsVoiceTranscriptionCloud => 'السحابة';
@@ -1183,7 +1221,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'سجّل الدخول لاستخدام النسخ السحابي. سيظل النسخ النظامي نشطًا حتى ذلك الحين.';
+      'سجّل الدخول لاستخدام النسخ السحابي. سيظل النسخ المدمج نشطًا حتى ذلك الحين.';
 
   @override
   String get settingsThemeTitle => 'السمة';
@@ -1424,6 +1462,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'التعرف على الكلام غير متاح. تحقق من الاتصال. على Mac، تحقق أيضاً من إعدادات النظام ← لوحة المفاتيح ← الإملاء واللغة.';
+
+  @override
+  String get voiceSystemRecognitionUnavailable =>
+      'التعرّف على الكلام عبر النظام غير متاح على هذا الجهاز.';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      'تعذّر تنزيل نموذج التعرّف على الكلام. تحقّق من الاتصال وحاول مجددًا.';
+
+  @override
+  String get voiceNoSpeechRecognized =>
+      'لم يتم التعرّف على أي كلام. جرّب التسجيل مرة أخرى.';
 
   @override
   String get voiceCloudServiceUnavailable =>

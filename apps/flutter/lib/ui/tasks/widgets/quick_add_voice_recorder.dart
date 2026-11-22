@@ -107,11 +107,7 @@ extension _MobileVoiceRecorder on _VoiceQuickAddHostState {
                         ),
                       if (recovery.isNotEmpty)
                         Wrap(spacing: 8, runSpacing: 8, children: recovery),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(LucideIcons.mic, size: 20),
-                        title: Text(l10n.voiceRecorderSource),
-                      ),
+                      _transcriptionModeRow(context),
                       const Divider(height: 1),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -176,7 +172,7 @@ extension _MobileVoiceRecorder on _VoiceQuickAddHostState {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final action = recording
         ? (_voice.captureActive && !_voice.stopping ? _voiceActions.stop : null)
-        : (_voice.canStart ? _voiceActions.start : null);
+        : (_voice.canStart ? _startVoice : null);
     final pendingPermission =
         _voice.status == VoiceCaptureStatus.requestingPermission;
     return Column(

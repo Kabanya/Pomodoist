@@ -115,17 +115,77 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @whisperDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default (Tiny)'**
+  String get whisperDefault;
+
+  /// No description provided for @whisperFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get whisperFast;
+
+  /// No description provided for @whisperBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced speed and accuracy'**
+  String get whisperBalanced;
+
+  /// No description provided for @whisperAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher accuracy'**
+  String get whisperAccuracy;
+
+  /// No description provided for @whisperReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to record'**
+  String get whisperReady;
+
+  /// No description provided for @whisperNeedsDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download required'**
+  String get whisperNeedsDownload;
+
+  /// No description provided for @whisperDownloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download {model}?'**
+  String whisperDownloadTitle(String model);
+
+  /// No description provided for @whisperDownloadBody.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device recognition needs a {size} MB download. Once downloaded, you can dictate offline.'**
+  String whisperDownloadBody(int size);
+
+  /// No description provided for @whisperDownloadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Download {size} MB'**
+  String whisperDownloadButton(int size);
+
+  /// No description provided for @whisperNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get whisperNotNow;
+
+  /// No description provided for @whisperSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB'**
+  String whisperSize(int size);
+
   /// No description provided for @voiceRecorderTitle.
   ///
   /// In en, this message translates to:
   /// **'Voice input'**
   String get voiceRecorderTitle;
-
-  /// No description provided for @voiceRecorderSource.
-  ///
-  /// In en, this message translates to:
-  /// **'Built-in microphone'**
-  String get voiceRecorderSource;
 
   /// No description provided for @voiceRecorderTap.
   ///
@@ -2206,7 +2266,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVoiceTranscriptionSystem.
   ///
   /// In en, this message translates to:
-  /// **'System (Apple)'**
+  /// **'Built-in'**
   String get settingsVoiceTranscriptionSystem;
 
   /// No description provided for @settingsVoiceTranscriptionCloud.
@@ -2224,7 +2284,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVoiceTranscriptionCloudRequiresSignIn.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to use cloud transcription. System transcription is active until then.'**
+  /// **'Sign in to use cloud transcription. Until then, built-in transcription is active.'**
   String get settingsVoiceTranscriptionCloudRequiresSignIn;
 
   /// No description provided for @settingsThemeTitle.
@@ -2652,6 +2712,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Speech recognition is unavailable. Check your connection. On Mac, also check System Settings → Keyboard → Dictation and your language.'**
   String get voiceServiceUnavailable;
+
+  /// No description provided for @voiceSystemRecognitionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'System speech recognition is unavailable on this device.'**
+  String get voiceSystemRecognitionUnavailable;
+
+  /// No description provided for @voiceModelDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download the speech model. Check your connection and try again.'**
+  String get voiceModelDownloadFailed;
+
+  /// No description provided for @voiceNoSpeechRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech recognized. Try recording again.'**
+  String get voiceNoSpeechRecognized;
 
   /// No description provided for @voiceCloudServiceUnavailable.
   ///

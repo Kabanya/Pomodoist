@@ -40,6 +40,11 @@ dependencies:
   go_router: ^17.2.2
   audioplayers: ^6.7.1
   record: 6.2.1
+  # Match the C API header used by the desktop speech bridge.
+  sherpa_onnx_linux: 2.0.2
+  sherpa_onnx_windows: 2.0.2
+  sherpa_onnx_web: 2.0.2
+  ffi: ^2.2.0
   drift: ^2.32.1
   drift_flutter: ^0.3.0
   # 3.3.4 fixes the native-asset cache key so one release build does not

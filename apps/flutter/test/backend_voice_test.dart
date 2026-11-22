@@ -13,7 +13,7 @@ import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('Apple runtimes honor the selected transcription mode', () {
+  test('runtimes with system recognition honor the selected mode', () {
     for (final platform in TargetPlatform.values) {
       expect(
         usesBackendVoice(
@@ -21,17 +21,15 @@ void main() {
           platform: platform,
           mode: VoiceTranscriptionMode.system,
         ),
-        isTrue,
+        isFalse,
       );
-      final isApple =
-          platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
       expect(
         usesBackendVoice(
           isWeb: false,
           platform: platform,
           mode: VoiceTranscriptionMode.system,
         ),
-        !isApple,
+        platform == TargetPlatform.fuchsia,
       );
       expect(
         usesBackendVoice(

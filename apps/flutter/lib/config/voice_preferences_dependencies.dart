@@ -1,3 +1,4 @@
+import 'package:pomodoist/data/services/voice/local_voice_engine.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
@@ -14,10 +15,21 @@ final voiceTranscriptionModeSelectionSupportedProvider = Provider<bool>(
   ),
 );
 
+final downloadableVoiceModelProvider = Provider<bool>(
+  (ref) => usesDownloadableVoiceModel(
+    isWeb: kIsWeb,
+    platform: defaultTargetPlatform,
+  ),
+);
+
 final voicePreferencesRepositoryProvider = Provider<VoicePreferencesRepository>(
   (ref) {
     final repository = LocalVoicePreferencesRepository(
       ref.watch(preferencesServiceProvider),
+      defaultMode: defaultVoiceTranscriptionMode(
+        isWeb: kIsWeb,
+        platform: defaultTargetPlatform,
+      ),
     );
     ref.onDispose(repository.dispose);
     return repository;
@@ -38,3 +50,6 @@ final voiceTranscriptionModeProvider = Provider<VoiceTranscriptionMode>(
 final voiceSmartModeProvider = Provider<bool>(
   (ref) => ref.watch(voicePreferencesStateProvider).smartMode,
 );
+
+final checkWhisperModelProvider = Provider((ref) => isVoiceModelReady);
+final downloadWhisperModelProvider = Provider((ref) => downloadVoiceModel);

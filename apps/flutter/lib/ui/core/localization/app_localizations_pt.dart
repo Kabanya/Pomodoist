@@ -9,10 +9,48 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get voiceRecorderTitle => 'Entrada de voz';
+  String get whisperDefault => 'Padrão (Tiny)';
 
   @override
-  String get voiceRecorderSource => 'Microfone integrado';
+  String get whisperFast => 'Rápido';
+
+  @override
+  String get whisperBalanced => 'Equilíbrio entre velocidade e precisão';
+
+  @override
+  String get whisperAccuracy => 'Maior precisão';
+
+  @override
+  String get whisperReady => 'Pronto para gravar';
+
+  @override
+  String get whisperNeedsDownload => 'Download necessário';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return 'Baixar $model?';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return 'O reconhecimento neste dispositivo requer um download de $size MB. Depois, você poderá ditar sem internet.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return 'Baixar $size MB';
+  }
+
+  @override
+  String get whisperNotNow => 'Agora não';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => 'Entrada de voz';
 
   @override
   String get voiceRecorderTap => 'Toque para gravar';
@@ -1202,7 +1240,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Escolha como as gravações são convertidas em texto neste dispositivo.';
 
   @override
-  String get settingsVoiceTranscriptionSystem => 'Sistema (Apple)';
+  String get settingsVoiceTranscriptionSystem => 'Integrada';
 
   @override
   String get settingsVoiceTranscriptionCloud => 'Nuvem';
@@ -1213,7 +1251,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Entre para usar a transcrição na nuvem. Até lá, a transcrição do sistema permanece ativa.';
+      'Entre para usar a transcrição na nuvem. Até lá, a transcrição integrada permanece ativa.';
 
   @override
   String get settingsThemeTitle => 'Tema';
@@ -1458,6 +1496,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get voiceServiceUnavailable =>
       'O reconhecimento de fala está indisponível. Verifique sua conexão. No Mac, confira também Ajustes do Sistema → Teclado → Ditado e seu idioma.';
+
+  @override
+  String get voiceSystemRecognitionUnavailable =>
+      'O reconhecimento de voz do sistema não está disponível neste dispositivo.';
+
+  @override
+  String get voiceModelDownloadFailed =>
+      'Não foi possível baixar o modelo de voz. Verifique a conexão e tente novamente.';
+
+  @override
+  String get voiceNoSpeechRecognized =>
+      'Nenhuma fala reconhecida. Tente gravar novamente.';
 
   @override
   String get voiceCloudServiceUnavailable =>
@@ -5269,10 +5319,48 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   AppLocalizationsPtBr() : super('pt_BR');
 
   @override
-  String get voiceRecorderTitle => 'Entrada de voz';
+  String get whisperDefault => 'Padrão (Tiny)';
 
   @override
-  String get voiceRecorderSource => 'Microfone integrado';
+  String get whisperFast => 'Rápido';
+
+  @override
+  String get whisperBalanced => 'Equilíbrio entre velocidade e precisão';
+
+  @override
+  String get whisperAccuracy => 'Maior precisão';
+
+  @override
+  String get whisperReady => 'Pronto para gravar';
+
+  @override
+  String get whisperNeedsDownload => 'Download necessário';
+
+  @override
+  String whisperDownloadTitle(String model) {
+    return 'Baixar $model?';
+  }
+
+  @override
+  String whisperDownloadBody(int size) {
+    return 'O reconhecimento neste dispositivo requer um download de $size MB. Depois, você poderá ditar sem internet.';
+  }
+
+  @override
+  String whisperDownloadButton(int size) {
+    return 'Baixar $size MB';
+  }
+
+  @override
+  String get whisperNotNow => 'Agora não';
+
+  @override
+  String whisperSize(int size) {
+    return '$size MB';
+  }
+
+  @override
+  String get voiceRecorderTitle => 'Entrada de voz';
 
   @override
   String get voiceRecorderTap => 'Toque para gravar';

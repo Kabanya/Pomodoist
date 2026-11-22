@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 import 'package:pomodoist/domain/models/voice/voice_preferences.dart';
 import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
 import 'package:pomodoist/utils/result.dart';
@@ -21,6 +22,8 @@ abstract interface class VoicePreferencesRepository {
   Future<Result<void>> setMode(VoiceTranscriptionMode value);
 
   Future<Result<void>> setSmartMode(bool value);
+
+  Future<Result<void>> setWhisper(WhisperPreference value);
 
   void dispose();
 }

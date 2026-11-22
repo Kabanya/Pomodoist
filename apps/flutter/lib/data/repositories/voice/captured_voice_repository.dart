@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
-import 'package:pomodoist/data/services/voice/pomodoist_voice_controller.dart';
 import 'package:pomodoist/data/services/voice/voice_capture_service.dart';
 import 'package:pomodoist/data/services/voice/voice_transcription_policy.dart';
 import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
@@ -19,6 +18,7 @@ import 'package:pomodoist/utils/result.dart';
 final class CapturedVoiceRepository implements VoiceCaptureRepository {
   CapturedVoiceRepository({
     required VoiceCaptureService initialController,
+    VoiceTranscriptionMode initialMode = VoiceTranscriptionMode.system,
     required Future<void> Function() waitForMode,
     required VoiceTranscriptionMode Function() effectiveMode,
     required VoiceCaptureService Function() replaceController,
@@ -29,16 +29,8 @@ final class CapturedVoiceRepository implements VoiceCaptureRepository {
        _replaceController = replaceController,
        _setMode = setMode,
        _signedIn = signedIn,
-       _voiceController = initialController {
-    _voiceMode =
-        supportsVoiceTranscriptionModeSelection(
-              isWeb: kIsWeb,
-              platform: defaultTargetPlatform,
-            ) &&
-            initialController is! BackendVoiceController
-        ? VoiceTranscriptionMode.system
-        : VoiceTranscriptionMode.cloud;
-  }
+       _voiceController = initialController,
+       _voiceMode = initialMode;
 
   final Future<void> Function() _waitForMode;
   final VoiceTranscriptionMode Function() _effectiveMode;
@@ -48,7 +40,7 @@ final class CapturedVoiceRepository implements VoiceCaptureRepository {
 
   final _states = StreamController<VoiceCaptureState>.broadcast();
   VoiceCaptureService _voiceController;
-  late VoiceTranscriptionMode _voiceMode;
+  VoiceTranscriptionMode _voiceMode;
   VoiceCaptureStatus _status = VoiceCaptureStatus.idle;
   StreamSubscription<VoiceCaptureEvent>? _subscription;
   StreamSubscription<double>? _amplitudeSubscription;
@@ -252,6 +244,7 @@ final class CapturedVoiceRepository implements VoiceCaptureRepository {
       _subscription = stream.listen(
         _handleEvent,
         onDone: () {
+          _subscription = null;
           if (!_isActive) return;
           _stopRecordingCountdown();
           _stopAmplitudeMeter();
