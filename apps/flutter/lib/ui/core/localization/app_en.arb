@@ -1,4 +1,36 @@
 {
+  "voiceRecorderTitle": "Voice input",
+  "voiceRecorderSource": "Built-in microphone",
+  "voiceRecorderTap": "Tap to record",
+  "voiceRecorderStep": "Step {step} of 3",
+  "voiceRecorderStop": "Stop recording",
+  "voiceRecorderActive": "Recording",
+  "@voiceRecorderStep": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceReviewTitle": "Review tasks",
+  "voiceReviewCount": "{count, plural, one{1 task in dictation order} other{{count} tasks in dictation order}}",
+  "voiceReviewAdd": "{count, plural, one{Add 1 task} other{Add {count} tasks}}",
+  "voiceReviewDate": "Date",
+  "voiceReviewNote": "Note",
+  "@voiceReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@voiceReviewAdd": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDateFormatTitle": "Date format",
   "settingsDateFormatSubtitle": "Automatic follows the app language.",
   "settingsDateFormatAutomatic": "Automatic",

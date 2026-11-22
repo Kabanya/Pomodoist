@@ -9,6 +9,57 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => 'Voice input';
+
+  @override
+  String get voiceRecorderSource => 'Built-in microphone';
+
+  @override
+  String get voiceRecorderTap => 'Tap to record';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return 'Step $step of 3';
+  }
+
+  @override
+  String get voiceRecorderStop => 'Stop recording';
+
+  @override
+  String get voiceRecorderActive => 'Recording';
+
+  @override
+  String get voiceReviewTitle => 'Review tasks';
+
+  @override
+  String voiceReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks in dictation order',
+      one: '1 task in dictation order',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Add $count tasks',
+      one: 'Add 1 task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voiceReviewDate => 'Date';
+
+  @override
+  String get voiceReviewNote => 'Note';
+
+  @override
   String get settingsDateFormatTitle => 'Date format';
 
   @override

@@ -1162,6 +1162,184 @@ void main() {
     expect(schedule?.duration, const Duration(hours: 1));
   });
 
+  testWidgets(
+    'mobile review edits and saves a batch of fifteen dictated tasks',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 844);
+      addTearDown(tester.view.reset);
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.ensureSeedData();
+      final recognizer = _FakeRecordedRecognizer(
+        transcript: const VoiceRecognitionTranscript(text: 'список задач'),
+      );
+      final decomposer = _WaitingTaskDecomposer();
+      final voice = VoiceRecognitionController(
+        recordedRecognizer: recognizer,
+        platformSupport: const VoicePlatformSupport(
+          supportsRecordedSystem: true,
+        ),
+      );
+      addTearDown(voice.dispose);
+      final drafts = [
+        'Созвониться с командой',
+        'Купить продукты',
+        'Поделать домашку #Учёба today 17:00 25m p3',
+        'Разобрать почту',
+        'Подготовить презентацию',
+        'Оплатить счета',
+        'Запланировать неделю',
+        'Сделать зарядку',
+        'Забрать посылку',
+        'Полить цветы',
+        'Купить билеты',
+        'Позвонить маме',
+        'Заказать книгу',
+        'Вынести мусор',
+        'Зарядить наушники',
+      ];
+      final boundary = GlobalKey();
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundary,
+          child: ProviderScope(
+            overrides: [
+              ...proVoiceOverrides,
+              appDatabaseProvider.overrideWithValue(db),
+              localSyncOwnerProvider.overrideWith((ref) => Stream.value(null)),
+              applePurchasesSupportedProvider.overrideWithValue(false),
+              voiceRecognitionControllerProvider.overrideWithValue(voice),
+              taskDecomposerProvider.overrideWithValue(decomposer),
+            ],
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              builder: testAppBuilder,
+              locale: const Locale('ru'),
+              theme: AppTheme.light(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: QuickAddBar(defaultDate: DateTime(2026, 11, 22)),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Голосовое добавление'));
+      await tester.pumpAndSettle();
+      final action = find.byKey(const Key('voice-recorder-action'));
+      final smart = find.byKey(const Key('voice-smart-mode'));
+      expect(find.text('Голосовой ввод'), findsOneWidget);
+      expect(find.text('Шаг 1 из 3'), findsOneWidget);
+      expect(find.text('Встроенный микрофон'), findsOneWidget);
+      expect(find.text('Нажмите для записи'), findsOneWidget);
+      expect(tester.getCenter(action).dx, 195);
+      expect(tester.widget<ShadSwitch>(smart).enabled, isTrue);
+      await tester.tap(action);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Идёт запись'), findsOneWidget);
+      expect(find.text('00:01'), findsOneWidget);
+      expect(tester.widget<ShadSwitch>(smart).enabled, isFalse);
+      expect(find.byKey(const Key('voice-amplitude-bars')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('voice-collapse')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.byKey(const Key('voice-expand')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(recognizer.startCalls, 1);
+      expect(recognizer.stopCalls, 0);
+      await tester.tap(find.text('Остановить'));
+      await tester.pump();
+      expect(recognizer.stopCalls, 1);
+      expect(find.text('Шаг 2 из 3'), findsOneWidget);
+      expect(find.text('Разбиваю на задачи'), findsOneWidget);
+      decomposer.complete([
+        for (final title in drafts) DecomposedTaskDraft(quickAdd: title),
+      ]);
+      await tester.pumpAndSettle();
+      expect(find.text('15 задач в порядке диктовки'), findsOneWidget);
+      final list = find.byKey(const PageStorageKey('voice-mobile-review'));
+      final save = find.byKey(const Key('voice-add-all'));
+      final footerPosition = tester.getTopLeft(save);
+      expect(
+        tester.getCenter(find.widgetWithText(TextButton, 'Заново')).dy,
+        tester.getCenter(save).dy,
+      );
+      Finder row(String number) => find.byKey(ValueKey('voice-review-$number'));
+      await tester.tap(row('03'));
+      await tester.pumpAndSettle();
+      expect(find.text('Длительность'), findsOneWidget);
+      final captureDir = Platform.environment['VOICE_CAPTURE_DIR'];
+      if (captureDir != null) {
+        await tester.runAsync(() async {
+          await (FontLoader('packages/lucide_icons_flutter/Lucide')..addFont(
+                rootBundle.load(
+                  'packages/lucide_icons_flutter/assets/lucide.ttf',
+                ),
+              ))
+              .load();
+        });
+        await tester.pumpAndSettle();
+        await tester.runAsync(() async {
+          final image =
+              await (boundary.currentContext!.findRenderObject()!
+                      as RenderRepaintBoundary)
+                  .toImage(pixelRatio: 2);
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          image.dispose();
+          await Directory(captureDir).create(recursive: true);
+          await File(
+            '$captureDir/voice-review.png',
+          ).writeAsBytes(bytes!.buffer.asUint8List());
+        });
+      }
+      await tester.tap(find.text('Длительность'));
+      await tester.pumpAndSettle();
+      final duration = find.text('45 мин');
+      await tester.tap(duration);
+      await tester.pumpAndSettle();
+      final editor = find.descendant(
+        of: list,
+        matching: find.byType(TextField),
+      );
+      await tester.tap(row('02'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('voice-review-edit-title')));
+      await tester.pumpAndSettle();
+      expect(editor, findsOneWidget);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      await tester.pumpAndSettle();
+      expect(tester.getRect(save).bottom, lessThanOrEqualTo(844 - 280));
+      await tester.enterText(editor, 'Купить продукты на неделю');
+      tester.view.viewInsets = const FakeViewPadding();
+      await tester.pump();
+      await tester.tap(row('02'));
+      await tester.pumpAndSettle();
+      await tester.drag(list, const Offset(0, -700));
+      await tester.pumpAndSettle();
+      expect(row('15').hitTestable(), findsOneWidget);
+      expect(tester.getTopLeft(save), footerPosition);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      final tasks = await db.select(db.tasks).get();
+      expect(tasks, hasLength(15));
+      expect(
+        tasks.any((t) => t.content == 'Купить продукты на неделю'),
+        isTrue,
+      );
+      final homework = tasks.singleWhere(
+        (t) => t.content == 'Поделать домашку',
+      );
+      expect(
+        TaskSchedule.fromJsonString(homework.dueJson)?.duration,
+        const Duration(minutes: 45),
+      );
+    },
+  );
+
   testWidgets('voice records for five minutes and stops exactly once', (
     tester,
   ) async {
@@ -1820,62 +1998,87 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('voice recording bars respect reduced motion', (tester) async {
-    final amplitudes = StreamController<double>.broadcast();
-    addTearDown(amplitudes.close);
-    final recordedRecognizer = _FakeRecordedRecognizer(
-      transcript: const VoiceRecognitionTranscript(text: 'buy milk'),
-      amplitudeDbfs: amplitudes.stream,
-    );
-    final controller = VoiceRecognitionController(
-      recordedRecognizer: recordedRecognizer,
-      platformSupport: const VoicePlatformSupport(supportsRecordedSystem: true),
-    );
+  for (final phone in [false, true]) {
+    testWidgets(
+      'voice recording respects reduced motion on ${phone ? "phone" : "desktop"}',
+      (tester) async {
+        if (phone) {
+          tester.view.devicePixelRatio = 1;
+          tester.view.physicalSize = const Size(320, 568);
+          addTearDown(tester.view.reset);
+        }
+        final amplitudes = StreamController<double>.broadcast();
+        addTearDown(amplitudes.close);
+        final recordedRecognizer = _FakeRecordedRecognizer(
+          transcript: const VoiceRecognitionTranscript(text: 'buy milk'),
+          amplitudeDbfs: amplitudes.stream,
+        );
+        final controller = VoiceRecognitionController(
+          recordedRecognizer: recordedRecognizer,
+          platformSupport: const VoicePlatformSupport(
+            supportsRecordedSystem: true,
+          ),
+        );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          ...proVoiceOverrides,
-          applePurchasesSupportedProvider.overrideWithValue(false),
-          voiceRecognitionControllerProvider.overrideWithValue(controller),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: Builder(
-              builder: (context) => testAppBuilder(context, child),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              ...proVoiceOverrides,
+              applePurchasesSupportedProvider.overrideWithValue(false),
+              voiceRecognitionControllerProvider.overrideWithValue(controller),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: Builder(
+                  builder: (context) => testAppBuilder(context, child),
+                ),
+              ),
+              home: const Scaffold(body: QuickAddBar()),
             ),
           ),
-          home: const Scaffold(body: QuickAddBar()),
-        ),
-      ),
+        );
+
+        await tester.tap(find.byTooltip('Voice quick add'));
+        await tester.pumpAndSettle();
+        final recorder = find.byKey(const Key('voice-recorder-action'));
+        await tester.tap(
+          phone ? recorder : find.widgetWithText(FilledButton, 'Record'),
+        );
+        await tester.pump();
+
+        final centerBar = find.byKey(const Key('voice-amplitude-bar-2'));
+        amplitudes.add(-50);
+        await tester.pump();
+        final quiet = tester
+            .widget<AnimatedContainer>(centerBar)
+            .constraints!
+            .maxHeight;
+        amplitudes.add(-5);
+        await tester.pump();
+        final loud = tester
+            .widget<AnimatedContainer>(centerBar)
+            .constraints!
+            .maxHeight;
+        expect(loud, quiet);
+        if (phone) {
+          final halo = find.descendant(
+            of: recorder,
+            matching: find.byType(ScaleTransition),
+          );
+          expect(tester.widget<ScaleTransition>(halo).scale.value, 1);
+          await tester.pump(const Duration(milliseconds: 650));
+          expect(tester.widget<ScaleTransition>(halo).scale.value, 1);
+          expect(find.text('Stop recording').hitTestable(), findsOneWidget);
+        }
+
+        await tester.tap(find.byTooltip('Close'));
+        await tester.pumpAndSettle();
+      },
     );
-
-    await tester.tap(find.byTooltip('Voice quick add'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Record'));
-    await tester.pump();
-
-    final centerBar = find.byKey(const Key('voice-amplitude-bar-2'));
-    amplitudes.add(-50);
-    await tester.pump();
-    final quiet = tester
-        .widget<AnimatedContainer>(centerBar)
-        .constraints!
-        .maxHeight;
-    amplitudes.add(-5);
-    await tester.pump();
-    final loud = tester
-        .widget<AnimatedContainer>(centerBar)
-        .constraints!
-        .maxHeight;
-    expect(loud, quiet);
-
-    await tester.tap(find.byTooltip('Close'));
-    await tester.pumpAndSettle();
-  });
+  }
 
   testWidgets('voice quick add uses default priority', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());

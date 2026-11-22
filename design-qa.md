@@ -30,3 +30,27 @@ Date: 2026-11-02.
 - Visual comparison uses a Flutter test rendering with loaded bundled fonts; the native macOS menu was also inspected before the footer removal. No full test suite or other-platform device verification was performed.
 
 final result: passed
+
+## Mobile voice draft review, 2026-11-22
+
+Compared the selected accordion reference
+(`codex-clipboard-265a15b7-3768-4479-9436-848e92b1f6f0.png`, 852 × 1846)
+with the Flutter widget capture at
+`~/.codex/visualizations/2026/11/22/01a20362-1b68-79f2-8739-6e9db09b95ac/voice-review.png`
+(780 × 1688). Both views were compared at 390 logical pixels wide, in Russian
+with the light theme, fifteen drafts and the third row expanded.
+
+The first capture showed Quick Add tokens in the resting title field and uneven
+value and chevron alignment. The revised field shows the parsed title until
+editing starts. Property values and chevrons now align at the trailing edge.
+A subsequent capture showed the footer wrapping at standard text size.
+Sizing both actions from the available width restored the single-row footer.
+
+The final capture shows rows 01–08, one tinted editor, five labeled properties
+and both footer actions. It uses the app's bundled typography, palette and
+Lucide icons. The header also retains collapse and close, and the editor retains
+draft removal. The widget test covers a timed task, editing a different row,
+keyboard insets, scrolling to the final row, and persisting all fifteen tasks.
+Physical device recording was outside this visual check.
+
+Final result: passed

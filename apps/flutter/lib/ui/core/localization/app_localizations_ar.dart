@@ -9,6 +9,45 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => 'الإدخال الصوتي';
+
+  @override
+  String get voiceRecorderSource => 'الميكروفون المدمج';
+
+  @override
+  String get voiceRecorderTap => 'اضغط للتسجيل';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return 'الخطوة $step من 3';
+  }
+
+  @override
+  String get voiceRecorderStop => 'إيقاف التسجيل';
+
+  @override
+  String get voiceRecorderActive => 'جارٍ التسجيل';
+
+  @override
+  String get voiceReviewTitle => 'مراجعة المهام';
+
+  @override
+  String voiceReviewCount(int count) {
+    return 'المهام بترتيب الإملاء ($count)';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    return 'إضافة المهام ($count)';
+  }
+
+  @override
+  String get voiceReviewDate => 'التاريخ';
+
+  @override
+  String get voiceReviewNote => 'ملاحظة';
+
+  @override
   String get settingsDateFormatTitle => 'تنسيق التاريخ';
 
   @override

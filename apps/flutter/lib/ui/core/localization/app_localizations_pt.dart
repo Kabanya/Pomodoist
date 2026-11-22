@@ -9,6 +9,57 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => 'Entrada de voz';
+
+  @override
+  String get voiceRecorderSource => 'Microfone integrado';
+
+  @override
+  String get voiceRecorderTap => 'Toque para gravar';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return 'Etapa $step de 3';
+  }
+
+  @override
+  String get voiceRecorderStop => 'Parar gravação';
+
+  @override
+  String get voiceRecorderActive => 'A gravar';
+
+  @override
+  String get voiceReviewTitle => 'Rever tarefas';
+
+  @override
+  String voiceReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tarefas pela ordem do ditado',
+      one: '$count tarefa pela ordem do ditado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Adicionar $count tarefas',
+      one: 'Adicionar $count tarefa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voiceReviewDate => 'Data';
+
+  @override
+  String get voiceReviewNote => 'Nota';
+
+  @override
   String get settingsDateFormatTitle => 'Formato de data';
 
   @override
@@ -5216,6 +5267,57 @@ class AppLocalizationsPt extends AppLocalizations {
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
 class AppLocalizationsPtBr extends AppLocalizationsPt {
   AppLocalizationsPtBr() : super('pt_BR');
+
+  @override
+  String get voiceRecorderTitle => 'Entrada de voz';
+
+  @override
+  String get voiceRecorderSource => 'Microfone integrado';
+
+  @override
+  String get voiceRecorderTap => 'Toque para gravar';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return 'Etapa $step de 3';
+  }
+
+  @override
+  String get voiceRecorderStop => 'Parar gravação';
+
+  @override
+  String get voiceRecorderActive => 'Gravando';
+
+  @override
+  String get voiceReviewTitle => 'Revisar tarefas';
+
+  @override
+  String voiceReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tarefas na ordem do ditado',
+      one: '$count tarefa na ordem do ditado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Adicionar $count tarefas',
+      one: 'Adicionar $count tarefa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voiceReviewDate => 'Data';
+
+  @override
+  String get voiceReviewNote => 'Nota';
 
   @override
   String get settingsDateFormatTitle => 'Formato de data';

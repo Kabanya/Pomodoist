@@ -9,6 +9,61 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => 'Голосовой ввод';
+
+  @override
+  String get voiceRecorderSource => 'Встроенный микрофон';
+
+  @override
+  String get voiceRecorderTap => 'Нажмите для записи';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return 'Шаг $step из 3';
+  }
+
+  @override
+  String get voiceRecorderStop => 'Остановить';
+
+  @override
+  String get voiceRecorderActive => 'Идёт запись';
+
+  @override
+  String get voiceReviewTitle => 'Проверьте задачи';
+
+  @override
+  String voiceReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count задачи в порядке диктовки',
+      many: '$count задач в порядке диктовки',
+      few: '$count задачи в порядке диктовки',
+      one: '$count задача в порядке диктовки',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Добавить $count задачи',
+      many: 'Добавить $count задач',
+      few: 'Добавить $count задачи',
+      one: 'Добавить $count задачу',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voiceReviewDate => 'Дата';
+
+  @override
+  String get voiceReviewNote => 'Заметка';
+
+  @override
   String get settingsDateFormatTitle => 'Формат даты';
 
   @override

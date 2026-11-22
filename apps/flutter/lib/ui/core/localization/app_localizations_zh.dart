@@ -9,6 +9,45 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => '语音输入';
+
+  @override
+  String get voiceRecorderSource => '内置麦克风';
+
+  @override
+  String get voiceRecorderTap => '轻点录音';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return '第 $step 步，共 3 步';
+  }
+
+  @override
+  String get voiceRecorderStop => '停止录音';
+
+  @override
+  String get voiceRecorderActive => '正在录音';
+
+  @override
+  String get voiceReviewTitle => '检查任务';
+
+  @override
+  String voiceReviewCount(int count) {
+    return '按口述顺序排列的 $count 项任务';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    return '添加 $count 项任务';
+  }
+
+  @override
+  String get voiceReviewDate => '日期';
+
+  @override
+  String get voiceReviewNote => '备注';
+
+  @override
   String get settingsDateFormatTitle => '日期格式';
 
   @override

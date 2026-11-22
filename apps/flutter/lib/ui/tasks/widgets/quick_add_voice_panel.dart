@@ -8,7 +8,14 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
       !_voice.isTranscribing &&
       _error == null;
 
+  bool get _useMobileLayout =>
+      MediaQuery.sizeOf(context).width < 600 &&
+      (_draftControllers.isEmpty || _reviewReady);
+
   Widget _expandedPanel(BuildContext context) {
+    if (_useMobileLayout) {
+      return _reviewReady ? _mobileReview(context) : _mobileRecorder(context);
+    }
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: ConstrainedBox(
@@ -151,12 +158,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
           style: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(width: 8),
-        ShadSwitch(
-          key: const Key('voice-smart-mode'),
-          value: _voice.smartMode,
-          enabled: !_voice.motionActive,
-          onChanged: _voice.motionActive ? null : _voiceActions.setSmartMode,
-        ),
+        _smartModeSwitch(),
         const Spacer(),
         if (_voice.status == VoiceCaptureStatus.recording)
           Text(
@@ -170,6 +172,16 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
       ],
     );
   }
+
+  Widget _smartModeSwitch() => Semantics(
+    label: context.l10n.voiceSmartMode,
+    child: ShadSwitch(
+      key: const Key('voice-smart-mode'),
+      value: _voice.smartMode,
+      enabled: !_voice.motionActive,
+      onChanged: _voice.motionActive ? null : _voiceActions.setSmartMode,
+    ),
+  );
 
   Widget _panelActions(BuildContext context, int acceptedTaskCount) {
     final l10n = context.l10n;
@@ -229,45 +241,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
           icon: const Icon(LucideIcons.square),
           label: Text(l10n.voiceStop),
         ),
-        if (_voice.canRetryTranscription &&
-            !_voice.captureActive &&
-            !_voice.isTranscribing) ...[
-          FilledButton.icon(
-            key: const Key('voice-retry-transcription'),
-            onPressed: _voice.canStart
-                ? () => _voiceActions.start(retry: true)
-                : null,
-            icon: const Icon(LucideIcons.rotateCw),
-            label: Text(l10n.voiceRetryTranscription),
-          ),
-        ],
-        if (_voice.needsPermissionRequest || _voice.settingsDestination != null)
-          OutlinedButton.icon(
-            key: const Key('voice-recover-access'),
-            onPressed: _voice.canStart ? _voiceActions.recoverAccess : null,
-            icon: const Icon(LucideIcons.settings2),
-            label: Text(_recoveryLabel),
-          ),
-        if (_voice.canUseCloudFallback)
-          OutlinedButton.icon(
-            key: const Key('voice-use-cloud-transcription'),
-            onPressed: _voice.canStart
-                ? _voiceActions.useCloudTranscription
-                : null,
-            icon: const Icon(LucideIcons.cloud),
-            label: Text(l10n.voiceUseCloudTranscription),
-          ),
-        if (_error != null &&
-            _voice.transcript.trim().isNotEmpty &&
-            !_voice.captureActive &&
-            !_voice.isTranscribing &&
-            !_voice.analyzing)
-          TextButton.icon(
-            onPressed: () =>
-                _voiceActions.decomposeTranscript(_voice.transcript),
-            icon: const Icon(LucideIcons.rotateCw),
-            label: Text(l10n.voiceRetryAnalysis),
-          ),
+        ..._recoveryActions(context),
         FilledButton.icon(
           onPressed:
               _voice.saving ||
@@ -283,6 +257,50 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
         ),
       ],
     );
+  }
+
+  List<Widget> _recoveryActions(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      if (_voice.canRetryTranscription &&
+          !_voice.captureActive &&
+          !_voice.isTranscribing) ...[
+        FilledButton.icon(
+          key: const Key('voice-retry-transcription'),
+          onPressed: _voice.canStart
+              ? () => _voiceActions.start(retry: true)
+              : null,
+          icon: const Icon(LucideIcons.rotateCw),
+          label: Text(l10n.voiceRetryTranscription),
+        ),
+      ],
+      if (_voice.needsPermissionRequest || _voice.settingsDestination != null)
+        OutlinedButton.icon(
+          key: const Key('voice-recover-access'),
+          onPressed: _voice.canStart ? _voiceActions.recoverAccess : null,
+          icon: const Icon(LucideIcons.settings2),
+          label: Text(_recoveryLabel),
+        ),
+      if (_voice.canUseCloudFallback)
+        OutlinedButton.icon(
+          key: const Key('voice-use-cloud-transcription'),
+          onPressed: _voice.canStart
+              ? _voiceActions.useCloudTranscription
+              : null,
+          icon: const Icon(LucideIcons.cloud),
+          label: Text(l10n.voiceUseCloudTranscription),
+        ),
+      if (_error != null &&
+          _voice.transcript.trim().isNotEmpty &&
+          !_voice.captureActive &&
+          !_voice.isTranscribing &&
+          !_voice.analyzing)
+        TextButton.icon(
+          onPressed: () => _voiceActions.decomposeTranscript(_voice.transcript),
+          icon: const Icon(LucideIcons.rotateCw),
+          label: Text(l10n.voiceRetryAnalysis),
+        ),
+    ];
   }
 
   Widget _body(ColorScheme colorScheme) {

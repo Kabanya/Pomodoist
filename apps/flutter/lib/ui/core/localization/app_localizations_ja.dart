@@ -9,6 +9,45 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => '音声入力';
+
+  @override
+  String get voiceRecorderSource => '内蔵マイク';
+
+  @override
+  String get voiceRecorderTap => 'タップして録音';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return 'ステップ $step/3';
+  }
+
+  @override
+  String get voiceRecorderStop => '録音を停止';
+
+  @override
+  String get voiceRecorderActive => '録音中';
+
+  @override
+  String get voiceReviewTitle => 'タスクを確認';
+
+  @override
+  String voiceReviewCount(int count) {
+    return '入力順のタスク $count 件';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    return '$count 件のタスクを追加';
+  }
+
+  @override
+  String get voiceReviewDate => '日付';
+
+  @override
+  String get voiceReviewNote => 'メモ';
+
+  @override
   String get settingsDateFormatTitle => '日付の形式';
 
   @override

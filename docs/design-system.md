@@ -1117,8 +1117,20 @@ these actions while submitting. Use `AppMotion.panel` and `AppMotion.curve`,
 with no animation under Reduce Motion. Each new opening starts compact; desktop,
 the separate Quick Add window and voice panels keep their existing behavior.
 
+Below 600 logical pixels, voice capture opens full-screen. Center the primary
+microphone action between the three-step progress header and the microphone
+source and smart-mode settings. During recording the same control stops capture;
+show elapsed time and input level alongside it. Respect Reduce Motion for the
+recording halo, level bars and processing transitions.
+
 Voice draft titles start at one line and grow with their text up to three lines;
 do not reserve blank lines for short tasks. Keep metadata and comments editable.
+On phone widths below 600 logical pixels, review opens full-screen. Keep drafts
+in dictation order, number nested drafts under their parents, and expand one
+row at a time. Show the parsed title at rest and the Quick Add input when editing.
+Keep date, project, priority, duration, and note controls inside the expanded
+row. The count includes accepted subtasks. Keep record-again and batch add in
+the safe-area footer while the list scrolls, including when the keyboard opens.
 
 Voice gestures belong only to explicit `VoicePanelSwipeArea` surfaces. Swipe up
 on the compact panel to expand and down on the editor header to collapse, using

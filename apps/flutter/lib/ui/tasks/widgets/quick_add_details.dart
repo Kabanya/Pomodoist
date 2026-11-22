@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:pomodoist/domain/models/tasks/task_focus_estimate.dart';
 import 'quick_add_focus_estimate.dart';
+import 'project_color_picker.dart';
+import 'package:pomodoist/domain/models/tasks/project_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart'
     show
@@ -45,6 +47,7 @@ class QuickAddDetails extends ConsumerWidget {
     this.touchTargets = false,
     this.desktop = false,
     this.iconsOnly = false,
+    this.reviewRows = false,
     this.onNaturalWidthChanged,
     this.trailing,
   });
@@ -61,6 +64,7 @@ class QuickAddDetails extends ConsumerWidget {
   final bool touchTargets;
   final bool desktop;
   final bool iconsOnly;
+  final bool reviewRows;
   final ValueChanged<double>? onNaturalWidthChanged;
   final Widget? trailing;
 
@@ -225,6 +229,10 @@ class QuickAddDetails extends ConsumerWidget {
 
         final dateLabel = schedule == null
             ? context.l10n.noDate
+            : reviewRows
+            ? AppDateFormatter.of(
+                context,
+              ).formatTaskListDate(schedule.displayDate, context.l10n, now: now)
             : AppDateFormatter.of(context).format(schedule.displayDate);
         final timeLabel = schedule?.isTimed == true
             ? TimeOfDay.fromDateTime(schedule!.start!.toLocal()).format(context)
@@ -268,13 +276,10 @@ class QuickAddDetails extends ConsumerWidget {
         if (hideToolbar) return const SizedBox.shrink();
         final inlineEstimate =
             !desktop && MediaQuery.sizeOf(context).width < 820;
-        Widget toolbar(Widget estimateControl) => Wrap(
-          alignment: mobileToolbar
-              ? WrapAlignment.spaceBetween
-              : WrapAlignment.start,
-          spacing: touchTargets || desktop ? 8 : 4,
-          runSpacing: touchTargets || desktop ? 8 : 4,
-          children: [
+        String minutesLabel(int minutes) =>
+            '$minutes ${context.l10n.minutesSuffix}';
+        Widget toolbar(Widget? estimateControl) {
+          final controls = <Widget>[
             AppDateTimePicker(
               bottomAligned: mobileToolbar,
               builder: (context, picker) => _DetailsMenu(
@@ -282,6 +287,7 @@ class QuickAddDetails extends ConsumerWidget {
                 desktop: desktop,
                 iconsOnly: iconsOnly,
                 focusNode: picker.focusNode,
+                rowTitle: reviewRows ? context.l10n.voiceReviewDate : null,
                 label: scheduleLabel,
                 semanticLabel:
                     '${context.l10n.taskSchedule}: ${timeLabel == null ? dateLabel : '$dateLabel · $timeLabel'}',
@@ -370,9 +376,16 @@ class QuickAddDetails extends ConsumerWidget {
               touchTargets: touchTargets,
               desktop: desktop,
               iconsOnly: iconsOnly,
+              rowTitle: reviewRows ? context.l10n.kanbanProjectField : null,
+              rowDot: reviewRows
+                  ? allProjects
+                        .where((p) => p.id == selectedProjectId)
+                        .map((p) => projectColorValue(effectiveProjectColor(p)))
+                        .firstOrNull
+                  : null,
               label: projectName,
               semanticLabel: '${context.l10n.kanbanProjectField}: $projectName',
-              icon: LucideIcons.hash,
+              icon: reviewRows ? LucideIcons.layers : LucideIcons.hash,
               color: colors.quickAddTokenColor(QuickAddTokenKind.project),
               enabled: canEdit,
               content: (close) => QuickAddProjectPicker(
@@ -391,7 +404,15 @@ class QuickAddDetails extends ConsumerWidget {
               touchTargets: touchTargets,
               desktop: desktop,
               iconsOnly: iconsOnly,
-              label: touchTargets || desktop
+              rowTitle: reviewRows ? context.l10n.taskPriority : null,
+              label: reviewRows
+                  ? switch (parsed.priority ?? priority ?? 4) {
+                      1 => context.l10n.priorityUrgent,
+                      2 => context.l10n.priorityHigh,
+                      3 => context.l10n.priorityNormal,
+                      _ => context.l10n.priorityLow,
+                    }
+                  : touchTargets || desktop
                   ? 'P${parsed.priority ?? priority ?? 4}'
                   : context.l10n.priority(parsed.priority ?? priority ?? 4),
               semanticLabel: context.l10n.priority(
@@ -415,10 +436,101 @@ class QuickAddDetails extends ConsumerWidget {
                   ),
               ],
             ),
-            if (!inlineEstimate || mobileToolbar) estimateControl,
+            if (reviewRows)
+              AppDateTimePicker(
+                bottomAligned: true,
+                builder: (context, picker) => _DetailsMenu(
+                  rowTitle: context.l10n.focusDuration,
+                  label: schedule?.duration == null
+                      ? '—'
+                      : minutesLabel(schedule!.duration!.inMinutes),
+                  icon: LucideIcons.timer,
+                  color: colors.secondaryText,
+                  enabled: canEdit,
+                  focusNode: picker.focusNode,
+                  touchTargets: true,
+                  iconsOnly: true,
+                  content: (close) => SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final minutes in [15, 25, 30, 45, 60, 90])
+                          _scheduleOption(
+                            context,
+                            minutesLabel(minutes),
+                            LucideIcons.timer,
+                            null,
+                            () async {
+                              close();
+                              final current = currentSchedule();
+                              var start = current?.start?.toLocal();
+                              if (start == null) {
+                                final time = await picker.pickTime(
+                                  initialTime: TimeOfDay.fromDateTime(now),
+                                );
+                                if (time == null || !context.mounted) return;
+                                final day =
+                                    current?.displayDate ?? defaultDate ?? now;
+                                start = DateTime(
+                                  day.year,
+                                  day.month,
+                                  day.day,
+                                  time.hour,
+                                  time.minute,
+                                );
+                              }
+                              edit(
+                                quickAddSchedulingKinds,
+                                quickAddScheduleToken(
+                                  TaskSchedule.timed(
+                                    start: start,
+                                    end: start.add(Duration(minutes: minutes)),
+                                    timeZone: current?.timeZone,
+                                  ),
+                                ),
+                              );
+                            },
+                            checked: schedule?.duration?.inMinutes == minutes,
+                          ),
+                        const Divider(),
+                        QuickAddFocusEstimateChip(
+                          estimate: estimate,
+                          manual: parsed.estimatedFocusIntervals != null,
+                          workSeconds: viewState.focusPreset?.workSeconds,
+                          enabled: canEdit,
+                          touchTargets: true,
+                          onChanged: (count) => edit({
+                            QuickAddTokenKind.focusEstimate,
+                          }, count == null ? null : '${count}p'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else if ((!inlineEstimate || mobileToolbar) &&
+                estimateControl != null)
+              estimateControl,
             ?trailing,
-          ],
-        );
+          ];
+          if (reviewRows) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: controls,
+            );
+          }
+          return Wrap(
+            alignment: mobileToolbar
+                ? WrapAlignment.spaceBetween
+                : WrapAlignment.start,
+            spacing: touchTargets || desktop ? 8 : 4,
+            runSpacing: touchTargets || desktop ? 8 : 4,
+            children: controls,
+          );
+        }
+
+        if (reviewRows) return toolbar(null);
         final estimateControl = QuickAddFocusEstimateChip(
           estimate: estimate,
           manual: parsed.estimatedFocusIntervals != null,
@@ -629,6 +741,79 @@ class _PriorityOption extends StatelessWidget {
   }
 }
 
+/// A full-width editable property in the mobile voice review.
+class QuickAddDetailRow extends StatelessWidget {
+  const QuickAddDetailRow({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.onPressed,
+    this.expanded = false,
+    this.dot,
+    this.focusNode,
+  });
+  final String title;
+  final String value;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool expanded;
+  final Color? dot;
+  final FocusNode? focusNode;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Semantics(
+      button: true,
+      expanded: expanded,
+      child: InkWell(
+        focusNode: focusNode,
+        onTap: onPressed,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.border)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: colors.secondaryText),
+              const SizedBox(width: 10),
+              Expanded(child: Text(title)),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (dot != null) ...[
+                      Icon(Icons.circle, color: dot, size: 8),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: Text(
+                        value.isEmpty ? '—' : value,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                LucideIcons.chevronRight,
+                size: 16,
+                color: colors.secondaryText,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DetailsMenu extends StatefulWidget {
   const _DetailsMenu({
     required this.label,
@@ -642,9 +827,13 @@ class _DetailsMenu extends StatefulWidget {
     this.desktop = false,
     this.iconsOnly = false,
     this.semanticLabel,
+    this.rowTitle,
+    this.rowDot,
   }) : assert((items == null) != (content == null));
   final String label;
   final String? semanticLabel;
+  final String? rowTitle;
+  final Color? rowDot;
   final IconData icon;
   final Color color;
   final FocusNode? focusNode;
@@ -777,69 +966,82 @@ class _DetailsMenuState extends State<_DetailsMenu> {
                 ),
               ),
         ),
-        child: MergeSemantics(
-          child: Semantics(
-            label: widget.iconsOnly ? label : null,
-            expanded: _popover.isOpen,
-            child: ShadButton.outline(
-              key: _trigger,
-              focusNode: widget.focusNode ?? _triggerFocus,
-              size: ShadButtonSize.sm,
-              height: widget.touchTargets ? 48 : 40,
-              width: widget.iconsOnly ? (widget.touchTargets ? 48 : 40) : null,
-              padding: widget.iconsOnly ? EdgeInsets.zero : null,
-              enabled: widget.enabled,
-              onPressed: widget.enabled ? _popover.toggle : null,
-              foregroundColor: foreground,
-              hoverForegroundColor: foreground,
-              pressedForegroundColor: foreground,
-              backgroundColor: mobileIcon
-                  ? colors.surfaceTint
-                  : style.backgroundColor,
-              hoverBackgroundColor: colors.quickAddBackground(
-                foreground,
-                emphasized: true,
-              ),
-              pressedBackgroundColor: colors.quickAddBackground(
-                foreground,
-                emphasized: true,
-              ),
-              decoration: ShadDecoration(
-                border: ShadBorder.all(
-                  strokeAlign: mobileIcon
-                      ? BorderSide.strokeAlignOutside
-                      : null,
-                  color: mobileIcon && !_popover.isOpen
-                      ? colors.border
-                      : colors.quickAddBorder(
-                          foreground,
-                          active: _popover.isOpen,
-                        ),
-                  radius: BorderRadius.circular(8),
-                ),
-              ),
-              leading: Icon(
-                widget.icon,
-                size: mobileIcon
-                    ? 22
-                    : (widget.touchTargets || widget.desktop ? 18 : 14),
-              ),
-              trailing: widget.desktop && !widget.iconsOnly
-                  ? const Icon(LucideIcons.chevronDown, size: 12)
-                  : null,
-              child: widget.iconsOnly
-                  ? null
-                  : Flexible(
-                      child: Text(
-                        widget.label,
-                        semanticsLabel: widget.semanticLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+        child: widget.rowTitle != null
+            ? QuickAddDetailRow(
+                key: _trigger,
+                title: widget.rowTitle!,
+                dot: widget.rowDot,
+                value: widget.label,
+                icon: widget.icon,
+                onPressed: widget.enabled ? _popover.toggle : null,
+                focusNode: widget.focusNode ?? _triggerFocus,
+                expanded: _popover.isOpen,
+              )
+            : MergeSemantics(
+                child: Semantics(
+                  label: widget.iconsOnly ? label : null,
+                  expanded: _popover.isOpen,
+                  child: ShadButton.outline(
+                    key: _trigger,
+                    focusNode: widget.focusNode ?? _triggerFocus,
+                    size: ShadButtonSize.sm,
+                    height: widget.touchTargets ? 48 : 40,
+                    width: widget.iconsOnly
+                        ? (widget.touchTargets ? 48 : 40)
+                        : null,
+                    padding: widget.iconsOnly ? EdgeInsets.zero : null,
+                    enabled: widget.enabled,
+                    onPressed: widget.enabled ? _popover.toggle : null,
+                    foregroundColor: foreground,
+                    hoverForegroundColor: foreground,
+                    pressedForegroundColor: foreground,
+                    backgroundColor: mobileIcon
+                        ? colors.surfaceTint
+                        : style.backgroundColor,
+                    hoverBackgroundColor: colors.quickAddBackground(
+                      foreground,
+                      emphasized: true,
+                    ),
+                    pressedBackgroundColor: colors.quickAddBackground(
+                      foreground,
+                      emphasized: true,
+                    ),
+                    decoration: ShadDecoration(
+                      border: ShadBorder.all(
+                        strokeAlign: mobileIcon
+                            ? BorderSide.strokeAlignOutside
+                            : null,
+                        color: mobileIcon && !_popover.isOpen
+                            ? colors.border
+                            : colors.quickAddBorder(
+                                foreground,
+                                active: _popover.isOpen,
+                              ),
+                        radius: BorderRadius.circular(8),
                       ),
                     ),
-            ),
-          ),
-        ),
+                    leading: Icon(
+                      widget.icon,
+                      size: mobileIcon
+                          ? 22
+                          : (widget.touchTargets || widget.desktop ? 18 : 14),
+                    ),
+                    trailing: widget.desktop && !widget.iconsOnly
+                        ? const Icon(LucideIcons.chevronDown, size: 12)
+                        : null,
+                    child: widget.iconsOnly
+                        ? null
+                        : Flexible(
+                            child: Text(
+                              widget.label,
+                              semanticsLabel: widget.semanticLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
       ),
     );
   }

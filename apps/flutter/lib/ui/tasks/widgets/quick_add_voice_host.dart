@@ -134,6 +134,8 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   late final AnimationController _analysisProgressController;
   final _draftControllers = <_VoiceTaskDraftController>[];
   bool _expanded = true;
+  _VoiceTaskDraftController? _openReviewDraft;
+  late final DateTime _reviewDate = widget.defaultDate ?? DateTime.now();
   LocalHistoryEntry? _backEntry;
   VoiceQuickAddState get _voice =>
       ref.read(voiceQuickAddViewModelProvider(widget._session));
@@ -362,6 +364,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
       valueListenable: voicePanelBottomClearanceOf(context),
       builder: (context, bottom, _) => VoicePanelMotion(
         reservedInsets: EdgeInsets.only(bottom: bottom),
+        fullScreen: _useMobileLayout,
         expanded: _expanded,
         onCollapse: () => _setExpanded(false),
         onExpand: () => _setExpanded(true),
@@ -530,6 +533,7 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
   }
 
   void _setTaskDrafts(List<DecomposedTaskDraft> tasks) {
+    _openReviewDraft = null;
     if (tasks.isEmpty) {
       _analysisProgressController
         ..stop()

@@ -115,6 +115,72 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @voiceRecorderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input'**
+  String get voiceRecorderTitle;
+
+  /// No description provided for @voiceRecorderSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in microphone'**
+  String get voiceRecorderSource;
+
+  /// No description provided for @voiceRecorderTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record'**
+  String get voiceRecorderTap;
+
+  /// No description provided for @voiceRecorderStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of 3'**
+  String voiceRecorderStep(int step);
+
+  /// No description provided for @voiceRecorderStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop recording'**
+  String get voiceRecorderStop;
+
+  /// No description provided for @voiceRecorderActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get voiceRecorderActive;
+
+  /// No description provided for @voiceReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review tasks'**
+  String get voiceReviewTitle;
+
+  /// No description provided for @voiceReviewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 task in dictation order} other{{count} tasks in dictation order}}'**
+  String voiceReviewCount(int count);
+
+  /// No description provided for @voiceReviewAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Add 1 task} other{Add {count} tasks}}'**
+  String voiceReviewAdd(int count);
+
+  /// No description provided for @voiceReviewDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get voiceReviewDate;
+
+  /// No description provided for @voiceReviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get voiceReviewNote;
+
   /// No description provided for @settingsDateFormatTitle.
   ///
   /// In en, this message translates to:

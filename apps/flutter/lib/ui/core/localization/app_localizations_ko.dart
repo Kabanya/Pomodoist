@@ -9,6 +9,45 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get voiceRecorderTitle => '음성 입력';
+
+  @override
+  String get voiceRecorderSource => '내장 마이크';
+
+  @override
+  String get voiceRecorderTap => '탭하여 녹음';
+
+  @override
+  String voiceRecorderStep(int step) {
+    return '3단계 중 $step단계';
+  }
+
+  @override
+  String get voiceRecorderStop => '녹음 중지';
+
+  @override
+  String get voiceRecorderActive => '녹음 중';
+
+  @override
+  String get voiceReviewTitle => '작업 확인';
+
+  @override
+  String voiceReviewCount(int count) {
+    return '받아쓴 순서대로 작업 $count개';
+  }
+
+  @override
+  String voiceReviewAdd(int count) {
+    return '작업 $count개 추가';
+  }
+
+  @override
+  String get voiceReviewDate => '날짜';
+
+  @override
+  String get voiceReviewNote => '메모';
+
+  @override
   String get settingsDateFormatTitle => '날짜 형식';
 
   @override

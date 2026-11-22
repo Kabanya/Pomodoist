@@ -82,9 +82,11 @@ class VoicePanelMotion extends StatefulWidget {
     required this.onCollapse,
     required this.onExpand,
     this.reservedInsets = EdgeInsets.zero,
+    this.fullScreen = false,
   });
 
   final bool expanded;
+  final bool fullScreen;
   final Widget panel;
   final Widget indicator;
   final Widget stopButton;
@@ -350,7 +352,11 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
               math.max(padding.left, constraints.maxWidth - padding.right),
               math.max(padding.top, constraints.maxHeight - padding.bottom),
             );
-            final panelWidth = math.min(640.0, _bounds.width);
+            final viewport = Offset.zero & constraints.biggest;
+            final panelBounds = widget.fullScreen ? viewport : _bounds;
+            final panelWidth = widget.fullScreen
+                ? viewport.width
+                : math.min(640.0, _bounds.width);
             final panelHeight = math.min(_panelHeight, _bounds.height);
             final compactPosition = _clamp(
               _dragPosition ??
@@ -364,12 +370,14 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                   ),
             );
             final target = widget.expanded
-                ? Rect.fromLTWH(
-                    _bounds.center.dx - panelWidth / 2,
-                    _bounds.bottom - panelHeight,
-                    panelWidth,
-                    panelHeight,
-                  )
+                ? widget.fullScreen
+                      ? viewport
+                      : Rect.fromLTWH(
+                          _bounds.center.dx - panelWidth / 2,
+                          _bounds.bottom - panelHeight,
+                          panelWidth,
+                          panelHeight,
+                        )
                 : compactPosition & _capsule;
             return Stack(
               children: [
@@ -411,19 +419,22 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                   duration: _dragPosition == null ? duration : Duration.zero,
                   curve: Curves.easeOutCubic,
                   builder: (context, animatedRect, _) {
-                    final width = math.min(animatedRect!.width, _bounds.width);
+                    final width = math.min(
+                      animatedRect!.width,
+                      panelBounds.width,
+                    );
                     final height = math.min(
                       animatedRect.height,
-                      _bounds.height,
+                      panelBounds.height,
                     );
                     final rect = Rect.fromLTWH(
                       animatedRect.left.clamp(
-                        _bounds.left,
-                        _bounds.right - width,
+                        panelBounds.left,
+                        panelBounds.right - width,
                       ),
                       animatedRect.top.clamp(
-                        _bounds.top,
-                        _bounds.bottom - height,
+                        panelBounds.top,
+                        panelBounds.bottom - height,
                       ),
                       width,
                       height,
@@ -436,8 +447,12 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                         elevation: 3,
                         shadowColor: colors.shadow.withValues(alpha: .22),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: colors.outlineVariant),
+                          borderRadius: BorderRadius.circular(
+                            widget.fullScreen && widget.expanded ? 0 : 12,
+                          ),
+                          side: widget.fullScreen && widget.expanded
+                              ? BorderSide.none
+                              : BorderSide(color: colors.outlineVariant),
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Stack(
@@ -461,7 +476,7 @@ class _VoicePanelMotionState extends State<VoicePanelMotion> {
                                           minWidth: panelWidth,
                                           maxWidth: panelWidth,
                                           minHeight: 0,
-                                          maxHeight: _bounds.height,
+                                          maxHeight: panelBounds.height,
                                           child: _MeasurePanel(
                                             onSize: (size) {
                                               if (mounted &&

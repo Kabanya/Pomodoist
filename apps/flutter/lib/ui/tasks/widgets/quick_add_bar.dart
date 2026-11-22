@@ -7,6 +7,8 @@ import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/ui/tasks/view_models/quick_add_view_model.dart';
 import 'dart:async';
+import 'package:intl/intl.dart' show DateFormat;
+import 'package:pomodoist/ui/core/localization/app_date_formatter.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -42,6 +44,8 @@ part 'quick_add_composer.dart';
 part 'quick_add_comment.dart';
 part 'quick_add_voice_host.dart';
 part 'quick_add_voice_panel.dart';
+part 'quick_add_voice_review.dart';
+part 'quick_add_voice_recorder.dart';
 part 'quick_add_voice_panels.dart';
 part 'quick_add_voice_drafts.dart';
 
