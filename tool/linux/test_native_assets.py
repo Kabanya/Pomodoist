@@ -18,6 +18,7 @@ class NativeAssetsTests(unittest.TestCase):
                 for child in ("flutter", "runner", "cmake"):
                     (source / child).mkdir(parents=True)
                 shutil.copyfile(ROOT / "apps/flutter/linux/CMakeLists.txt", source / "CMakeLists.txt")
+                shutil.copytree(ROOT / "apps/flutter/desktop", source.parent / "desktop")
                 # Keep this fixture focused on package paths; the X11 source
                 # override is covered separately by test_thermion_x11.py.
                 (source / "thermion_runtime.cmake").write_text("# X11 override excluded from the path fixture.\n")
