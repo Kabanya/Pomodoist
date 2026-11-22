@@ -227,6 +227,12 @@ List<Override> _billingEntitlementOverrides({
 List<Override> _billingPurchaseOverrides() {
   return [
     billingPurchaseLinkerProvider.overrideWith(_purchaseLinker),
+    billingAnnualHistoryLinkerProvider.overrideWith((ref) {
+      final service = _accountBillingService(ref);
+      return service == null
+          ? null
+          : (proofs) => service.linkPurchases(proofs, annualHistory: true);
+    }),
     billingOfferRequestProvider.overrideWith(_offerRequest),
     billingStripeGatewayProvider.overrideWith(_stripeGateway),
     billingSignInPromptProvider.overrideWith(_signInPrompt),

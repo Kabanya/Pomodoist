@@ -1132,6 +1132,13 @@ that it sends audio to Pomodoist and requires sign-in. During recording the same
 control stops capture and shows elapsed time and input level. Respect Reduce
 Motion for the recording halo, level bars and processing transitions.
 
+Keep speech recognition and task analysis as separate settings. When the user
+chooses their own task analysis API, show the audio recipient and the text
+recipient before recording. Keep the ordinary and smart model IDs under one
+connection. A failed custom request keeps the transcript available for an
+explicit retry or conversion into an editable task. Only confirmed drafts
+enter the normal task store and sync flow.
+
 Voice draft titles start at one line and grow with their text up to three lines;
 do not reserve blank lines for short tasks. Keep metadata and comments editable.
 On phone widths below 600 logical pixels, review opens full-screen. Keep drafts

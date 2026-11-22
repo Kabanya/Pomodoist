@@ -1247,11 +1247,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'A transcrição na nuvem envia áudio ao Pomodoist e requer conexão com a internet.';
+      'O Pomodoist envia o áudio para o OpenRouter para transcrição. É necessária uma ligação à Internet.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Entre para usar a transcrição na nuvem. Até lá, a transcrição integrada permanece ativa.';
+      'Para usar a transcrição na nuvem, inicie sessão com um plano Pro ativo.';
 
   @override
   String get settingsThemeTitle => 'Tema';
@@ -5312,6 +5312,122 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get focusFinish => 'Concluir';
+
+  @override
+  String get customAnalysisTitle => 'Modelo de análise de tarefas';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'Escolha o modelo que transforma a transcrição em rascunhos de tarefas.';
+
+  @override
+  String get customDefault => 'Predefinido · Pomodoist';
+
+  @override
+  String get customEndpoint => 'API ou servidor próprio';
+
+  @override
+  String get customBaseUrl => 'URL base da API compatível com OpenAI';
+
+  @override
+  String get customInvalidUrl =>
+      'Utilize HTTPS ou HTTP em localhost. Remova as credenciais, os parâmetros e o fragmento.';
+
+  @override
+  String get customLocalhost =>
+      'Num telemóvel, localhost refere-se ao próprio telemóvel. Para um computador na sua rede, introduza o respetivo endereço HTTPS.';
+
+  @override
+  String get customNormalModel => 'ID do modelo padrão';
+
+  @override
+  String get customRequiredModel => 'Introduza o ID de um modelo.';
+
+  @override
+  String get customSmartModel => 'ID do modelo inteligente (opcional)';
+
+  @override
+  String get customSmartFallback =>
+      'Deixe este campo vazio para utilizar o modelo padrão no modo inteligente.';
+
+  @override
+  String get customApiKey => 'Chave de API (opcional)';
+
+  @override
+  String get customRemoveKey => 'Remover chave guardada';
+
+  @override
+  String get customBrowserKey =>
+      'A chave fica na memória deste separador. Volte a introduzi-la depois de o recarregar.';
+
+  @override
+  String get customTest => 'Testar ligação';
+
+  @override
+  String get customTestOk => 'Tarefa de teste recebida';
+
+  @override
+  String get customSaved => 'Definições guardadas';
+
+  @override
+  String get customAccessInfo =>
+      'Disponível durante um mês pago ou permanentemente após a compra de um plano anual ou de acesso vitalício.';
+
+  @override
+  String get customDenied =>
+      'Acesso recusado. Verifique a chave e o ID do modelo.';
+
+  @override
+  String get customRateLimit =>
+      'Foi atingido o limite de pedidos do fornecedor.';
+
+  @override
+  String get customProviderError =>
+      'O fornecedor devolveu um erro. Verifique o URL e o ID do modelo.';
+
+  @override
+  String get customBrowserNetwork =>
+      'Não foi possível ligar. Verifique o URL, as permissões do navegador e as definições CORS do servidor.';
+
+  @override
+  String get customNetwork =>
+      'Não foi possível estabelecer ligação ao servidor.';
+
+  @override
+  String get customTimeout => 'O tempo do pedido expirou.';
+
+  @override
+  String get customInvalidResponse =>
+      'Não foi possível ler a tarefa devolvida pelo modelo.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'O áudio fica neste dispositivo. A transcrição é enviada para $host para criar tarefas.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'O Pomodoist envia o áudio para o OpenRouter para transcrição. A transcrição é enviada para $host para criar as tarefas.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'O serviço de reconhecimento de voz da Apple processa o áudio. A transcrição é enviada para $host para criar tarefas.';
+  }
+
+  @override
+  String get customUseText => 'Usar o texto como tarefa';
+
+  @override
+  String get customAnalysisFailed =>
+      'O seu modelo não conseguiu transformar este texto em tarefas.';
+
+  @override
+  String get customAccessExpired => 'O acesso ao seu modelo está indisponível.';
+
+  @override
+  String get customSetupRequired =>
+      'Para continuar, ligue o seu modelo nas definições de entrada de voz.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -5562,6 +5678,14 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get csvExportError =>
       'Não foi possível exportar o CSV. Tente novamente.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudDescription =>
+      'O Pomodoist envia o áudio ao OpenRouter para transcrição. É necessária uma conexão com a internet.';
+
+  @override
+  String get settingsVoiceTranscriptionCloudRequiresSignIn =>
+      'Para usar a transcrição na nuvem, entre em uma conta com um plano Pro ativo.';
 
   @override
   String get taskChangeProject => 'Alterar projeto';
@@ -6932,4 +7056,119 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get focusFinish => 'Concluir';
+
+  @override
+  String get customAnalysisTitle => 'Modelo para análise de tarefas';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'Escolha o modelo que transforma a transcrição em rascunhos de tarefas.';
+
+  @override
+  String get customDefault => 'Padrão · Pomodoist';
+
+  @override
+  String get customEndpoint => 'API ou servidor próprio';
+
+  @override
+  String get customBaseUrl => 'URL base da API compatível com OpenAI';
+
+  @override
+  String get customInvalidUrl =>
+      'Use HTTPS ou HTTP em localhost. Remova as credenciais, os parâmetros e o fragmento.';
+
+  @override
+  String get customLocalhost =>
+      'No celular, localhost se refere ao próprio celular. Para um computador na sua rede, insira o endereço HTTPS dele.';
+
+  @override
+  String get customNormalModel => 'ID do modelo padrão';
+
+  @override
+  String get customRequiredModel => 'Insira o ID de um modelo.';
+
+  @override
+  String get customSmartModel => 'ID do modelo inteligente (opcional)';
+
+  @override
+  String get customSmartFallback =>
+      'Deixe este campo em branco para usar o modelo padrão no modo inteligente.';
+
+  @override
+  String get customApiKey => 'Chave de API (opcional)';
+
+  @override
+  String get customRemoveKey => 'Remover chave salva';
+
+  @override
+  String get customBrowserKey =>
+      'A chave fica na memória desta aba. Insira a chave novamente após recarregar a página.';
+
+  @override
+  String get customTest => 'Testar conexão';
+
+  @override
+  String get customTestOk => 'Tarefa de teste recebida';
+
+  @override
+  String get customSaved => 'Configurações salvas';
+
+  @override
+  String get customAccessInfo =>
+      'Disponível durante um mês pago ou permanentemente após a compra de um plano anual ou de acesso vitalício.';
+
+  @override
+  String get customDenied =>
+      'Acesso negado. Verifique a chave e o ID do modelo.';
+
+  @override
+  String get customRateLimit =>
+      'O limite de solicitações do provedor foi atingido.';
+
+  @override
+  String get customProviderError =>
+      'O provedor retornou um erro. Verifique a URL e o ID do modelo.';
+
+  @override
+  String get customBrowserNetwork =>
+      'Falha na conexão. Verifique a URL, as permissões do navegador e as configurações de CORS do servidor.';
+
+  @override
+  String get customNetwork => 'Não foi possível conectar ao servidor.';
+
+  @override
+  String get customTimeout => 'O tempo da solicitação expirou.';
+
+  @override
+  String get customInvalidResponse =>
+      'Não foi possível ler a tarefa retornada pelo modelo.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'O áudio fica neste dispositivo. A transcrição é enviada para $host para criar tarefas.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'O Pomodoist envia o áudio ao OpenRouter para transcrição. A transcrição é enviada para $host para criar as tarefas.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'O serviço de reconhecimento de voz da Apple processa o áudio. A transcrição é enviada para $host para criar tarefas.';
+  }
+
+  @override
+  String get customUseText => 'Usar o texto como tarefa';
+
+  @override
+  String get customAnalysisFailed =>
+      'Seu modelo não conseguiu transformar este texto em tarefas.';
+
+  @override
+  String get customAccessExpired => 'O acesso ao seu modelo está indisponível.';
+
+  @override
+  String get customSetupRequired =>
+      'Para continuar, conecte seu modelo nas configurações de entrada de voz.';
 }

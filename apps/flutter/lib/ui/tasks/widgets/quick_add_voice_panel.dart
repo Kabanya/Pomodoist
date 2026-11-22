@@ -163,12 +163,21 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
         ? LucideIcons.mic
         : LucideIcons.cloud;
 
+    final host = _voice.customHost ?? 'Pomodoist';
+    final route = mode == VoiceTranscriptionMode.cloud
+        ? l10n.customRouteCloud(host)
+        : !kIsWeb &&
+              (defaultTargetPlatform == TargetPlatform.iOS ||
+                  defaultTargetPlatform == TargetPlatform.macOS)
+        ? l10n.customRouteApple(host)
+        : l10n.customRouteLocal(host);
+
     if (!_voice.transcriptionModeSelectable) {
       return ListTile(
         contentPadding: EdgeInsets.zero,
         leading: Icon(icon(mode), size: 20),
         title: Text(l10n.settingsVoiceTranscriptionTitle),
-        subtitle: Text(label(mode)),
+        subtitle: Text(_voice.taskRouteReady ? route : label(mode)),
       );
     }
     return Column(
@@ -206,6 +215,8 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
               ),
           ],
         ),
+        if (_voice.taskRouteReady)
+          Text(route, style: Theme.of(context).textTheme.bodySmall),
         if (_voice.usesDownloadableVoiceModel &&
             mode == VoiceTranscriptionMode.system &&
             !_voice.motionActive)
@@ -257,7 +268,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
-              onPressed: _voice.canStart ? _startVoice : null,
+              onPressed: _voice.canRecord ? _startVoice : null,
               icon: const Icon(LucideIcons.mic),
               label: Text(l10n.voiceAgain),
             ),
@@ -267,7 +278,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 key: const Key('voice-retry-transcription'),
-                onPressed: _voice.canStart
+                onPressed: _voice.canRecord
                     ? () => _voiceActions.start(retry: true)
                     : null,
                 icon: const Icon(LucideIcons.rotateCw),
@@ -288,7 +299,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
       runSpacing: 8,
       children: [
         FilledButton.icon(
-          onPressed: _voice.canStart ? _startVoice : null,
+          onPressed: _voice.canRecord ? _startVoice : null,
           icon: const Icon(LucideIcons.mic),
           label: Text(
             _voice.transcript.isEmpty &&
@@ -332,7 +343,7 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
           !_voice.isTranscribing) ...[
         FilledButton.icon(
           key: const Key('voice-retry-transcription'),
-          onPressed: _voice.canStart
+          onPressed: _voice.canRecord
               ? () => _voiceActions.start(retry: true)
               : null,
           icon: const Icon(LucideIcons.rotateCw),
@@ -355,13 +366,19 @@ extension _VoiceQuickAddHostPanel on _VoiceQuickAddHostState {
           icon: const Icon(LucideIcons.cloud),
           label: Text(l10n.voiceUseCloudTranscription),
         ),
+      if (_voice.canUseTranscriptAsTask)
+        TextButton.icon(
+          onPressed: _voiceActions.useTranscriptAsTask,
+          icon: const Icon(LucideIcons.text),
+          label: Text(l10n.customUseText),
+        ),
       if (_error != null &&
           _voice.transcript.trim().isNotEmpty &&
           !_voice.captureActive &&
           !_voice.isTranscribing &&
           !_voice.analyzing)
         TextButton.icon(
-          onPressed: () => _voiceActions.decomposeTranscript(_voice.transcript),
+          onPressed: _voice.canRecord ? _voiceActions.retryAnalysis : null,
           icon: const Icon(LucideIcons.rotateCw),
           label: Text(l10n.voiceRetryAnalysis),
         ),

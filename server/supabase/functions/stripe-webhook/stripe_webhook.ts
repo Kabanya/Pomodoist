@@ -34,6 +34,7 @@ export type StripeWebhookDeps = {
   recordEvent: (
     record: StripeEventRecord,
   ) => Promise<{ applied: boolean }>;
+  syncCustomModelPayments?: (event: StripeWebhookEvent) => Promise<void>;
   now?: () => Date;
 };
 
@@ -93,12 +94,13 @@ export async function handleStripeWebhook(
       500,
     );
   }
-  if (record == null) {
-    return json({ ok: true, ignored: true });
-  }
   try {
-    const result = await deps.recordEvent(record);
-    return json({ ok: true, applied: result.applied });
+    const result = record == null ? null : await deps.recordEvent(record);
+    // Retry a failed receipt write even when the general Pro event was already applied.
+    await deps.syncCustomModelPayments?.(event);
+    return result
+      ? json({ ok: true, applied: result.applied })
+      : json({ ok: true, ignored: true });
   } catch {
     return json(
       { code: "webhook_failed", error: "Could not record Stripe event." },
@@ -229,6 +231,9 @@ function lifetimeRecordForCheckout(
     payload: {
       checkoutSessionId: sessionId,
       paymentStatus: "paid",
+      ...(integerValue(session.amount_total) == null
+        ? {}
+        : { amountTotal: session.amount_total }),
     },
   };
 }

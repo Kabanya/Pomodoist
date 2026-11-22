@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/settings/custom_model_config.dart';
 import 'package:pomodoist/ui/voice/widgets/whisper_model_controls.dart';
 import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 import 'package:pomodoist/ui/tasks/widgets/quick_add_input.dart';

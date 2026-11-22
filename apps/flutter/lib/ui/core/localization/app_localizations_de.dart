@@ -1256,11 +1256,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'Die Cloud-Transkription sendet Audio an Pomodoist und benötigt eine Internetverbindung.';
+      'Pomodoist sendet die Aufnahme zur Transkription an OpenRouter. Dafür ist eine Internetverbindung erforderlich.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Melde dich für die Cloud-Transkription an. Bis dahin bleibt die integrierte Transkription aktiv.';
+      'Die Cloud-Transkription erfordert die Anmeldung mit einem aktiven Pro-Abo.';
 
   @override
   String get settingsThemeTitle => 'Design';
@@ -5305,4 +5305,121 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get focusFinish => 'Beenden';
+
+  @override
+  String get customAnalysisTitle => 'Modell für die Aufgabenanalyse';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'Wähle das Modell, das das Transkript in Aufgabenentwürfe umwandelt.';
+
+  @override
+  String get customDefault => 'Standard · Pomodoist';
+
+  @override
+  String get customEndpoint => 'Eigene API oder eigener Server';
+
+  @override
+  String get customBaseUrl => 'Basis-URL der OpenAI-kompatiblen API';
+
+  @override
+  String get customInvalidUrl =>
+      'Verwende HTTPS oder für localhost HTTP. Entferne Zugangsdaten, Abfrage und Fragment.';
+
+  @override
+  String get customLocalhost =>
+      'Auf einem Smartphone verweist localhost auf das Smartphone selbst. Gib für einen Computer im Netzwerk dessen HTTPS-Adresse ein.';
+
+  @override
+  String get customNormalModel => 'Standardmodell-ID';
+
+  @override
+  String get customRequiredModel => 'Gib eine Modell-ID ein.';
+
+  @override
+  String get customSmartModel =>
+      'Modell-ID für den intelligenten Modus (optional)';
+
+  @override
+  String get customSmartFallback =>
+      'Lass dieses Feld leer, um im intelligenten Modus das Standardmodell zu verwenden.';
+
+  @override
+  String get customApiKey => 'API-Schlüssel (optional)';
+
+  @override
+  String get customRemoveKey => 'Gespeicherten Schlüssel entfernen';
+
+  @override
+  String get customBrowserKey =>
+      'Der Schlüssel bleibt im Speicher dieses Tabs. Gib ihn nach dem Neuladen erneut ein.';
+
+  @override
+  String get customTest => 'Verbindung testen';
+
+  @override
+  String get customTestOk => 'Testaufgabe empfangen';
+
+  @override
+  String get customSaved => 'Einstellungen gespeichert';
+
+  @override
+  String get customAccessInfo =>
+      'Während eines bezahlten Monatsabos oder dauerhaft nach dem Kauf eines Jahresabos oder eines lebenslangen Zugangs verfügbar.';
+
+  @override
+  String get customDenied =>
+      'Zugriff verweigert. Prüfe den Schlüssel und die Modell-ID.';
+
+  @override
+  String get customRateLimit =>
+      'Das Anfragelimit des Anbieters wurde erreicht.';
+
+  @override
+  String get customProviderError =>
+      'Der Anbieter meldet einen Fehler. Prüfe URL und Modell-ID.';
+
+  @override
+  String get customBrowserNetwork =>
+      'Verbindung fehlgeschlagen. Prüfe URL, Browserberechtigungen und CORS-Einstellungen des Servers.';
+
+  @override
+  String get customNetwork => 'Verbindung zum Server fehlgeschlagen.';
+
+  @override
+  String get customTimeout => 'Zeitüberschreitung bei der Anfrage.';
+
+  @override
+  String get customInvalidResponse =>
+      'Die Aufgabe in der Modellantwort ist unlesbar.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'Die Aufnahme bleibt auf diesem Gerät. Das Transkript geht zur Aufgabenerstellung an $host.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist sendet die Aufnahme zur Transkription an OpenRouter. Das Transkript geht zur Aufgabenerstellung an $host.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Apples Spracherkennung verarbeitet die Aufnahme. Das Transkript geht zur Aufgabenerstellung an $host.';
+  }
+
+  @override
+  String get customUseText => 'Text als Aufgabe verwenden';
+
+  @override
+  String get customAnalysisFailed =>
+      'Dein Modell konnte den Text nicht in Aufgaben umwandeln.';
+
+  @override
+  String get customAccessExpired =>
+      'Der Zugriff auf dein eigenes Modell ist nicht verfügbar.';
+
+  @override
+  String get customSetupRequired =>
+      'Verbinde dein Modell in den Einstellungen für die Spracheingabe, um fortzufahren.';
 }

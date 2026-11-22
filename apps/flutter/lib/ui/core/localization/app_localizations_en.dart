@@ -1240,11 +1240,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'Cloud transcription sends audio to Pomodoist and requires an internet connection.';
+      'Pomodoist sends audio to OpenRouter for transcription. An internet connection is required.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Sign in to use cloud transcription. Until then, built-in transcription is active.';
+      'Cloud transcription requires signing in with an active Pro plan.';
 
   @override
   String get settingsThemeTitle => 'Theme';
@@ -5282,4 +5282,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get focusFinish => 'Finish';
+
+  @override
+  String get customAnalysisTitle => 'Model for task analysis';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'Choose which model turns the transcript into task drafts.';
+
+  @override
+  String get customDefault => 'Default · Pomodoist';
+
+  @override
+  String get customEndpoint => 'Custom API or server';
+
+  @override
+  String get customBaseUrl => 'OpenAI-compatible API base URL';
+
+  @override
+  String get customInvalidUrl =>
+      'Use HTTPS, or HTTP on localhost. Omit credentials, query and fragment.';
+
+  @override
+  String get customLocalhost =>
+      'On a phone, localhost means the phone itself. For a computer on your network, enter its HTTPS address.';
+
+  @override
+  String get customNormalModel => 'Standard model ID';
+
+  @override
+  String get customRequiredModel => 'Enter a model ID.';
+
+  @override
+  String get customSmartModel => 'Smart model ID (optional)';
+
+  @override
+  String get customSmartFallback =>
+      'Leave this blank to use the standard model in Smart mode.';
+
+  @override
+  String get customApiKey => 'API key (optional)';
+
+  @override
+  String get customRemoveKey => 'Remove saved key';
+
+  @override
+  String get customBrowserKey =>
+      'This tab keeps the key in memory. Enter it again after reloading.';
+
+  @override
+  String get customTest => 'Test connection';
+
+  @override
+  String get customTestOk => 'Test task received';
+
+  @override
+  String get customSaved => 'Settings saved';
+
+  @override
+  String get customAccessInfo =>
+      'Available during a paid monthly plan, or permanently after a paid annual or lifetime purchase.';
+
+  @override
+  String get customDenied => 'Access denied. Check the key and model ID.';
+
+  @override
+  String get customRateLimit => 'The provider’s rate limit was reached.';
+
+  @override
+  String get customProviderError =>
+      'The provider returned an error. Check the URL and model ID.';
+
+  @override
+  String get customBrowserNetwork =>
+      'Cannot connect. Check the URL, browser permissions and the server’s CORS settings.';
+
+  @override
+  String get customNetwork => 'Cannot connect to the server.';
+
+  @override
+  String get customTimeout => 'The request timed out.';
+
+  @override
+  String get customInvalidResponse => 'The model returned an unreadable task.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'Audio stays on this device. The transcript goes to $host for task creation.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist sends the audio to OpenRouter for transcription. The transcript goes to $host for task creation.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Apple’s speech service processes the audio. The transcript goes to $host for task creation.';
+  }
+
+  @override
+  String get customUseText => 'Use text as a task';
+
+  @override
+  String get customAnalysisFailed =>
+      'Your model could not turn this text into tasks.';
+
+  @override
+  String get customAccessExpired =>
+      'Access to your custom model is unavailable.';
+
+  @override
+  String get customSetupRequired =>
+      'To continue, connect your model in voice input settings.';
 }

@@ -1,3 +1,4 @@
+import { syncCustomModelStripeEvent } from "./custom_model_payments.ts";
 import { assertStripeOffersConfig } from "../pomodoist-stripe-billing/stripe_offers.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
@@ -51,6 +52,14 @@ Deno.serve((req) => {
       const subscription = await stripe.subscriptions.retrieve(id);
       return subscription as unknown as Record<string, unknown>;
     },
+    syncCustomModelPayments: (event) =>
+      syncCustomModelStripeEvent(stripe, event, async (payment) => {
+        const { error } = await admin.rpc(
+          "record_pomodoist_custom_model_stripe_payment",
+          payment,
+        );
+        if (error) throw new Error("Could not save custom model payment.");
+      }),
     recordEvent: async (record) => {
       const { data, error } = await admin.rpc(
         "record_pomodoist_stripe_event",

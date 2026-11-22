@@ -1255,11 +1255,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'La transcription cloud envoie l’audio à Pomodoist et nécessite une connexion Internet.';
+      'Pomodoist envoie l’audio à OpenRouter pour la transcription. Une connexion Internet est nécessaire.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Connectez-vous pour utiliser la transcription cloud. La transcription intégrée reste active jusque-là.';
+      'La transcription dans le cloud nécessite une connexion à un compte Pro actif.';
 
   @override
   String get settingsThemeTitle => 'Thème';
@@ -5310,4 +5310,121 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get focusFinish => 'Terminer';
+
+  @override
+  String get customAnalysisTitle => 'Modèle d’analyse des tâches';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'Choisissez le modèle qui transforme la transcription en brouillons de tâches.';
+
+  @override
+  String get customDefault => 'Par défaut · Pomodoist';
+
+  @override
+  String get customEndpoint => 'API ou serveur personnel';
+
+  @override
+  String get customBaseUrl => 'URL de base de l’API compatible OpenAI';
+
+  @override
+  String get customInvalidUrl =>
+      'Utilisez HTTPS ou HTTP sur localhost. Retirez les identifiants, les paramètres et le fragment.';
+
+  @override
+  String get customLocalhost =>
+      'Sur un téléphone, localhost désigne le téléphone lui-même. Pour un ordinateur du réseau, saisissez son adresse HTTPS.';
+
+  @override
+  String get customNormalModel => 'Identifiant du modèle standard';
+
+  @override
+  String get customRequiredModel => 'Saisissez un identifiant de modèle.';
+
+  @override
+  String get customSmartModel =>
+      'Identifiant du modèle intelligent (facultatif)';
+
+  @override
+  String get customSmartFallback =>
+      'Laissez ce champ vide pour utiliser le modèle standard en mode intelligent.';
+
+  @override
+  String get customApiKey => 'Clé API (facultative)';
+
+  @override
+  String get customRemoveKey => 'Supprimer la clé enregistrée';
+
+  @override
+  String get customBrowserKey =>
+      'La clé reste en mémoire dans cet onglet. Saisissez-la à nouveau après le rechargement.';
+
+  @override
+  String get customTest => 'Tester la connexion';
+
+  @override
+  String get customTestOk => 'Tâche de test reçue';
+
+  @override
+  String get customSaved => 'Paramètres enregistrés';
+
+  @override
+  String get customAccessInfo =>
+      'Disponible pendant un mois payé ou de façon permanente après l’achat d’un abonnement annuel ou d’un accès à vie.';
+
+  @override
+  String get customDenied =>
+      'Accès refusé. Vérifiez la clé et l’identifiant du modèle.';
+
+  @override
+  String get customRateLimit =>
+      'La limite de requêtes du fournisseur a été atteinte.';
+
+  @override
+  String get customProviderError =>
+      'Le fournisseur a renvoyé une erreur. Vérifiez l’URL et l’identifiant du modèle.';
+
+  @override
+  String get customBrowserNetwork =>
+      'Connexion impossible. Vérifiez l’URL, les autorisations du navigateur et les paramètres CORS du serveur.';
+
+  @override
+  String get customNetwork => 'Connexion au serveur impossible.';
+
+  @override
+  String get customTimeout => 'La requête a expiré.';
+
+  @override
+  String get customInvalidResponse =>
+      'La tâche renvoyée par le modèle est illisible.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'L’audio reste sur cet appareil. La transcription est envoyée à $host pour créer les tâches.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist envoie l’audio à OpenRouter pour la transcription. La transcription est envoyée à $host pour créer les tâches.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Le service de reconnaissance vocale d’Apple traite l’audio. La transcription est envoyée à $host pour créer les tâches.';
+  }
+
+  @override
+  String get customUseText => 'Utiliser le texte comme tâche';
+
+  @override
+  String get customAnalysisFailed =>
+      'Votre modèle n’a pas pu transformer ce texte en tâches.';
+
+  @override
+  String get customAccessExpired =>
+      'L’accès à votre modèle personnel est indisponible.';
+
+  @override
+  String get customSetupRequired =>
+      'Pour continuer, connectez votre modèle dans les paramètres de saisie vocale.';
 }

@@ -24,7 +24,7 @@ final class StoreKitHost: NSObject, FlutterPlugin {
       purchasePromotionalOffer(call.arguments, result: result)
       return
     }
-    guard ["currentEntitlements", "latestSubscriptionTransaction"].contains(call.method) else {
+    guard ["currentEntitlements", "latestSubscriptionTransaction", "paidAnnualTransactions"].contains(call.method) else {
       result(FlutterMethodNotImplemented)
       return
     }
@@ -34,6 +34,26 @@ final class StoreKitHost: NSObject, FlutterPlugin {
     }
 
     Task { @MainActor in
+      if call.method == "paidAnnualTransactions" {
+        // An annual payment survives subscription expiry. Read verified history
+        // because currentEntitlements omits an expired or superseded plan.
+        var history: [[String: String]] = []
+        for await verification in StoreKit.Transaction.all {
+          guard case .verified(let transaction) = verification,
+                transaction.productID == "pomodoist.pro.annual",
+                transaction.revocationDate == nil,
+                transaction.ownershipType == .purchased,
+                let price = transaction.price, price > 0 else { continue }
+          history.append([
+            "productId": transaction.productID,
+            "transactionId": String(transaction.id),
+            "jws": verification.jwsRepresentation,
+            "localVerificationData": String(decoding: transaction.jsonRepresentation, as: UTF8.self),
+          ])
+        }
+        result(history)
+        return
+      }
       if call.method == "latestSubscriptionTransaction" {
         var latest: StoreKit.Transaction?
         var proof: String?

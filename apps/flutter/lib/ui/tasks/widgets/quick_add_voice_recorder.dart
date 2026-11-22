@@ -172,7 +172,7 @@ extension _MobileVoiceRecorder on _VoiceQuickAddHostState {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final action = recording
         ? (_voice.captureActive && !_voice.stopping ? _voiceActions.stop : null)
-        : (_voice.canStart ? _startVoice : null);
+        : (_voice.canRecord ? _startVoice : null);
     final pendingPermission =
         _voice.status == VoiceCaptureStatus.requestingPermission;
     return Column(

@@ -47,7 +47,7 @@ class TaskDecompositionService {
           'type': 'task.decomposeTranscript',
           'transcript': text,
           'locale': locale,
-          'currentLocalTime': _isoWithOffset(now),
+          'currentLocalTime': taskDecompositionLocalTime(now),
           'smart': smartMode,
         },
       }).timeout(smartMode ? _smartTimeout : _fastTimeout);
@@ -80,7 +80,7 @@ List<DecomposedTaskDraft> decodeTaskDecompositionResponse(Object? response) {
   return tasks;
 }
 
-String _isoWithOffset(DateTime value) {
+String taskDecompositionLocalTime(DateTime value) {
   final local = value.toLocal();
   final offset = local.timeZoneOffset;
   final sign = offset.isNegative ? '-' : '+';

@@ -83,6 +83,7 @@ export async function handlePomodoistPurchase(
   if (!isRecord(parsed.value) || !Array.isArray(parsed.value.transactions)) {
     return json({ error: "transactions must be an array." }, 400);
   }
+  const annualHistory = parsed.value.annualHistory === true;
   const candidates = parsed.value.transactions;
   if (candidates.length < 1 || candidates.length > maxTransactions) {
     return json({ error: "transactions must contain 1 to 100 items." }, 400);
@@ -114,6 +115,9 @@ export async function handlePomodoistPurchase(
         transaction,
         deps.now?.() ?? new Date(),
       );
+      if (annualHistory && transaction.productId !== "pomodoist.pro.annual") {
+        continue;
+      }
       if (
         state == null ||
         transaction.purchaseDate == null ||
@@ -129,6 +133,7 @@ export async function handlePomodoistPurchase(
         transaction.appAccountToken.toLowerCase() !==
           account.accountToken.toLowerCase()
       ) {
+        if (annualHistory) continue;
         return purchaseAlreadyLinked();
       }
       accepted.push({
@@ -156,12 +161,17 @@ export async function handlePomodoistPurchase(
       p_expires_at: transaction.expiresDate ?? null,
       p_revoked_at: transaction.revocationDate ?? null,
       p_app_account_token: transaction.appAccountToken ?? null,
-      p_signed_at: transaction.signedDate!,
+      // A freshly re-signed historical proof must not overwrite the current
+      // subscription. The separate receipt projection uses the actual signedDate.
+      p_signed_at: annualHistory
+        ? transaction.purchaseDate!
+        : transaction.signedDate!,
       p_raw_claims: transaction.claims,
       p_user_id: account.userId,
     });
     if (error) {
       if (error.message.includes("pomodoist_purchase_already_linked")) {
+        if (annualHistory) continue;
         return purchaseAlreadyLinked();
       }
       return json({ error: "Could not save App Store purchase." }, 500);
@@ -169,6 +179,7 @@ export async function handlePomodoistPurchase(
     entitlements.push(data);
   }
 
+  if (entitlements.length === 0) return purchaseAlreadyLinked();
   return json({ ok: true, entitlements });
 }
 

@@ -15,6 +15,12 @@ Run root `make check` for architecture boundaries, Flutter analysis and unit tes
 Direct Flutter commands run from `apps/flutter`. Keep dependencies directed as
 described in the [repository architecture](docs/architecture/repository.md).
 
+Desktop builds include secure storage for custom model API keys. On Windows,
+install the C++ ATL component for your MSVC toolset in Visual Studio Installer.
+On Linux, install the libsecret development package (`libsecret-1-dev` on
+Ubuntu, `libsecret` on Arch). Saving a key at runtime uses the desktop's
+unlocked Secret Service keyring.
+
 Local macOS staging targets (`macos-staging-debug`, `macos-staging-profile`,
 and `macos-staging-release`) opt into the in-process test StoreKit catalog,
 matching staging TestFlight. Purchases in this mode are simulated and do not

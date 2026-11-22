@@ -1,5 +1,6 @@
 import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
+import 'package:pomodoist/config/voice_task_route.dart';
 import 'support/test_app.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,15 +32,24 @@ void main() {
     expect(disabled.onSelected, isNull);
     expect(
       find.text(
-        'Sign in to use cloud transcription. Until then, built-in transcription is active.',
+        'Cloud transcription requires signing in with an active Pro plan.',
       ),
       findsOneWidget,
     );
     expect(
       find.text(
-        'Cloud transcription sends audio to Pomodoist and requires an internet connection.',
+        'Pomodoist sends audio to OpenRouter for transcription. An internet connection is required.',
       ),
       findsOneWidget,
+    );
+
+    await tester.pumpWidget(_app(signedIn: true, managedAccess: false));
+    await tester.pump();
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Cloud'))
+          .onSelected,
+      isNull,
     );
 
     await tester.pumpWidget(_app(signedIn: true));
@@ -96,16 +106,20 @@ void main() {
   });
 }
 
-Widget _app({required bool signedIn}) => ProviderScope(
-  overrides: [
-    checkWhisperModelProvider.overrideWithValue(
-      (model) async => model == WhisperModel.tiny,
-    ),
-  ],
-  child: MaterialApp(
-    builder: testAppBuilder,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: Scaffold(body: VoiceTranscriptionSettingsCard(signedIn: signedIn)),
-  ),
-);
+Widget _app({required bool signedIn, bool managedAccess = true}) =>
+    ProviderScope(
+      overrides: [
+        managedVoiceAccessProvider.overrideWithValue(managedAccess),
+        checkWhisperModelProvider.overrideWithValue(
+          (model) async => model == WhisperModel.tiny,
+        ),
+      ],
+      child: MaterialApp(
+        builder: testAppBuilder,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: VoiceTranscriptionSettingsCard(signedIn: signedIn),
+        ),
+      ),
+    );

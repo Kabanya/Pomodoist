@@ -1155,11 +1155,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      '云端转写会将音频发送到 Pomodoist，并且需要互联网连接。';
+      'Pomodoist 会将录音发送到 OpenRouter 进行转写。此过程需要互联网连接。';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      '登录后可使用云端转写。在此之前将使用内置转写。';
+      '使用云端转录需要登录已开通且仍有效的 Pro 账户。';
 
   @override
   String get settingsThemeTitle => '主题';
@@ -5010,4 +5010,108 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get focusFinish => '结束';
+
+  @override
+  String get customAnalysisTitle => '任务解析模型';
+
+  @override
+  String get customAnalysisSubtitle => '选择将转写文本转换为任务草稿的模型。';
+
+  @override
+  String get customDefault => '默认 · Pomodoist';
+
+  @override
+  String get customEndpoint => '自定义 API 或服务器';
+
+  @override
+  String get customBaseUrl => '兼容 OpenAI 的 API 基础 URL';
+
+  @override
+  String get customInvalidUrl =>
+      '请使用 HTTPS，或在 localhost 上使用 HTTP。请勿包含凭据、查询参数或片段。';
+
+  @override
+  String get customLocalhost =>
+      '在手机上，localhost 指手机本身。如需连接同一网络中的电脑，请输入电脑的 HTTPS 地址。';
+
+  @override
+  String get customNormalModel => '标准模型 ID';
+
+  @override
+  String get customRequiredModel => '请输入模型 ID。';
+
+  @override
+  String get customSmartModel => '智能模型 ID（可选）';
+
+  @override
+  String get customSmartFallback => '留空时，智能模式将使用标准模型。';
+
+  @override
+  String get customApiKey => 'API 密钥（可选）';
+
+  @override
+  String get customRemoveKey => '移除已保存的密钥';
+
+  @override
+  String get customBrowserKey => '密钥保存在此标签页的内存中。刷新后请重新输入。';
+
+  @override
+  String get customTest => '测试连接';
+
+  @override
+  String get customTestOk => '已收到测试任务';
+
+  @override
+  String get customSaved => '设置已保存';
+
+  @override
+  String get customAccessInfo => '在已付费的月度订阅期内可用。购买年度订阅或终身使用权后可永久使用。';
+
+  @override
+  String get customDenied => '访问被拒绝。请检查密钥和模型 ID。';
+
+  @override
+  String get customRateLimit => '已达到服务商的请求频率限制。';
+
+  @override
+  String get customProviderError => '服务商返回错误。请检查 URL 和模型 ID。';
+
+  @override
+  String get customBrowserNetwork => '无法连接。请检查 URL、浏览器权限和服务器的 CORS 设置。';
+
+  @override
+  String get customNetwork => '无法连接到服务器。';
+
+  @override
+  String get customTimeout => '请求超时。';
+
+  @override
+  String get customInvalidResponse => '无法读取模型返回的任务。';
+
+  @override
+  String customRouteLocal(String host) {
+    return '录音保留在此设备上。转写文本将发送到 $host 以创建任务。';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist 会将录音发送到 OpenRouter 进行转写，然后将转写文本发送到 $host 以创建任务。';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Apple 的语音识别服务会处理录音。转写文本将发送到 $host 以创建任务。';
+  }
+
+  @override
+  String get customUseText => '将文本用作任务';
+
+  @override
+  String get customAnalysisFailed => '你的模型未能将此文本转换为任务。';
+
+  @override
+  String get customAccessExpired => '目前无法使用自定义模型。';
+
+  @override
+  String get customSetupRequired => '如要继续，请在语音输入设置中连接你的模型。';
 }

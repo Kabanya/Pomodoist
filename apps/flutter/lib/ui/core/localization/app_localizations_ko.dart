@@ -1189,11 +1189,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      '클라우드 받아쓰기는 오디오를 Pomodoist로 전송하며 인터넷 연결이 필요합니다.';
+      'Pomodoist가 음성을 텍스트로 변환하기 위해 오디오를 OpenRouter로 보냅니다. 인터넷 연결이 필요합니다.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      '클라우드 받아쓰기를 사용하려면 로그인하세요. 그전까지 내장 받아쓰기가 활성화됩니다.';
+      '클라우드 음성 인식을 사용하려면 활성 Pro 요금제가 있는 계정으로 로그인하세요.';
 
   @override
   String get settingsThemeTitle => '테마';
@@ -5122,4 +5122,110 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get focusFinish => '완료';
+
+  @override
+  String get customAnalysisTitle => '작업 분석 모델';
+
+  @override
+  String get customAnalysisSubtitle => '받아쓴 텍스트를 작업 초안으로 변환할 모델을 선택하세요.';
+
+  @override
+  String get customDefault => '기본값 · Pomodoist';
+
+  @override
+  String get customEndpoint => '사용자 지정 API 또는 서버';
+
+  @override
+  String get customBaseUrl => 'OpenAI 호환 API 기본 URL';
+
+  @override
+  String get customInvalidUrl =>
+      'HTTPS 또는 localhost의 HTTP를 사용하세요. 인증 정보, 쿼리, 프래그먼트는 제외하세요.';
+
+  @override
+  String get customLocalhost =>
+      '휴대전화에서 localhost는 휴대전화 자체를 가리킵니다. 같은 네트워크의 컴퓨터에 연결하려면 해당 컴퓨터의 HTTPS 주소를 입력하세요.';
+
+  @override
+  String get customNormalModel => '일반 모델 ID';
+
+  @override
+  String get customRequiredModel => '모델 ID를 입력하세요.';
+
+  @override
+  String get customSmartModel => '스마트 모델 ID(선택 사항)';
+
+  @override
+  String get customSmartFallback => '이 필드를 비워 두면 스마트 모드에서도 일반 모델을 사용합니다.';
+
+  @override
+  String get customApiKey => 'API 키(선택 사항)';
+
+  @override
+  String get customRemoveKey => '저장된 키 삭제';
+
+  @override
+  String get customBrowserKey => '키는 이 탭의 메모리에 보관됩니다. 새로고침한 후 다시 입력하세요.';
+
+  @override
+  String get customTest => '연결 테스트';
+
+  @override
+  String get customTestOk => '테스트 작업을 받았습니다';
+
+  @override
+  String get customSaved => '설정을 저장했습니다';
+
+  @override
+  String get customAccessInfo =>
+      '월간 요금제의 유료 기간 동안 이용할 수 있으며 연간 요금제나 평생 이용권을 구매하면 계속 이용할 수 있습니다.';
+
+  @override
+  String get customDenied => '접근이 거부되었습니다. 키와 모델 ID를 확인하세요.';
+
+  @override
+  String get customRateLimit => '제공업체의 요청 한도에 도달했습니다.';
+
+  @override
+  String get customProviderError => '제공업체가 오류를 반환했습니다. URL과 모델 ID를 확인하세요.';
+
+  @override
+  String get customBrowserNetwork =>
+      '연결할 수 없습니다. URL, 브라우저 권한 및 서버의 CORS 설정을 확인하세요.';
+
+  @override
+  String get customNetwork => '서버에 연결할 수 없습니다.';
+
+  @override
+  String get customTimeout => '요청 시간이 초과되었습니다.';
+
+  @override
+  String get customInvalidResponse => '모델이 반환한 작업을 읽을 수 없습니다.';
+
+  @override
+  String customRouteLocal(String host) {
+    return '오디오는 이 기기에 보관됩니다. 작업 생성을 위해 받아쓴 텍스트를 $host에 보냅니다.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist가 음성을 텍스트로 변환하기 위해 오디오를 OpenRouter로 보냅니다. 작업 생성을 위해 변환된 텍스트를 $host에 보냅니다.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Apple 음성 인식 서비스가 오디오를 처리합니다. 작업 생성을 위해 받아쓴 텍스트를 $host에 보냅니다.';
+  }
+
+  @override
+  String get customUseText => '텍스트를 작업으로 사용';
+
+  @override
+  String get customAnalysisFailed => '내 모델이 이 텍스트를 작업으로 변환하지 못했습니다.';
+
+  @override
+  String get customAccessExpired => '현재 내 모델에 접근할 수 없습니다.';
+
+  @override
+  String get customSetupRequired => '계속하려면 음성 입력 설정에서 내 모델을 연결하세요.';
 }

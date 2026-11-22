@@ -10,6 +10,7 @@ import audioplayers_darwin
 import emoji_picker_flutter
 import file_selector_macos
 import flutter_local_notifications
+import flutter_secure_storage_darwin
 import flutter_timezone
 import in_app_purchase_storekit
 import multiview_desktop
@@ -28,6 +29,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   EmojiPickerFlutterPlugin.register(with: registry.registrar(forPlugin: "EmojiPickerFlutterPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   FlutterLocalNotificationsPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalNotificationsPlugin"))
+  FlutterSecureStorageDarwinPlugin.register(with: registry.registrar(forPlugin: "FlutterSecureStorageDarwinPlugin"))
   FlutterTimezonePlugin.register(with: registry.registrar(forPlugin: "FlutterTimezonePlugin"))
   InAppPurchasePlugin.register(with: registry.registrar(forPlugin: "InAppPurchasePlugin"))
   MultiviewDesktopPlugin.register(with: registry.registrar(forPlugin: "MultiviewDesktopPlugin"))

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/voice_dependencies.dart';
+import 'package:pomodoist/config/voice_task_route.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/planning/task_decomposition_repository.dart';
 import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
@@ -263,6 +264,10 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          managedVoiceAccessProvider.overrideWithValue(true),
+          voiceTaskTargetProvider.overrideWith(
+            (ref, smart) async => managedVoiceTarget,
+          ),
           voiceCaptureRepositoryProvider.overrideWith(
             (ref, session) =>
                 identical(session, firstSession) ? firstCapture : secondCapture,
@@ -392,6 +397,10 @@ ProviderContainer _container({
 }) {
   return ProviderContainer(
     overrides: [
+      managedVoiceAccessProvider.overrideWithValue(true),
+      voiceTaskTargetProvider.overrideWith(
+        (ref, smart) async => managedVoiceTarget,
+      ),
       voiceCaptureRepositoryProvider.overrideWith((ref, session) => capture),
       taskDecomposerProvider.overrideWithValue(
         decomposer ?? _ControlledDecomposer(),

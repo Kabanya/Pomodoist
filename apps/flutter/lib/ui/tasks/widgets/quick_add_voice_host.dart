@@ -286,6 +286,10 @@ class _VoiceQuickAddHostState extends ConsumerState<VoiceQuickAddHost>
     final l10n = context.l10n;
     return switch (error) {
       null => null,
+      ModelCheck problem => modelCheckLabel(l10n, problem),
+      VoiceQuickAddError.customAnalysis => l10n.customAnalysisFailed,
+      VoiceQuickAddError.customAccess => l10n.customAccessExpired,
+      VoiceQuickAddError.customSetup => l10n.customSetupRequired,
       VoiceQuickAddError.general => l10n.voiceStatusError,
       VoiceQuickAddError.settings => l10n.voiceSettingsFailed,
       VoiceQuickAddError.preference => l10n.settingsSaveError,

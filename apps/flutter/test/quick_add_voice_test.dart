@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/voice_dependencies.dart';
+import 'package:pomodoist/config/voice_task_route.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/ui/core/themes/app_theme.dart';
 import 'package:pomodoist/data/services/local/database/app_database.dart';
@@ -154,6 +155,7 @@ void main() {
 
     final signedIn = ProviderContainer(
       overrides: [
+        managedVoiceAccessProvider.overrideWithValue(true),
         accountClientProvider.overrideWithValue(
           _VoiceAccountClient(userId: 'user'),
         ),
@@ -168,6 +170,7 @@ void main() {
 
     final signedOut = ProviderContainer(
       overrides: [
+        managedVoiceAccessProvider.overrideWithValue(true),
         accountClientProvider.overrideWithValue(
           _VoiceAccountClient(userId: null),
         ),

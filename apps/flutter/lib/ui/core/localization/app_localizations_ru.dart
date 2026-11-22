@@ -1249,11 +1249,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'Облачная транскрибация отправляет аудио в Pomodoist и требует подключения к интернету.';
+      'Для распознавания речи Pomodoist отправляет запись в OpenRouter. Требуется интернет.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'Войдите, чтобы использовать облачную транскрибацию. До этого будет активна встроенная.';
+      'Облачная транскрибация доступна после входа в аккаунт с действующей Pro.';
 
   @override
   String get settingsThemeTitle => 'Тема';
@@ -5297,4 +5297,117 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get focusFinish => 'Завершить';
+
+  @override
+  String get customAnalysisTitle => 'Модель для разбора задач';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'Выберите модель, которая превратит расшифровку в черновики задач.';
+
+  @override
+  String get customDefault => 'По умолчанию · Pomodoist';
+
+  @override
+  String get customEndpoint => 'Свой API или сервер';
+
+  @override
+  String get customBaseUrl => 'Базовый URL OpenAI-совместимого API';
+
+  @override
+  String get customInvalidUrl =>
+      'Укажите HTTPS или HTTP для localhost. Уберите логин, пароль, параметры запроса и фрагмент.';
+
+  @override
+  String get customLocalhost =>
+      'На телефоне localhost означает сам телефон. Чтобы подключиться к компьютеру в вашей сети, укажите его HTTPS-адрес.';
+
+  @override
+  String get customNormalModel => 'ID обычной модели';
+
+  @override
+  String get customRequiredModel => 'Введите ID модели.';
+
+  @override
+  String get customSmartModel => 'ID умной модели (необязательно)';
+
+  @override
+  String get customSmartFallback =>
+      'Если оставить поле пустым, в умном режиме будет использоваться обычная модель.';
+
+  @override
+  String get customApiKey => 'API-ключ (необязательно)';
+
+  @override
+  String get customRemoveKey => 'Удалить сохранённый ключ';
+
+  @override
+  String get customBrowserKey =>
+      'Ключ хранится в памяти вкладки. После перезагрузки введите его снова.';
+
+  @override
+  String get customTest => 'Проверить подключение';
+
+  @override
+  String get customTestOk => 'Тестовая задача получена';
+
+  @override
+  String get customSaved => 'Настройки сохранены';
+
+  @override
+  String get customAccessInfo =>
+      'Доступно на время оплаченного месяца или навсегда после оплаты года либо покупки пожизненного доступа.';
+
+  @override
+  String get customDenied => 'Доступ отклонён. Проверьте ключ и ID модели.';
+
+  @override
+  String get customRateLimit => 'Провайдер ограничил частоту запросов.';
+
+  @override
+  String get customProviderError =>
+      'Сервер вернул ошибку. Проверьте адрес и ID модели.';
+
+  @override
+  String get customBrowserNetwork =>
+      'Нет соединения. Проверьте адрес, разрешения браузера и настройки CORS на сервере.';
+
+  @override
+  String get customNetwork => 'Не удалось подключиться к серверу.';
+
+  @override
+  String get customTimeout => 'Сервер не ответил вовремя.';
+
+  @override
+  String get customInvalidResponse =>
+      'Не удалось прочитать задачу в ответе модели.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'Запись остаётся на устройстве. Текст для создания задач получит $host.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist отправит запись в OpenRouter для распознавания речи. Текст для создания задач получит $host.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Запись обрабатывает служба распознавания Apple. Текст для создания задач получит $host.';
+  }
+
+  @override
+  String get customUseText => 'Создать задачу из текста';
+
+  @override
+  String get customAnalysisFailed =>
+      'Ваша модель не смогла разобрать текст на задачи.';
+
+  @override
+  String get customAccessExpired => 'Сейчас нельзя использовать свою модель.';
+
+  @override
+  String get customSetupRequired =>
+      'Чтобы продолжить, подключите свою модель в настройках голосового ввода.';
 }

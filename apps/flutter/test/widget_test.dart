@@ -1,3 +1,4 @@
+import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/domain/models/focus/focus_models.dart';
 import 'package:pomodoist/data/repositories/focus/focus_preferences_repository.dart';
 import 'package:pomodoist/utils/result.dart';
@@ -787,6 +788,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
           builder: testAppBuilder,
           home: Scaffold(
             body: SettingsScreen(
@@ -820,6 +822,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
           builder: testAppBuilder,
           home: Scaffold(
             body: SettingsScreen(

@@ -20,7 +20,8 @@ class VoiceTranscriptionSettingsCard extends ConsumerWidget {
     if (!state.supported) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final signedIn = this.signedIn ?? state.signedIn;
-    final mode = signedIn ? state.mode : VoiceTranscriptionMode.system;
+    final cloudAvailable = signedIn && state.managedAccess;
+    final mode = cloudAvailable ? state.mode : VoiceTranscriptionMode.system;
     final whisper = ref.watch(whisperModelSettingsProvider);
     return SettingsRow(
       title: l10n.settingsVoiceTranscriptionTitle,
@@ -41,7 +42,7 @@ class VoiceTranscriptionSettingsCard extends ConsumerWidget {
                   ),
                   selected: mode == option,
                   onSelected:
-                      option == VoiceTranscriptionMode.cloud && !signedIn
+                      option == VoiceTranscriptionMode.cloud && !cloudAvailable
                       ? null
                       : (_) => saveSetting(
                           context,
@@ -91,7 +92,7 @@ class VoiceTranscriptionSettingsCard extends ConsumerWidget {
             }),
             const WhisperModelStatus(),
           ],
-          if (!signedIn) ...[
+          if (!cloudAvailable) ...[
             const SizedBox(height: 4),
             Text(
               l10n.settingsVoiceTranscriptionCloudRequiresSignIn,

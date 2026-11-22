@@ -398,3 +398,25 @@ Stripe references: [Checkout trials](https://docs.stripe.com/payments/checkout/f
 - [Identity-bound JWS signing](https://developer.apple.com/documentation/storekit/generating-jws-to-sign-app-store-requests)
 - [Legacy signature lifetime and nonce](https://developer.apple.com/documentation/storekit/generating-a-signature-for-promotional-offers)
 - [Subscription price changes](https://developer.apple.com/help/app-store-connect/manage-subscriptions/manage-pricing-for-auto-renewable-subscriptions)
+
+### Custom AI model access
+
+An owned StoreKit transaction with a positive price or a charged Stripe invoice
+unlocks a custom model. Monthly payments cover their paid service period. Each
+annual payment or lifetime purchase keeps the feature after Pro expires.
+A full refund removes the corresponding payment. Other qualifying payments
+still count. Free trials and zero-price invoices do not qualify.
+
+Apply the custom-model purchase migration before releasing the updated
+`stripe-webhook`, `pomodoist-purchase`, and client. The migration imports
+available verified Apple claims and reads existing paid Stripe lifetime claims.
+Restore Purchases on Apple can link a verified historical annual transaction
+for the signed-in account. Signed-out Apple clients use verified StoreKit history.
+
+For existing Stripe subscriptions, run the idempotent history import once
+against each corresponding Stripe and Supabase environment after the migration.
+It reads paid invoices, charge refunds and billed service periods. The required
+environment variables are `STRIPE_SECRET_KEY`, `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY`. From the repository root run
+`deno run --allow-env --allow-net server/scripts/backfill-custom-model-payments.ts`.
+The old account-wide first-payment timestamp contains no plan information.

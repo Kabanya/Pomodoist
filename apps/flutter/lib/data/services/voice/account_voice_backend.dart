@@ -9,8 +9,8 @@ final class AccountVoiceBackend {
   bool _disposed = false;
 
   Future<Object?> call(Map<String, Object?> body) async {
-    final account = _account();
-    if (_disposed || account == null || account.currentUserId == null) {
+    final account = _disposed ? null : _account();
+    if (account == null || account.currentUserId == null) {
       throw const VoiceRecognitionException(
         'speech_unavailable',
         'Sign in to use voice transcription.',

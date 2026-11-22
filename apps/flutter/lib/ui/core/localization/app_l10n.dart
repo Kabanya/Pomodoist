@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:pomodoist/domain/models/settings/custom_model_config.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations.dart';
 import 'package:pomodoist/ui/core/localization/app_localizations_en.dart';
@@ -33,3 +35,14 @@ String appShortcutLabel(AppLocalizations l10n, AppShortcutCommand command) =>
       AppShortcutCommand.reports => l10n.navReports,
       AppShortcutCommand.settings => l10n.navSettings,
     };
+
+String modelCheckLabel(AppLocalizations l, ModelCheck check) => switch (check) {
+  ModelCheck.success => l.customTestOk,
+  ModelCheck.configuration => l.customInvalidUrl,
+  ModelCheck.unauthorized => l.customDenied,
+  ModelCheck.rateLimited => l.customRateLimit,
+  ModelCheck.provider => l.customProviderError,
+  ModelCheck.network => kIsWeb ? l.customBrowserNetwork : l.customNetwork,
+  ModelCheck.timeout => l.customTimeout,
+  ModelCheck.invalidResponse => l.customInvalidResponse,
+};

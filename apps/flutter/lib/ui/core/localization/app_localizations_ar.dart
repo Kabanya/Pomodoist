@@ -1217,11 +1217,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'يرسل النسخ السحابي الصوت إلى Pomodoist ويتطلب اتصالاً بالإنترنت.';
+      'يرسل Pomodoist التسجيل إلى OpenRouter لتفريغه. يلزم الاتصال بالإنترنت.';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'سجّل الدخول لاستخدام النسخ السحابي. سيظل النسخ المدمج نشطًا حتى ذلك الحين.';
+      'يتطلب النسخ السحابي تسجيل الدخول بحساب لديه اشتراك Pro سارٍ.';
 
   @override
   String get settingsThemeTitle => 'السمة';
@@ -5192,4 +5192,116 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get focusFinish => 'إنهاء';
+
+  @override
+  String get customAnalysisTitle => 'نموذج تحليل المهام';
+
+  @override
+  String get customAnalysisSubtitle =>
+      'اختر النموذج الذي يحوّل النص المُفرّغ إلى مسودات مهام.';
+
+  @override
+  String get customDefault => 'الافتراضي · Pomodoist';
+
+  @override
+  String get customEndpoint => 'واجهة API أو خادم خاص';
+
+  @override
+  String get customBaseUrl => 'العنوان الأساسي لواجهة API المتوافقة مع OpenAI';
+
+  @override
+  String get customInvalidUrl =>
+      'استخدم HTTPS، أو HTTP مع localhost. لا تُدرج بيانات الدخول أو معلمات الاستعلام أو الجزء المُعرّف بعلامة #.';
+
+  @override
+  String get customLocalhost =>
+      'على الهاتف، يشير localhost إلى الهاتف نفسه. للاتصال بحاسوب على شبكتك، أدخل عنوان HTTPS الخاص به.';
+
+  @override
+  String get customNormalModel => 'معرّف النموذج العادي';
+
+  @override
+  String get customRequiredModel => 'أدخل معرّف النموذج.';
+
+  @override
+  String get customSmartModel => 'معرّف النموذج الذكي (اختياري)';
+
+  @override
+  String get customSmartFallback =>
+      'اترك هذا الحقل فارغًا لاستخدام النموذج العادي في الوضع الذكي.';
+
+  @override
+  String get customApiKey => 'مفتاح API (اختياري)';
+
+  @override
+  String get customRemoveKey => 'إزالة المفتاح المحفوظ';
+
+  @override
+  String get customBrowserKey =>
+      'يُحفظ المفتاح في ذاكرة علامة التبويب هذه. أدخله مجددًا بعد إعادة التحميل.';
+
+  @override
+  String get customTest => 'اختبار الاتصال';
+
+  @override
+  String get customTestOk => 'تم استلام مهمة الاختبار';
+
+  @override
+  String get customSaved => 'تم حفظ الإعدادات';
+
+  @override
+  String get customAccessInfo =>
+      'متاح خلال مدة الاشتراك الشهري المدفوعة، أو بشكل دائم بعد شراء اشتراك سنوي أو ترخيص مدى الحياة.';
+
+  @override
+  String get customDenied => 'رُفض الوصول. تحقّق من المفتاح ومعرّف النموذج.';
+
+  @override
+  String get customRateLimit => 'تم بلوغ حد الطلبات لدى المزوّد.';
+
+  @override
+  String get customProviderError =>
+      'أرجع المزوّد خطأ. تحقّق من العنوان ومعرّف النموذج.';
+
+  @override
+  String get customBrowserNetwork =>
+      'تعذّر الاتصال. تحقّق من العنوان وأذونات المتصفح وإعدادات CORS على الخادم.';
+
+  @override
+  String get customNetwork => 'تعذّر الاتصال بالخادم.';
+
+  @override
+  String get customTimeout => 'انتهت مهلة الطلب.';
+
+  @override
+  String get customInvalidResponse =>
+      'تعذّرت قراءة المهمة التي أرجعها النموذج.';
+
+  @override
+  String customRouteLocal(String host) {
+    return 'يبقى التسجيل على هذا الجهاز. يُرسَل النص إلى $host لإنشاء المهام.';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'يرسل Pomodoist التسجيل إلى OpenRouter لتفريغه، ثم يُرسَل النص إلى $host لإنشاء المهام.';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'تعالج خدمة التعرف على الكلام من Apple التسجيل. يُرسَل النص إلى $host لإنشاء المهام.';
+  }
+
+  @override
+  String get customUseText => 'استخدام النص كمهمة';
+
+  @override
+  String get customAnalysisFailed => 'تعذّر على نموذجك تحويل النص إلى مهام.';
+
+  @override
+  String get customAccessExpired => 'الوصول إلى نموذجك الخاص غير متاح.';
+
+  @override
+  String get customSetupRequired =>
+      'للمتابعة، اربط نموذجك في إعدادات الإدخال الصوتي.';
 }

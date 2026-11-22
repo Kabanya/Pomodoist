@@ -97,6 +97,33 @@ void main() {
     },
   );
 
+  test(
+    'all paid annual proofs are available independently of current Pro',
+    () async {
+      messenger.setMockMethodCallHandler(_channel, (call) async {
+        if (call.method != 'paidAnnualTransactions') return [];
+        return [
+          _nativeRow(
+            productId: pomodoistAnnualProductId,
+            transactionId: 'first-year',
+          ),
+          _nativeRow(
+            productId: pomodoistAnnualProductId,
+            transactionId: 'second-year',
+          ),
+        ];
+      });
+      final store = BillingStore();
+      expect(
+        (await store.paidAnnualTransactions()).map(
+          (proof) => proof.transactionId,
+        ),
+        ['first-year', 'second-year'],
+      );
+      expect(await store.refreshCurrentEntitlements(), isEmpty);
+    },
+  );
+
   test('empty native snapshot completes successfully', () {
     fakeAsync((time) {
       messenger.setMockMethodCallHandler(_channel, (_) async => []);

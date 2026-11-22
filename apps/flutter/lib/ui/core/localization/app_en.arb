@@ -572,8 +572,8 @@
   "settingsVoiceTranscriptionSubtitle": "Choose how recordings are converted to text on this device.",
   "settingsVoiceTranscriptionSystem": "Built-in",
   "settingsVoiceTranscriptionCloud": "Cloud",
-  "settingsVoiceTranscriptionCloudDescription": "Cloud transcription sends audio to Pomodoist and requires an internet connection.",
-  "settingsVoiceTranscriptionCloudRequiresSignIn": "Sign in to use cloud transcription. Until then, built-in transcription is active.",
+  "settingsVoiceTranscriptionCloudDescription": "Pomodoist sends audio to OpenRouter for transcription. An internet connection is required.",
+  "settingsVoiceTranscriptionCloudRequiresSignIn": "Cloud transcription requires signing in with an active Pro plan.",
   "settingsThemeTitle": "Theme",
   "settingsThemeSubtitle": "Choose the app appearance.",
   "settingsThemeSystem": "System",
@@ -2684,5 +2684,58 @@
         "type": "String"
       }
     }
-  }
+  },
+  "customAnalysisTitle": "Model for task analysis",
+  "customAnalysisSubtitle": "Choose which model turns the transcript into task drafts.",
+  "customDefault": "Default · Pomodoist",
+  "customEndpoint": "Custom API or server",
+  "customBaseUrl": "OpenAI-compatible API base URL",
+  "customInvalidUrl": "Use HTTPS, or HTTP on localhost. Omit credentials, query and fragment.",
+  "customLocalhost": "On a phone, localhost means the phone itself. For a computer on your network, enter its HTTPS address.",
+  "customNormalModel": "Standard model ID",
+  "customRequiredModel": "Enter a model ID.",
+  "customSmartModel": "Smart model ID (optional)",
+  "customSmartFallback": "Leave this blank to use the standard model in Smart mode.",
+  "customApiKey": "API key (optional)",
+  "customRemoveKey": "Remove saved key",
+  "customBrowserKey": "This tab keeps the key in memory. Enter it again after reloading.",
+  "customTest": "Test connection",
+  "customTestOk": "Test task received",
+  "customSaved": "Settings saved",
+  "customAccessInfo": "Available during a paid monthly plan, or permanently after a paid annual or lifetime purchase.",
+  "customDenied": "Access denied. Check the key and model ID.",
+  "customRateLimit": "The provider’s rate limit was reached.",
+  "customProviderError": "The provider returned an error. Check the URL and model ID.",
+  "customBrowserNetwork": "Cannot connect. Check the URL, browser permissions and the server’s CORS settings.",
+  "customNetwork": "Cannot connect to the server.",
+  "customTimeout": "The request timed out.",
+  "customInvalidResponse": "The model returned an unreadable task.",
+  "customRouteLocal": "Audio stays on this device. The transcript goes to {host} for task creation.",
+  "@customRouteLocal": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "customRouteCloud": "Pomodoist sends the audio to OpenRouter for transcription. The transcript goes to {host} for task creation.",
+  "@customRouteCloud": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "customRouteApple": "Apple’s speech service processes the audio. The transcript goes to {host} for task creation.",
+  "@customRouteApple": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "customUseText": "Use text as a task",
+  "customAnalysisFailed": "Your model could not turn this text into tasks.",
+  "customAccessExpired": "Access to your custom model is unavailable.",
+  "customSetupRequired": "To continue, connect your model in voice input settings."
 }

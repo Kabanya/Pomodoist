@@ -2278,13 +2278,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVoiceTranscriptionCloudDescription.
   ///
   /// In en, this message translates to:
-  /// **'Cloud transcription sends audio to Pomodoist and requires an internet connection.'**
+  /// **'Pomodoist sends audio to OpenRouter for transcription. An internet connection is required.'**
   String get settingsVoiceTranscriptionCloudDescription;
 
   /// No description provided for @settingsVoiceTranscriptionCloudRequiresSignIn.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to use cloud transcription. Until then, built-in transcription is active.'**
+  /// **'Cloud transcription requires signing in with an active Pro plan.'**
   String get settingsVoiceTranscriptionCloudRequiresSignIn;
 
   /// No description provided for @settingsThemeTitle.
@@ -9086,6 +9086,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finish'**
   String get focusFinish;
+
+  /// No description provided for @customAnalysisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model for task analysis'**
+  String get customAnalysisTitle;
+
+  /// No description provided for @customAnalysisSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which model turns the transcript into task drafts.'**
+  String get customAnalysisSubtitle;
+
+  /// No description provided for @customDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default · Pomodoist'**
+  String get customDefault;
+
+  /// No description provided for @customEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom API or server'**
+  String get customEndpoint;
+
+  /// No description provided for @customBaseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI-compatible API base URL'**
+  String get customBaseUrl;
+
+  /// No description provided for @customInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Use HTTPS, or HTTP on localhost. Omit credentials, query and fragment.'**
+  String get customInvalidUrl;
+
+  /// No description provided for @customLocalhost.
+  ///
+  /// In en, this message translates to:
+  /// **'On a phone, localhost means the phone itself. For a computer on your network, enter its HTTPS address.'**
+  String get customLocalhost;
+
+  /// No description provided for @customNormalModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard model ID'**
+  String get customNormalModel;
+
+  /// No description provided for @customRequiredModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a model ID.'**
+  String get customRequiredModel;
+
+  /// No description provided for @customSmartModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart model ID (optional)'**
+  String get customSmartModel;
+
+  /// No description provided for @customSmartFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this blank to use the standard model in Smart mode.'**
+  String get customSmartFallback;
+
+  /// No description provided for @customApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key (optional)'**
+  String get customApiKey;
+
+  /// No description provided for @customRemoveKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved key'**
+  String get customRemoveKey;
+
+  /// No description provided for @customBrowserKey.
+  ///
+  /// In en, this message translates to:
+  /// **'This tab keeps the key in memory. Enter it again after reloading.'**
+  String get customBrowserKey;
+
+  /// No description provided for @customTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get customTest;
+
+  /// No description provided for @customTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Test task received'**
+  String get customTestOk;
+
+  /// No description provided for @customSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved'**
+  String get customSaved;
+
+  /// No description provided for @customAccessInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Available during a paid monthly plan, or permanently after a paid annual or lifetime purchase.'**
+  String get customAccessInfo;
+
+  /// No description provided for @customDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Access denied. Check the key and model ID.'**
+  String get customDenied;
+
+  /// No description provided for @customRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider’s rate limit was reached.'**
+  String get customRateLimit;
+
+  /// No description provided for @customProviderError.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider returned an error. Check the URL and model ID.'**
+  String get customProviderError;
+
+  /// No description provided for @customBrowserNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot connect. Check the URL, browser permissions and the server’s CORS settings.'**
+  String get customBrowserNetwork;
+
+  /// No description provided for @customNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot connect to the server.'**
+  String get customNetwork;
+
+  /// No description provided for @customTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out.'**
+  String get customTimeout;
+
+  /// No description provided for @customInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The model returned an unreadable task.'**
+  String get customInvalidResponse;
+
+  /// No description provided for @customRouteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio stays on this device. The transcript goes to {host} for task creation.'**
+  String customRouteLocal(String host);
+
+  /// No description provided for @customRouteCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoist sends the audio to OpenRouter for transcription. The transcript goes to {host} for task creation.'**
+  String customRouteCloud(String host);
+
+  /// No description provided for @customRouteApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple’s speech service processes the audio. The transcript goes to {host} for task creation.'**
+  String customRouteApple(String host);
+
+  /// No description provided for @customUseText.
+  ///
+  /// In en, this message translates to:
+  /// **'Use text as a task'**
+  String get customUseText;
+
+  /// No description provided for @customAnalysisFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your model could not turn this text into tasks.'**
+  String get customAnalysisFailed;
+
+  /// No description provided for @customAccessExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Access to your custom model is unavailable.'**
+  String get customAccessExpired;
+
+  /// No description provided for @customSetupRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'To continue, connect your model in voice input settings.'**
+  String get customSetupRequired;
 }
 
 class _AppLocalizationsDelegate

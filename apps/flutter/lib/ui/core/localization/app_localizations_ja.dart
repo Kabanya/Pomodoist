@@ -1184,11 +1184,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsVoiceTranscriptionCloudDescription =>
-      'クラウド文字起こしは音声をPomodoistに送信し、インターネット接続が必要です。';
+      'Pomodoist は文字起こしのために音声を OpenRouter に送信します。インターネット接続が必要です。';
 
   @override
   String get settingsVoiceTranscriptionCloudRequiresSignIn =>
-      'クラウド文字起こしを使うにはログインしてください。それまでは内蔵の文字起こしが有効です。';
+      'クラウド文字起こしには、有効な Pro プランのアカウントでログインしてください。';
 
   @override
   String get settingsThemeTitle => 'テーマ';
@@ -5108,4 +5108,109 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get focusFinish => '完了';
+
+  @override
+  String get customAnalysisTitle => 'タスク解析用のモデル';
+
+  @override
+  String get customAnalysisSubtitle => '文字起こしをタスクの下書きに変換するモデルを選択します。';
+
+  @override
+  String get customDefault => 'デフォルト · Pomodoist';
+
+  @override
+  String get customEndpoint => '独自の API またはサーバー';
+
+  @override
+  String get customBaseUrl => 'OpenAI 互換 API のベース URL';
+
+  @override
+  String get customInvalidUrl =>
+      'HTTPS、または localhost の HTTP を使用してください。認証情報、クエリ、フラグメントは含めないでください。';
+
+  @override
+  String get customLocalhost =>
+      'スマートフォンでは localhost は端末自体を指します。ネットワーク上のコンピュータに接続するには、その HTTPS アドレスを入力してください。';
+
+  @override
+  String get customNormalModel => '標準モデルの ID';
+
+  @override
+  String get customRequiredModel => 'モデル ID を入力してください。';
+
+  @override
+  String get customSmartModel => 'スマートモデルの ID（任意）';
+
+  @override
+  String get customSmartFallback => '空欄にすると、スマートモードでも標準モデルが使用されます。';
+
+  @override
+  String get customApiKey => 'API キー（任意）';
+
+  @override
+  String get customRemoveKey => '保存したキーを削除';
+
+  @override
+  String get customBrowserKey => 'キーはこのタブのメモリに保持されます。再読み込み後は再入力してください。';
+
+  @override
+  String get customTest => '接続をテスト';
+
+  @override
+  String get customTestOk => 'テスト用のタスクを受信しました';
+
+  @override
+  String get customSaved => '設定を保存しました';
+
+  @override
+  String get customAccessInfo => '月額プランの有料期間中、または年間プランか永久ライセンスの購入後は無期限に利用できます。';
+
+  @override
+  String get customDenied => 'アクセスが拒否されました。キーとモデル ID を確認してください。';
+
+  @override
+  String get customRateLimit => 'プロバイダーのリクエスト上限に達しました。';
+
+  @override
+  String get customProviderError => 'プロバイダーがエラーを返しました。URL とモデル ID を確認してください。';
+
+  @override
+  String get customBrowserNetwork =>
+      '接続できません。URL、ブラウザの権限、サーバーの CORS 設定を確認してください。';
+
+  @override
+  String get customNetwork => 'サーバーに接続できません。';
+
+  @override
+  String get customTimeout => 'リクエストがタイムアウトしました。';
+
+  @override
+  String get customInvalidResponse => 'モデルが返したタスクを読み取れませんでした。';
+
+  @override
+  String customRouteLocal(String host) {
+    return '音声はこのデバイスに保持されます。タスク作成のため、文字起こしを $host に送信します。';
+  }
+
+  @override
+  String customRouteCloud(String host) {
+    return 'Pomodoist は文字起こしのために音声を OpenRouter に送信します。タスク作成のため、文字起こしを $host に送信します。';
+  }
+
+  @override
+  String customRouteApple(String host) {
+    return 'Apple の音声認識サービスが音声を処理します。タスク作成のため、文字起こしを $host に送信します。';
+  }
+
+  @override
+  String get customUseText => 'テキストをタスクにする';
+
+  @override
+  String get customAnalysisFailed => 'お使いのモデルではテキストをタスクに変換できませんでした。';
+
+  @override
+  String get customAccessExpired => '独自のモデルへのアクセスは現在利用できません。';
+
+  @override
+  String get customSetupRequired => '続行するには、音声入力設定でお使いのモデルに接続してください。';
 }

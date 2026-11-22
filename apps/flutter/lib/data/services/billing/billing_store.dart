@@ -325,6 +325,18 @@ class BillingStore {
     );
   }
 
+  /// All verified annual payments, including those from expired subscriptions.
+  Future<List<BillingTransactionProof>> paidAnnualTransactions() async {
+    if (pomodoistUsesLocalStoreKit || !applePurchasesSupported) return const [];
+    final values = await _channel
+        .invokeListMethod<Object?>('paidAnnualTransactions')
+        .timeout(billingStoreTimeout);
+    if (values == null) {
+      throw const FormatException('Missing StoreKit history.');
+    }
+    return [for (final value in values) _decodeTransaction(value)];
+  }
+
   Future<BillingTransactionProof?> latestSubscriptionTransaction() async {
     if (pomodoistUsesLocalStoreKit || !applePurchasesSupported) return null;
     final value = await _channel

@@ -284,3 +284,21 @@ function transaction(
     ...overrides,
   };
 }
+
+Deno.test("annual history restores payment evidence without advancing current Pro transaction order", async () => {
+  const annual = transaction({
+    productId: "pomodoist.pro.annual",
+    expiresDate: "2025-12-31T00:00:00Z",
+  });
+  const calls: Array<Record<string, unknown>> = [];
+  const response = await handlePomodoistPurchase(
+    rawRequest(JSON.stringify({
+      transactions: ["annual"],
+      annualHistory: true,
+    })),
+    deps({ calls, transactions: { annual } }),
+  );
+  assertEquals(response.status, 200);
+  assertEquals(calls[0].p_signed_at, annual.purchaseDate);
+  assertEquals(calls[0].p_raw_claims, annual.claims);
+});

@@ -72,6 +72,7 @@ dependencies:
   app_links: 7.0.0
   crypto: ^3.0.7
   http: ^1.2.2
+  flutter_secure_storage: 10.3.4
   shared_preferences: ^2.5.5
   sentry_flutter: 9.24.0
   supabase_flutter: ^2.12.2

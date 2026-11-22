@@ -26,6 +26,7 @@ final class AppBillingRepository implements BillingRepository {
     required bool storeSupported,
     required bool signedIn,
     required BillingPurchaseLinker? Function() purchaseLinker,
+    BillingPurchaseLinker? Function()? annualHistoryLinker,
     Duration storeTimeout = billingStoreTimeout,
     Duration purchaseTimeout = billingPurchaseTimeout,
     BillingStripeGateway? Function()? stripeGateway,
@@ -39,6 +40,7 @@ final class AppBillingRepository implements BillingRepository {
        _storeSupported = storeSupported,
        _signedIn = signedIn,
        _purchaseLinker = purchaseLinker,
+       _annualHistoryLinker = annualHistoryLinker,
        _storeTimeout = storeTimeout,
        _purchaseTimeout = purchaseTimeout,
        _stripeGateway = stripeGateway,
@@ -67,6 +69,7 @@ final class AppBillingRepository implements BillingRepository {
   final BillingChannel _channel;
   final bool _storeSupported;
   final BillingPurchaseLinker? Function() _purchaseLinker;
+  final BillingPurchaseLinker? Function()? _annualHistoryLinker;
   final Duration _storeTimeout;
   final Duration _purchaseTimeout;
   final BillingStripeGateway? Function()? _stripeGateway;
@@ -303,6 +306,7 @@ final class AppBillingRepository implements BillingRepository {
     });
     if (accepted && !_disposed) {
       unawaited(_finishVerifiedPurchases());
+      unawaited(_linkAnnualHistory(accountGeneration));
       unawaited(
         _linkTransactions([
           for (final p in transactions)
@@ -560,13 +564,29 @@ final class AppBillingRepository implements BillingRepository {
     }
   }
 
+  Future<void> _linkAnnualHistory(int generation) async {
+    final link = _signedIn ? _annualHistoryLinker?.call() : null;
+    if (link == null) return;
+    try {
+      final history = await _store.paidAnnualTransactions();
+      // The verification endpoint accepts up to 100 transactions per request.
+      for (var start = 0; start < history.length; start += 100) {
+        final proofs = history.skip(start).take(100).map((p) => p.jws).toList();
+        await _linkTransactions(proofs, generation, linkerOverride: link);
+      }
+    } on Object catch (error) {
+      _store.recordError('annual_history', error);
+    }
+  }
+
   Future<void> _linkTransactions(
     List<String> transactionJws,
-    int accountGeneration,
-  ) async {
+    int accountGeneration, {
+    BillingPurchaseLinker? linkerOverride,
+  }) async {
     if (_disposed) return;
     if (accountGeneration != _accountGeneration) return;
-    final linker = _signedIn ? _purchaseLinker() : null;
+    final linker = _signedIn ? linkerOverride ?? _purchaseLinker() : null;
     final unattemptedJws = transactionJws
         .toSet()
         .difference(_attemptedTransactionJws)

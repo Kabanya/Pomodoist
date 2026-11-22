@@ -1,18 +1,21 @@
-import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
+import 'package:pomodoist/config/custom_model_access.dart';
 import 'package:pomodoist/config/providers.dart';
+import 'package:pomodoist/config/voice_task_route.dart';
 import 'package:pomodoist/config/voice_dependencies.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
 import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
+import 'package:pomodoist/domain/models/settings/custom_model_config.dart';
 import 'package:pomodoist/domain/models/planning/quick_add_parser.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_quick_add_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
+import 'package:pomodoist/domain/models/voice/whisper_model.dart';
 
 final voiceQuickAddViewModelProvider = NotifierProvider.autoDispose
     .family<VoiceQuickAddViewModel, VoiceQuickAddState, Object>(
@@ -38,7 +41,13 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   bool _analyzing = false;
   bool _saving = false;
   bool _changingMode = false;
-  int? _accountGeneration;
+  VoiceTaskTarget? _recordingTarget;
+  int? _recordingGeneration;
+  bool _recordingSmart = false;
+
+  int get _accountGeneration =>
+      ref.read(accountSessionProvider).asData?.value.generation ??
+      ref.read(accountSessionRepositoryProvider).currentSession.generation;
 
   @override
   VoiceQuickAddState build() {
@@ -50,10 +59,19 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
       _smartMode = next;
       _emit();
     });
+    ref.listen(voiceTaskTargetProvider(false), (_, _) => _emit());
+    ref.listen(voiceTaskTargetProvider(true), (_, _) => _emit());
+    ref.listen(managedVoiceAccessProvider, (_, _) => _emit());
     ref.listen(voiceTranscriptionModeProvider, (_, _) => _emit());
-    ref.listen(accountClientProvider, (_, _) => _emit());
+    ref.listen(accountSignedInProvider, (_, _) => _emit());
     ref.listen(accountSessionProvider, (previous, next) {
-      _accountGeneration = next.value?.generation;
+      final generation = next.value?.generation;
+      final oldGeneration = previous?.value?.generation;
+      if (oldGeneration != null && generation != oldGeneration) {
+        _drafts = const [];
+        _draftRevision++;
+        _analysisError = null;
+      }
       if (previous != null) _emit();
     }, fireImmediately: true);
     _capture = capture;
@@ -63,7 +81,7 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   }
 
   bool get _cloudAvailable =>
-      ref.read(accountClientProvider)?.currentUserId != null;
+      ref.read(accountSignedInProvider) && ref.read(managedVoiceAccessProvider);
   bool get _modeSelectable =>
       ref.read(voiceTranscriptionModeSelectionSupportedProvider);
   VoiceTranscriptionMode get _displayMode {
@@ -81,7 +99,12 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   VoiceQuickAddState get _state => VoiceQuickAddState(
     status: _captureState.status,
     transcript: _captureState.transcript,
-    error: _analysisError ?? _captureError,
+    error:
+        _analysisError ??
+        _captureError ??
+        (ref.read(voiceTaskTargetProvider(_smartMode)).hasError
+            ? VoiceQuickAddError.customSetup
+            : null),
     recognitionErrorMessage: _captureState.recognitionErrorMessage,
     voiceErrorCode: _captureState.voiceErrorCode,
     restoring: _captureState.restoring,
@@ -96,9 +119,15 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
     isCapturing: _captureState.isCapturing,
     isTranscribing: _captureState.isTranscribing,
     canStart:
-        _captureState.canStart && !_analyzing && !_saving && !_changingMode,
+        _captureState.canStart &&
+        !_analyzing &&
+        !_saving &&
+        !_changingMode &&
+        !_preparingCapture,
+    taskRouteReady:
+        ref.read(voiceTaskTargetProvider(_smartMode)).asData != null,
     motionActive: _captureState.motionActive || _analyzing,
-    canUseCloudFallback: _captureState.canUseCloudFallback,
+    canUseCloudFallback: _cloudAvailable && _captureState.canUseCloudFallback,
     needsPermissionRequest: _captureState.needsPermissionRequest,
     settingsDestination: _captureState.settingsDestination,
     canRetryTranscription: _captureState.canRetryTranscription,
@@ -107,9 +136,25 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
     transcriptionModeSelectable: _modeSelectable,
     cloudTranscriptionAvailable: _cloudAvailable,
     usesDownloadableVoiceModel: ref.read(downloadableVoiceModelProvider),
+    customHost: _customHost,
     drafts: _drafts,
     draftRevision: _draftRevision,
   );
+
+  String? get _customHost {
+    final target = _captureState.motionActive || _analyzing
+        ? _recordingTarget
+        : ref.read(voiceTaskTargetProvider(_smartMode)).asData?.value;
+    if (target == null || target.baseUrl.isEmpty) return null;
+    return Uri.parse(target.baseUrl).authority;
+  }
+
+  Future<bool> _canUseTarget(VoiceTaskTarget target) async {
+    if (target == managedVoiceTarget) {
+      return ref.read(managedVoiceAccessProvider);
+    }
+    return ref.read(customModelAccessProvider.future);
+  }
 
   VoiceQuickAddError? get _captureError => switch (_captureState.failure) {
     null => null,
@@ -192,8 +237,28 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
     Future<void> Function(WhisperModel)? offerDownload,
   }) async {
     if (_changingMode || _preparingCapture) return;
+    final generation = _accountGeneration;
+    final audioMode = _displayMode;
     _preparingCapture = true;
+    _emit();
     try {
+      final target = await ref.read(voiceTaskTargetProvider(_smartMode).future);
+      if (!ref.mounted) return;
+      if (!await _canUseTarget(target)) {
+        if (ref.mounted) {
+          _analysisError = target == managedVoiceTarget
+              ? VoiceQuickAddError.customSetup
+              : VoiceQuickAddError.customAccess;
+          _emit();
+        }
+        return;
+      }
+      if (!ref.mounted ||
+          (retry &&
+              _captureState.cloudMode &&
+              !ref.read(managedVoiceAccessProvider))) {
+        return;
+      }
       if (!retry && ref.read(downloadableVoiceModelProvider)) {
         final preferences = ref.read(voicePreferencesRepositoryProvider);
         (await preferences.ready).getOrThrow();
@@ -212,9 +277,23 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
           }
         }
       }
+      if (!ref.mounted ||
+          generation != _accountGeneration ||
+          audioMode != _displayMode ||
+          target !=
+              ref.read(voiceTaskTargetProvider(_smartMode)).asData?.value) {
+        return;
+      }
+      _pinTarget(target);
       (await _capture.start(_locale, retry: retry)).getOrThrow();
+    } catch (_) {
+      if (ref.mounted) {
+        _analysisError = VoiceQuickAddError.general;
+        _emit();
+      }
     } finally {
       _preparingCapture = false;
+      _emit();
     }
   }
 
@@ -232,17 +311,54 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   Future<void> recoverAccess() =>
       _capture.recoverAccess(_locale).then((result) => result.getOrThrow());
 
-  Future<void> useCloudTranscription() => _capture
-      .useCloudTranscription(_locale)
-      .then((result) => result.getOrThrow());
+  void _pinTarget(VoiceTaskTarget target) {
+    _recordingTarget = target;
+    _recordingSmart = _smartMode;
+    _recordingGeneration = _accountGeneration;
+  }
+
+  Future<void> useCloudTranscription() async {
+    final target = ref.read(voiceTaskTargetProvider(_smartMode)).asData?.value;
+    if (!_cloudAvailable || target == null || _preparingCapture) return;
+    final generation = _accountGeneration;
+    try {
+      if (!await _canUseTarget(target) ||
+          !ref.mounted ||
+          !_cloudAvailable ||
+          generation != _accountGeneration ||
+          target !=
+              ref.read(voiceTaskTargetProvider(_smartMode)).asData?.value) {
+        return;
+      }
+      _pinTarget(target);
+      (await _capture.useCloudTranscription(_locale)).getOrThrow();
+    } catch (_) {
+      if (ref.mounted) {
+        _analysisError = VoiceQuickAddError.general;
+        _emit();
+      }
+    }
+  }
+
+  Future<void> retryAnalysis() async {
+    final text = _captureState.transcript;
+    final target = ref.read(voiceTaskTargetProvider(_smartMode)).asData?.value;
+    if (_analysisError == null ||
+        _analyzing ||
+        target == null ||
+        text.trim().isEmpty ||
+        (_recordingTarget != null &&
+            _recordingGeneration != _accountGeneration)) {
+      return;
+    }
+    _pinTarget(target);
+    await decomposeTranscript(text);
+  }
 
   Future<void> decomposeTranscript(String transcript) async {
-    final decomposer = ref.read(taskDecomposerProvider);
+    if (_analyzing) return;
     final now = ref.read(clockProvider).now();
-    final accountGeneration = ref
-        .read(accountSessionProvider)
-        .value
-        ?.generation;
+    final accountGeneration = _accountGeneration;
     _analysisError = null;
     _analyzing = true;
     _drafts = const [];
@@ -251,23 +367,71 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
     List<DecomposedTaskDraft> drafts;
     Object? failure;
     try {
-      final tasks = await decomposer.decompose(
-        transcript,
-        now: now,
-        locale: _locale,
-        smartMode: _smartMode,
-      );
+      final smart = _recordingTarget != null ? _recordingSmart : _smartMode;
+      final selected = await ref.read(voiceTaskTargetProvider(smart).future);
       if (!ref.mounted) return;
-      drafts = tasks.isEmpty ? fallbackQuickAddTasks(transcript) : tasks;
+      final target = _recordingTarget ?? selected;
+      if (target != selected ||
+          (_recordingTarget != null &&
+              _recordingGeneration != _accountGeneration)) {
+        throw const _VoiceRouteChanged();
+      }
+      if (!await _canUseTarget(target)) {
+        throw const _VoiceAccessUnavailable();
+      }
+      if (!ref.mounted ||
+          accountGeneration != _accountGeneration ||
+          target != ref.read(voiceTaskTargetProvider(smart)).asData?.value) {
+        throw const _VoiceRouteChanged();
+      }
+      if (target == managedVoiceTarget) {
+        final tasks = await ref
+            .read(taskDecomposerProvider)
+            .decompose(transcript, now: now, locale: _locale, smartMode: smart);
+        drafts = tasks.isEmpty ? fallbackQuickAddTasks(transcript) : tasks;
+      } else {
+        final key = await ref.read(voiceApiKeyProvider)(target.baseUrl);
+        if (!ref.mounted ||
+            accountGeneration != _accountGeneration ||
+            target != ref.read(voiceTaskTargetProvider(smart)).asData?.value) {
+          throw const _VoiceRouteChanged();
+        }
+        drafts = await ref.read(customVoiceAnalysisProvider)(
+          baseUrl: Uri.parse(target.baseUrl),
+          model: target.model,
+          apiKey: key,
+          transcript: transcript,
+          now: now,
+          locale: _locale,
+          smartMode: smart,
+        );
+      }
     } catch (exception) {
       if (!ref.mounted) return;
-      failure = exception is TaskDecompositionException
-          ? exception.message
-          : VoiceQuickAddError.fallback;
-      drafts = fallbackQuickAddTasks(transcript);
+      final managedFailure =
+          _recordingTarget == managedVoiceTarget ||
+          (_recordingTarget == null &&
+              ref.read(voiceTaskTargetProvider(_smartMode)).asData?.value ==
+                  managedVoiceTarget);
+      if (exception is _VoiceAccessUnavailable) {
+        failure = VoiceQuickAddError.customAccess;
+        drafts = [];
+      } else if (managedFailure && exception is! _VoiceRouteChanged) {
+        failure = exception is TaskDecompositionException
+            ? exception.message
+            : VoiceQuickAddError.fallback;
+        drafts = fallbackQuickAddTasks(transcript);
+      } else {
+        failure = exception is CustomModelException
+            ? exception.code
+            : VoiceQuickAddError.customAnalysis;
+        drafts = [];
+      }
     }
     if (!ref.mounted) return;
-    if (accountGeneration != null && accountGeneration != _accountGeneration) {
+    if (accountGeneration != _accountGeneration ||
+        (_recordingTarget != null &&
+            _recordingGeneration != _accountGeneration)) {
       _analyzing = false;
       _emit();
       return;
@@ -276,6 +440,15 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
     _drafts = List.unmodifiable(drafts);
     _draftRevision++;
     _analyzing = false;
+    _emit();
+  }
+
+  void useTranscriptAsTask() {
+    if (!state.canUseTranscriptAsTask) return;
+    final text = _captureState.transcript.trim();
+    _drafts = [DecomposedTaskDraft(quickAdd: text)];
+    _draftRevision++;
+    _analysisError = null;
     _emit();
   }
 
@@ -309,6 +482,14 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
   }
 }
 
+class _VoiceRouteChanged implements Exception {
+  const _VoiceRouteChanged();
+}
+
+class _VoiceAccessUnavailable implements Exception {
+  const _VoiceAccessUnavailable();
+}
+
 final voiceAccessViewModelProvider =
     AsyncNotifierProvider.autoDispose<VoiceAccessViewModel, bool>(
       VoiceAccessViewModel.new,
@@ -316,8 +497,15 @@ final voiceAccessViewModelProvider =
 
 class VoiceAccessViewModel extends AsyncNotifier<bool> {
   @override
-  Future<bool> build() async =>
-      ref.watch(billingAccessProvider).value?.hasActiveEntitlement ?? false;
+  Future<bool> build() async {
+    if (ref.watch(managedVoiceAccessProvider)) return true;
+    try {
+      return await ref.watch(customModelAccessProvider.future);
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> check() async {
     final keepAlive = ref.keepAlive();
     try {
@@ -327,7 +515,12 @@ class VoiceAccessViewModel extends AsyncNotifier<bool> {
         if (!ref.mounted) return false;
         access = ref.read(billingAccessProvider).value;
       }
-      return access?.hasActiveEntitlement ?? false;
+      if (access?.hasActiveEntitlement ?? false) return true;
+      try {
+        return await ref.read(customModelAccessProvider.future);
+      } catch (_) {
+        return false;
+      }
     } finally {
       keepAlive.close();
     }

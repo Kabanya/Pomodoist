@@ -7,6 +7,7 @@ import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/billing_store_dependencies.dart';
 import 'package:pomodoist/config/voice_dependencies.dart';
 import 'package:pomodoist/config/voice_preferences_dependencies.dart';
+import 'package:pomodoist/config/voice_task_route.dart';
 import 'package:pomodoist/data/repositories/planning/remote_task_decomposer.dart';
 import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
 import 'package:pomodoist/data/services/billing/billing_store.dart';
@@ -48,6 +49,10 @@ void main() {
             accountClientProvider.overrideWithValue(account),
             accountSessionProvider.overrideWith(
               (ref) => Stream.value((userId: 'account-id', generation: 1)),
+            ),
+            managedVoiceAccessProvider.overrideWithValue(true),
+            voiceTaskTargetProvider.overrideWith(
+              (ref, smart) async => managedVoiceTarget,
             ),
             voiceSmartModeProvider.overrideWithValue(false),
             voiceCaptureRepositoryProvider.overrideWith((ref, session) {

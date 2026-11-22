@@ -1,3 +1,4 @@
+import 'package:pomodoist/config/voice_task_route.dart';
 import 'package:app_voice/app_voice.dart';
 import 'package:pomodoist/data/repositories/voice/captured_voice_repository.dart';
 import 'package:pomodoist/data/repositories/voice/voice_capture_repository.dart';
@@ -23,13 +24,17 @@ final voiceRecognitionControllerProvider = Provider<VoiceRecognitionController>(
     ref.listen(accountClientProvider, (_, next) {
       account = next;
     });
-    final backend = AccountVoiceBackend(() => account);
+    final backend = AccountVoiceBackend(
+      () => ref.read(managedVoiceAccessProvider) ? account : null,
+    );
     final controller = createPomodoistVoiceController(
       mode: effectiveVoiceTranscriptionMode(
         isWeb: kIsWeb,
         platform: defaultTargetPlatform,
         preferred: ref.read(voiceTranscriptionModeProvider),
-        signedIn: account?.currentUserId != null,
+        signedIn:
+            account?.currentUserId != null &&
+            ref.read(managedVoiceAccessProvider),
       ),
       ownerId: () => account?.currentUserId,
       invoke: backend.call,
@@ -62,7 +67,9 @@ final voiceCaptureRepositoryProvider = Provider.autoDispose
           isWeb: kIsWeb,
           platform: defaultTargetPlatform,
           preferred: ref.read(voiceTranscriptionModeProvider),
-          signedIn: ref.read(accountClientProvider)?.currentUserId != null,
+          signedIn:
+              ref.read(accountClientProvider)?.currentUserId != null &&
+              ref.read(managedVoiceAccessProvider),
         ),
         replaceController: () {
           ref.invalidate(voiceRecognitionControllerProvider);
@@ -74,7 +81,9 @@ final voiceCaptureRepositoryProvider = Provider.autoDispose
             .read(voicePreferencesRepositoryProvider)
             .setMode(mode)
             .then((result) => result.getOrThrow()),
-        signedIn: () => ref.read(accountClientProvider)?.currentUserId != null,
+        signedIn: () =>
+            ref.read(accountClientProvider)?.currentUserId != null &&
+            ref.read(managedVoiceAccessProvider),
       );
       ref.onDispose(repository.dispose);
       return repository;

@@ -1,3 +1,4 @@
+import 'package:pomodoist/domain/models/settings/custom_model_config.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 import 'package:pomodoist/domain/models/voice/voice_capture_state.dart';
 import 'package:pomodoist/domain/models/voice/voice_transcription_mode.dart';
@@ -10,6 +11,9 @@ enum VoiceQuickAddError {
   microphoneDenied,
   speechDenied,
   fallback,
+  customAnalysis,
+  customAccess,
+  customSetup,
   recognition,
 }
 
@@ -43,12 +47,20 @@ class VoiceQuickAddState {
     this.transcriptionModeSelectable = false,
     this.cloudTranscriptionAvailable = false,
     this.usesDownloadableVoiceModel = false,
+    this.customHost,
+    this.taskRouteReady = false,
     required List<DecomposedTaskDraft> drafts,
     required this.draftRevision,
   }) : drafts = List.unmodifiable(drafts);
   final VoiceCaptureStatus status;
   final String transcript;
   final Object? error;
+  bool get canUseTranscriptAsTask =>
+      !analyzing &&
+      transcript.trim().isNotEmpty &&
+      (error is ModelCheck ||
+          error == VoiceQuickAddError.customAnalysis ||
+          error == VoiceQuickAddError.customAccess);
   final String recognitionErrorMessage;
   final String? voiceErrorCode;
   final bool restoring;
@@ -73,6 +85,9 @@ class VoiceQuickAddState {
   final bool transcriptionModeSelectable;
   final bool cloudTranscriptionAvailable;
   final bool usesDownloadableVoiceModel;
+  final String? customHost;
+  final bool taskRouteReady;
+  bool get canRecord => canStart && taskRouteReady;
   final List<DecomposedTaskDraft> drafts;
   final int draftRevision;
 }

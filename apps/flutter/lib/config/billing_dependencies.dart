@@ -37,6 +37,10 @@ final billingPurchaseLinkerProvider = Provider<BillingPurchaseLinker?>(
   (ref) => null,
 );
 
+final billingAnnualHistoryLinkerProvider = Provider<BillingPurchaseLinker?>(
+  (ref) => null,
+);
+
 /// The single owner of verified entitlement state for the current account.
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {
   final storeSupported = ref.watch(applePurchasesSupportedProvider);
@@ -48,6 +52,7 @@ final billingRepositoryProvider = Provider<BillingRepository>((ref) {
     storeSupported: storeSupported,
     signedIn: ref.read(billingSignedInProvider),
     purchaseLinker: () => ref.read(billingPurchaseLinkerProvider),
+    annualHistoryLinker: () => ref.read(billingAnnualHistoryLinkerProvider),
     storeTimeout: ref.watch(billingStoreTimeoutProvider),
     purchaseTimeout: ref.watch(billingPurchaseTimeoutProvider),
     stripeGateway: () => ref.read(billingStripeGatewayProvider),

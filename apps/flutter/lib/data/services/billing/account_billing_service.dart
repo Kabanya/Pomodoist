@@ -21,7 +21,10 @@ final class AccountBillingService {
   final String Function() _locale;
   final void Function() _onLinked;
 
-  Future<void> linkPurchases(List<String> transactions) async {
+  Future<void> linkPurchases(
+    List<String> transactions, {
+    bool annualHistory = false,
+  }) async {
     final session = _account.currentSession;
     if (_ownerId == null ||
         _account.currentUserId != _ownerId ||
@@ -34,7 +37,10 @@ final class AccountBillingService {
     final response = await _account.invokeFunction(
       'pomodoist-purchase',
       headers: {'Authorization': 'Bearer ${session.accessToken}'},
-      body: {'transactions': transactions},
+      body: {
+        'transactions': transactions,
+        if (annualHistory) 'annualHistory': true,
+      },
     );
     final data = response.data;
     if (data is Map && data['code'] == 'purchase_already_linked') {
