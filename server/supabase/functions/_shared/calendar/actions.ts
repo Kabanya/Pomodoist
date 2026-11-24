@@ -2,6 +2,9 @@ import { apiVersionError } from "../api_version.ts";
 import { readLimitedJson } from "../limited_json.ts";
 import { base64Url, randomToken, record, sha256 } from "./security.ts";
 import type { CalendarProvider } from "./reconcile.ts";
+
+const fdroidStatePrefix = "fdroid.";
+
 export type CalendarTokens = {
   accessToken: string;
   refreshToken: string;
@@ -51,7 +54,12 @@ export async function handleCalendarActions(
         }, 400);
       }
       await deps.connect(pending.userId, tokens);
-      return Response.redirect(deps.appRedirectUri, 302);
+      // The state hash consumed above covers the channel prefix as well as
+      // the random token. A callback cannot change the selected channel.
+      const appRedirectUri = state.startsWith(fdroidStatePrefix)
+        ? `pomodoist-fdroid://${deps.provider}-calendar-connected`
+        : deps.appRedirectUri;
+      return Response.redirect(appRedirectUri, 302);
     }
     if (req.method !== "POST") {
       return json({ error: "Method not allowed." }, 405);
@@ -73,7 +81,9 @@ export async function handleCalendarActions(
             503,
           );
         }
-        const state = randomToken();
+        const state = parsed.value.channel === "fdroid"
+          ? fdroidStatePrefix + randomToken()
+          : randomToken();
         const verifier = randomToken(64);
         const challenge = base64Url(
           new Uint8Array(

@@ -1,4 +1,5 @@
 import 'package:app_account/app_account.dart';
+import 'package:pomodoist/domain/models/app_flavor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef GoogleCalendarFunctionInvoker =
@@ -38,7 +39,10 @@ class GoogleCalendarSyncController {
   }
 
   Future<Map<String, Object?>> _action(String action) async {
-    final response = await _invoke({'action': action});
+    final response = await _invoke({
+      'action': action,
+      if (isFdroidBuild && action == 'start') 'channel': 'fdroid',
+    });
     final data = response.data is Map
         ? Map<String, Object?>.from(response.data! as Map)
         : const <String, Object?>{};

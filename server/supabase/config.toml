@@ -18,6 +18,8 @@ additional_redirect_urls = [
   "pomodoist-stg://captcha-callback",
   "pomodoist://login-callback",
   "pomodoist://captcha-callback",
+  "pomodoist-fdroid://login-callback",
+  "pomodoist-fdroid://captcha-callback",
 ]
 
 [auth.hook.custom_access_token]

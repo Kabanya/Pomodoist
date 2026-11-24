@@ -1,0 +1,45 @@
+Categories:
+  - Task
+  - Timer
+License: AGPL-3.0-only
+AuthorName: FinchForge LLC
+WebSite: https://pomodoist.com
+SourceCode: https://github.com/Kabanya/Pomodoist
+IssueTracker: https://github.com/Kabanya/Pomodoist/issues
+Changelog: https://github.com/Kabanya/Pomodoist/releases
+
+RepoType: git
+Repo: https://github.com/Kabanya/Pomodoist.git
+
+Builds:
+  - versionName: @VERSION_NAME@
+    versionCode: @VERSION_CODE@
+    commit: @COMMIT@
+    sudo:
+      - apt-get update
+      - apt-get install -y git-lfs
+    rm:
+      - apps/chrome-extension
+      - apps/flutter/linux/gnome-extension
+    output: apps/flutter/build/app/outputs/flutter-apk/app-production-release.apk
+    srclibs:
+      - flutter@@FLUTTER_VERSION@
+    prebuild:
+      - git lfs pull --include=apps/flutter/assets/pomo/model/pomo.glb.gz
+      - gzip -t apps/flutter/assets/pomo/model/pomo.glb.gz
+      - export PUB_CACHE="$PWD/apps/flutter/.pub-cache"
+      - $$flutter$$/bin/flutter config --no-analytics
+      - FLUTTER_BIN=$$flutter$$/bin/flutter bash tool/android/build_fdroid.sh --prepare
+    scandelete:
+      - apps/flutter/.pub-cache
+      - apps/flutter/web/sqlite3.wasm
+    build:
+      - export PUB_CACHE="$PWD/apps/flutter/.pub-cache"
+      - FLUTTER_BIN=$$flutter$$/bin/flutter bash tool/android/build_fdroid.sh --build-prepared
+    ndk: 28.2.13676358
+
+AutoUpdateMode: None
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+UpdateCheckData: apps/flutter/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
+CurrentVersion: @VERSION_NAME@
+CurrentVersionCode: @VERSION_CODE@

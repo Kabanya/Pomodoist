@@ -9,6 +9,9 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// F-Droid signs its separately identified production APK after the build.
+val fdroidBuild = providers.gradleProperty("pomodoistFdroid").orNull == "true"
+
 // Secrets belong in the environment or ignored android/key.properties, never
 // in dart-defines (which are compiled into the distributed application).
 val signingProperties = Properties()
@@ -66,7 +69,14 @@ fun validateReleaseSigning() {
 // assemble, bundle, install and abbreviated Gradle release tasks are covered.
 // Debug builds and IDE synchronization do not need signing credentials.
 gradle.taskGraph.whenReady {
-    if (allTasks.any { it.project == project && it.name.contains("Release", ignoreCase = true) }) {
+    val appTasks = allTasks.filter { it.project == project }
+    if (fdroidBuild) {
+        if (appTasks.none { it.name == "assembleProductionRelease" } ||
+            appTasks.any { it.name == "bundleProductionRelease" ||
+                it.name == "packageProductionReleaseBundle" }) {
+            throw GradleException("F-Droid builds must assemble the production release APK.")
+        }
+    } else if (appTasks.any { it.name.contains("Release", ignoreCase = true) }) {
         validateReleaseSigning()
     }
 }
@@ -119,6 +129,11 @@ android {
             applicationId = "com.finchforge.pomodoist"
             manifestPlaceholders["appLabel"] = "Pomodoist"
             manifestPlaceholders["urlScheme"] = "pomodoist"
+            if (fdroidBuild) {
+                applicationIdSuffix = ".fdroid"
+                manifestPlaceholders["appLabel"] = "Pomodoist F-Droid"
+                manifestPlaceholders["urlScheme"] = "pomodoist-fdroid"
+            }
         }
     }
     signingConfigs {
@@ -131,9 +146,18 @@ android {
     }
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            if (!fdroidBuild) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
+        }
+    }
+}
+
+androidComponents {
+    beforeVariants { variant ->
+        if (fdroidBuild &&
+            (variant.buildType != "release" || ("app" to "production") !in variant.productFlavors)) {
+            variant.enable = false
         }
     }
 }
