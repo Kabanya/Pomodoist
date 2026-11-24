@@ -34,7 +34,14 @@ jobs:
         with:
           flutter-version-file: .fvmrc
       - name: Install Android build tools
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
+        run: |
+          sdkmanager=$(find -L "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' -print -quit)
+          if [[ ! -x "$sdkmanager" ]]; then
+            echo 'Android cmdline-tools are missing from the runner SDK.' >&2
+            exit 1
+          fi
+          "$sdkmanager" --sdk_root="$ANDROID_HOME" \
+            "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
       - name: Test Android release tooling
         run: python3 -m unittest discover -s tool/android -p 'test_*.py'
       - name: Build unsigned APK

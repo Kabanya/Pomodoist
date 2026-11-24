@@ -27,8 +27,8 @@ Builds:
     prebuild:
       - git lfs pull --include=apps/flutter/assets/pomo/model/pomo.glb.gz
       - gzip -t apps/flutter/assets/pomo/model/pomo.glb.gz
-      - export PUB_CACHE="$PWD/apps/flutter/.pub-cache"
       - $$flutter$$/bin/flutter config --no-analytics
+      - export PUB_CACHE="$PWD/apps/flutter/.pub-cache"
       - FLUTTER_BIN=$$flutter$$/bin/flutter bash tool/android/build_fdroid.sh --prepare
     scandelete:
       - apps/flutter/.pub-cache
