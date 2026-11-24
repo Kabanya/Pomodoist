@@ -67,13 +67,8 @@ PY
     release=$(git rev-parse HEAD)
     scratch=$(mktemp -d -t pomodoist-fdroid.XXXXXXXX)
     trap 'rm -rf -- "$scratch"' EXIT
-    # Use the committed version even when running from a working checkout.
-    # git archive stores LFS pointers, so materialize the pinned model after extraction.
-    git archive "$release" | tar -xf - -C "$scratch"
-    model=apps/flutter/assets/pomo/model/pomo.glb.gz
-    git lfs smudge -- "$model" < "$scratch/$model" > "$scratch/$model.download"
-    mv -- "$scratch/$model.download" "$scratch/$model"
-    gzip -t "$scratch/$model"
+    # Use the committed version and skip the desktop-only LFS model.
+    GIT_LFS_SKIP_SMUDGE=1 git archive "$release" | tar -xf - -C "$scratch"
     export FLUTTER_BIN="$flutter_bin" POMODOIST_RELEASE="$release"
     bash "$scratch/tool/android/build_fdroid.sh" --prepare
     bash "$scratch/tool/android/build_fdroid.sh" --build-prepared

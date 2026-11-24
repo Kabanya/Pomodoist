@@ -32,6 +32,8 @@ def fdroid_pubspec(pubspec: str) -> str:
         pubspec = replace_once(
             pubspec, dependency[0], f'  {package}:\n    path: {OVERLAY}/{package}',
         )
+    for desktop_asset in ('manifest.json', 'pomo.glb.gz'):
+        pubspec = replace_once(pubspec, f'    - assets/pomo/model/{desktop_asset}\n', '')
     return pubspec.rstrip() + f'''
 
 hooks:

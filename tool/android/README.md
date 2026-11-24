@@ -326,12 +326,11 @@ The F-Droid edition is **Pomodoist F-Droid** on the device. Its package is
 `pomodoist-fdroid`. F-Droid signs its APK. The Google Play AAB and the GitHub
 APK continue to use the production package and the existing release workflow.
 
-On Linux, install Git LFS, Python 3, OpenJDK 17, the Flutter version in
+On Linux, install Python 3, OpenJDK 17, the Flutter version in
 `.fvmrc`, Android SDK platform 36, build-tools 36.0.0, and NDK 28.2.13676358.
 From the repository root, run:
 
 ```sh
-git lfs pull --include=apps/flutter/assets/pomo/model/pomo.glb.gz
 bash tool/android/build_fdroid.sh
 ```
 
@@ -347,7 +346,7 @@ The F-Droid build uses the same public backend as the production Android
 release. The Turnstile site key in `fdroid-production.json` is public. The
 build leaves Sentry disabled. During preparation the build fetches the pinned
 Flutter packages' source, removes the Android purchase and desktop 3D
-plugin registrations, and compiles SQLite from a checksum-verified source
+plugin registrations, drops the desktop-only 3D model, and compiles SQLite from a checksum-verified source
 archive. The Apple and regular Android dependency graphs remain under the
 original Flutter lockfile.
 

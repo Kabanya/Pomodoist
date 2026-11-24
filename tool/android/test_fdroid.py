@@ -17,6 +17,8 @@ class FDroidDependenciesTest(unittest.TestCase):
         self.assertIn('      path: third_party/fdroid/sqlite/sqlite3.c', manifest)
         self.assertIn('    path: third_party/fdroid/thermion_flutter', manifest)
         self.assertIn('      skip_native_build: true', manifest)
+        self.assertNotIn('assets/pomo/model/', manifest)
+        self.assertIn('assets/pomo/greeting-still.webp', manifest)
 
     def test_fdroid_lock_removes_only_the_native_play_plugin_and_repoints_purchase(self):
         original = (APP / 'pubspec.lock').read_text()
