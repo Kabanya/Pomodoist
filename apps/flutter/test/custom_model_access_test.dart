@@ -103,23 +103,33 @@ void main() {
   );
 
   test(
-    'an open consumer refreshes at expiry without a new purchase or login',
+    'a full paid month stays available with browser-safe timers until expiry',
     () {
       fakeAsync((time) {
         final clock = FixedClock(now);
+        final paidUntil = now.add(const Duration(days: 31));
         final container = ProviderContainer(
           overrides: [
             clockProvider.overrideWithValue(clock),
             customModelGrantLoaderProvider.overrideWithValue(
-              (_) async => (permanent: false, validUntil: expiry),
+              (_) async => (permanent: false, validUntil: paidUntil),
             ),
           ],
         );
         container.listen(customModelAccessProvider, (_, _) {});
         time.flushMicrotasks();
         expect(container.read(customModelAccessProvider).requireValue, isTrue);
-        clock.value = expiry;
-        time.elapse(const Duration(days: 1));
+        final firstDelay = time.pendingTimers
+            .where((timer) => timer.duration > Duration.zero)
+            .single
+            .duration;
+        expect(firstDelay.inMilliseconds, lessThanOrEqualTo(0x7fffffff));
+        clock.value = now.add(firstDelay);
+        time.elapse(firstDelay);
+        time.flushMicrotasks();
+        expect(container.read(customModelAccessProvider).requireValue, isTrue);
+        clock.value = paidUntil;
+        time.elapse(paidUntil.difference(now.add(firstDelay)));
         time.flushMicrotasks();
         expect(container.read(customModelAccessProvider).requireValue, isFalse);
         container.dispose();

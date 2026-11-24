@@ -106,7 +106,13 @@ final customModelAccessProvider = FutureProvider<bool>((ref) async {
   if (remaining == null || remaining <= Duration.zero || !ref.mounted) {
     return false;
   }
-  final timer = Timer(remaining, ref.invalidateSelf);
+  // Browsers accept at most a signed 32-bit millisecond delay. Recheck a
+  // longer monthly grant once before expiry, then schedule its remaining time.
+  const maxDelay = Duration(milliseconds: 0x7fffffff);
+  final timer = Timer(
+    remaining > maxDelay ? maxDelay : remaining,
+    ref.invalidateSelf,
+  );
   ref.onDispose(timer.cancel);
   return true;
 });
