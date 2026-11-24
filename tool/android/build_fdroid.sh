@@ -39,6 +39,9 @@ PYTHON
     python3 tool/android/prepare_fdroid.py "$app"
     cd "$app"
     "$flutter_bin" pub get --enforce-lockfile
+    # pub get writes a debug plugin registrant. Generate release configuration
+    # before the source scan so the build can use --no-pub without test plugins.
+    "$flutter_bin" build apk --release --flavor production --config-only
     ;;
   --build-prepared)
     check_flutter_version
