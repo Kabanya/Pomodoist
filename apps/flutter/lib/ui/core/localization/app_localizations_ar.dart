@@ -5198,7 +5198,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'اختر النموذج الذي يحوّل النص المُفرّغ إلى مسودات مهام.';
+      'اختر النموذج الذي يحوّل النص المُفرّغ إلى مسودات مهام. يمكنك أيضًا أن تطلب من وكيل MCP متصل إعداد نموذجك على هذا الجهاز.';
 
   @override
   String get customDefault => 'الافتراضي · Pomodoist';

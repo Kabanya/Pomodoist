@@ -5288,7 +5288,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'Choose which model turns the transcript into task drafts.';
+      'Choose which model turns the transcript into task drafts. You can also ask a connected MCP agent to set up your model on this device.';
 
   @override
   String get customDefault => 'Default · Pomodoist';

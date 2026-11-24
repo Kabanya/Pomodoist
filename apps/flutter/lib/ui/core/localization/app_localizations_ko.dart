@@ -5127,7 +5127,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get customAnalysisTitle => '작업 분석 모델';
 
   @override
-  String get customAnalysisSubtitle => '받아쓴 텍스트를 작업 초안으로 변환할 모델을 선택하세요.';
+  String get customAnalysisSubtitle =>
+      '받아쓴 텍스트를 작업 초안으로 변환할 모델을 선택하세요. 연결된 MCP 에이전트에게 이 기기에서 사용할 모델을 설정해 달라고 요청할 수도 있습니다.';
 
   @override
   String get customDefault => '기본값 · Pomodoist';

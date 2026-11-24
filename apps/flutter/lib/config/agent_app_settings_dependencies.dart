@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pomodoist/config/account_providers.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/config/custom_model_access.dart';
 import 'package:pomodoist/config/theme_settings_dependencies.dart';
 import 'package:pomodoist/data/services/agent_settings/agent_app_settings_runtime.dart';
 import 'package:pomodoist/data/services/agent_settings/remote_theme_image.dart';
@@ -54,9 +55,10 @@ final agentAppSettingsRuntimeProvider = FutureProvider.autoDispose<void>((
     name:
         '${kIsWeb ? 'Browser' : defaultTargetPlatform.name} · ${deviceId.substring(0, deviceId.length.clamp(0, 8))}',
     platform: platform,
-    capabilities: AgentAppSettingsAdapter.capabilitiesFor(
+    capabilities: () => AgentAppSettingsAdapter.capabilitiesFor(
       defaultTargetPlatform,
       isWeb: kIsWeb,
+      customModel: ref.read(verifiedCustomModelAccessProvider),
     ),
     isCurrent: isCurrent,
     invoke: (body) async {

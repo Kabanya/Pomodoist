@@ -2301,7 +2301,7 @@
   "blockingSyncConflictDetails": "이 작업이 차단되어 서버에서 완료 처리를 거부했습니다. 작업 상태가 복원되었으며 누적 집중 시간은 유지됩니다.",
   "blockingSyncConflict": "동기화 충돌",
   "customAnalysisTitle": "작업 분석 모델",
-  "customAnalysisSubtitle": "받아쓴 텍스트를 작업 초안으로 변환할 모델을 선택하세요.",
+  "customAnalysisSubtitle": "받아쓴 텍스트를 작업 초안으로 변환할 모델을 선택하세요. 연결된 MCP 에이전트에게 이 기기에서 사용할 모델을 설정해 달라고 요청할 수도 있습니다.",
   "customDefault": "기본값 · Pomodoist",
   "customEndpoint": "사용자 지정 API 또는 서버",
   "customBaseUrl": "OpenAI 호환 API 기본 URL",

@@ -5015,7 +5015,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get customAnalysisTitle => '任务解析模型';
 
   @override
-  String get customAnalysisSubtitle => '选择将转写文本转换为任务草稿的模型。';
+  String get customAnalysisSubtitle =>
+      '选择将转写文本转换为任务草稿的模型。也可以让已连接的 MCP 智能体在此设备上配置你的模型。';
 
   @override
   String get customDefault => '默认 · Pomodoist';

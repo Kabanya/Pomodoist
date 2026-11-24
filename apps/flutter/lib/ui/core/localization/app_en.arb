@@ -2686,7 +2686,7 @@
     }
   },
   "customAnalysisTitle": "Model for task analysis",
-  "customAnalysisSubtitle": "Choose which model turns the transcript into task drafts.",
+  "customAnalysisSubtitle": "Choose which model turns the transcript into task drafts. You can also ask a connected MCP agent to set up your model on this device.",
   "customDefault": "Default · Pomodoist",
   "customEndpoint": "Custom API or server",
   "customBaseUrl": "OpenAI-compatible API base URL",

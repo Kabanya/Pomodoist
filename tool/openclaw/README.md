@@ -119,7 +119,7 @@ Removing the local server definition or skill alone is also not revocation.
 | Projects and labels | Guarded project create/update/delete and label create/delete, preserving existing MCP restrictions on system anchors. |
 | Focus | `openclaw_get_focus`, then `openclaw_focus`: start a single 25-minute work session (optionally linked to a task), pause, resume, complete after its timer elapses, or stop with confirmation. Uses the shared Watch/Telegram Focus runtime, events and task totals. Custom session lengths/preset editing are not exposed in this version. |
 | Reports | Existing Focus history, productivity and achievements read tools. |
-| Device settings | `openclaw_list_app_devices`, fresh `openclaw_get_app_settings`, `openclaw_set_app_shortcut`, `openclaw_set_app_appearance`, and `openclaw_get_app_settings_request`. Changes require `--write`, a selected online device, UUID, and the affected group’s `expected_version`. |
+| Device settings | `openclaw_list_app_devices`, fresh `openclaw_get_app_settings`, `openclaw_set_app_shortcut`, `openclaw_set_app_appearance`, `openclaw_set_app_custom_model`, and `openclaw_get_app_settings_request`. Changes require `--write`, a selected online device, UUID, and the affected group’s `expected_version`. |
 
 Habits use `period_targets` for independent morning, afternoon, evening and night
 goals; their sum is the daily target. For example, `{"morning":2,"night":5}`

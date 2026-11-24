@@ -1,6 +1,6 @@
 # Agent control of local app settings
 
-Connected MCP agents can read and change shortcuts and appearance on an explicitly
+Connected MCP agents can read and change shortcuts, appearance and eligible custom task models on an explicitly
 selected, signed-in, online Pomodoist device. Commands use the existing OAuth
 connection and do not prompt for every change. Revoking the connection stops new
 commands and commands that have not yet been claimed. A change already executing
@@ -13,7 +13,7 @@ on a device may finish; revocation cannot undo a local side effect.
    platform's supported settings and key formats.
 2. Call `get_app_settings(device_id)`. The response contains current values and a
    version for each group. If the response is pending, poll its request ID.
-3. Call `set_app_shortcut` or `set_app_appearance` with `device_id`, a new UUID
+3. Call `set_app_shortcut`, `set_app_appearance` or `set_app_custom_model` with `device_id`, a new UUID
    `request_id`, and that group's `expected_version`.
 4. Poll `get_app_settings_request(request_id)` until the device reports a result.
    A queued or claimed request is not a successful settings change.
@@ -58,6 +58,33 @@ return the actual value and its new version. A stale version returns `version_co
 including when the user changed that setting manually after the agent read it.
 Unsupported settings fail; no tool exposes arbitrary preference keys or code.
 
+## Custom voice task model
+
+Ask the connected agent to configure a device, for example “Use my local server
+at `http://localhost:11434/v1` with model `llama3.2` for voice task drafts on
+my Mac.” Localhost refers to the device running Pomodoist. The agent gets the
+device ID and the current `versions.customModel` from its settings snapshot.
+
+`set_app_custom_model` takes that version, the device ID, a request UUID and
+`value`. To enable a provider, pass `enabled: true`, `baseUrl`, `normalModel`
+and optionally `smartModel` and a write-only `apiKey`. Omit the Smart model to
+use the standard model for both modes. Use `{"enabled":false}` to switch back
+to Pomodoist. Changing the address clears the previous credential. At the same
+address an omitted key retains it and an empty key clears it.
+
+The device and server check the paid custom-model entitlement. It covers an
+active paid month, any qualifying paid year (including after expiry), or a
+lifetime purchase. A free trial does not qualify. The device omits the setting
+from its snapshot until access is verified. This setting controls analysis of
+the transcript after speech recognition.
+
+An agent-supplied key passes through the MCP service. Supabase Vault encrypts
+it while the device command is pending. Completion and request pruning delete
+the Vault entry. The device saves the key in its normal credential store, or
+in session memory on the web. Settings snapshots and receipts expose only
+`hasKey`. A successful receipt confirms the configuration was saved. The
+settings screen also supports a connection test.
+
 ## Local images
 
 A `customTheme` value can include `image_url`, `image_palette` (`light` or `dark`)
@@ -77,7 +104,7 @@ Download or decoding errors preserve the previous background.
 
 Image bytes, base64 data, filesystem paths and persistent remote image URLs are
 never uploaded through settings RPCs or stored in database/Storage. Database
-records contain bounded command metadata and results only; source URLs are cleared
+records contain bounded command metadata and results. Image source URLs are cleared
 when a request finishes or expires.
 
 ## Delivery, failures and compatibility

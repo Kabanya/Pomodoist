@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/billing_dependencies.dart';
 import 'package:pomodoist/config/custom_model_settings_dependencies.dart';
+import 'package:pomodoist/config/custom_model_access.dart';
 import 'package:pomodoist/data/services/planning/custom_model_client.dart';
 import 'package:pomodoist/domain/models/planning/task_decomposition.dart';
 
@@ -14,7 +15,10 @@ final voiceTaskTargetProvider = FutureProvider.family<VoiceTaskTarget, bool>((
   smart,
 ) async {
   final config = await ref.watch(customModelConfigProvider.future);
-  if (!config.enabled) return managedVoiceTarget;
+  if (!config.enabled || !ref.mounted) return managedVoiceTarget;
+  if (!await ref.watch(customModelAccessProvider.future)) {
+    return managedVoiceTarget;
+  }
   return (
     baseUrl: CustomModelClient.parseBaseUrl(config.baseUrl).toString(),
     model: smart && config.smartModel.trim().isNotEmpty

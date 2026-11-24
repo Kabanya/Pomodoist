@@ -78,21 +78,30 @@ class CustomModelSettings extends AsyncNotifier<CustomModelConfig> {
 
   String normalizeUrl(String input) => normalizedCustomModelUrl(input);
 
-  Future<String> apiKeyFor(String baseUrl) =>
-      ref.read(customModelRepositoryProvider).apiKeyFor(normalizeUrl(baseUrl));
-
-  Future<void> save(CustomModelConfig config, {String? apiKey}) async {
-    final repository = ref.read(customModelRepositoryProvider);
-    if (config.enabled && !await ref.read(customModelAccessProvider.future)) {
+  Future<void> _requireAccess(CustomModelRepository repository) async {
+    if (!await ref.read(customModelAccessProvider.future) ||
+        !ref.mounted ||
+        repository != ref.read(customModelRepositoryProvider)) {
       throw StateError('Custom model access unavailable.');
     }
-    if (!ref.mounted || repository != ref.read(customModelRepositoryProvider)) {
-      throw StateError('The active account changed.');
-    }
-    final updated = await repository.save(config, apiKey: apiKey);
+  }
+
+  Future<CustomModelConfig> save(
+    CustomModelConfig config, {
+    String? apiKey,
+    String? expectedVersion,
+  }) async {
+    final repository = ref.read(customModelRepositoryProvider);
+    await _requireAccess(repository);
+    final updated = await repository.save(
+      config,
+      apiKey: apiKey,
+      expectedVersion: expectedVersion,
+    );
     if (ref.mounted && repository == ref.read(customModelRepositoryProvider)) {
       state = AsyncData(updated);
     }
+    return updated;
   }
 
   Future<Map<String, ModelCheck>> check(
@@ -101,6 +110,7 @@ class CustomModelSettings extends AsyncNotifier<CustomModelConfig> {
     String? apiKey,
   }) async {
     final repository = ref.read(customModelRepositoryProvider);
+    await _requireAccess(repository);
     final url = normalizeUrl(config.baseUrl);
     final key = apiKey ?? await repository.apiKeyFor(url);
     final probe = ref.read(customModelProbeProvider);
@@ -109,11 +119,7 @@ class CustomModelSettings extends AsyncNotifier<CustomModelConfig> {
       config.normalModel.trim(),
       config.smartModel.trim(),
     }..remove('')) {
-      if (!await ref.read(customModelAccessProvider.future) ||
-          !ref.mounted ||
-          repository != ref.read(customModelRepositoryProvider)) {
-        throw StateError('Custom model access unavailable.');
-      }
+      await _requireAccess(repository);
       results[model] = await probe(
         baseUrl: url,
         model: model,

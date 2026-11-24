@@ -10,7 +10,7 @@ const writeTools = [
   'create_habit', 'update_habit', 'add_habit_check_in', 'complete_habit', 'undo_habit_check_in', 'finish_habit', 'reopen_habit', 'delete_habit',
   'create_task', 'update_task', 'complete_task', 'restore_task', 'delete_task',
   'create_project', 'update_project', 'delete_project', 'create_label', 'delete_label',
-  'focus', 'set_task_details', 'set_app_shortcut', 'set_app_appearance',
+  'focus', 'set_task_details', 'set_app_shortcut', 'set_app_appearance', 'set_app_custom_model',
 ].map(name => `openclaw_${name}`);
 
 /** Generate one server definition, without reading or writing credentials. */

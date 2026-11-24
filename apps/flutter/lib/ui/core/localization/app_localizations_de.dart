@@ -5311,7 +5311,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'Wähle das Modell, das das Transkript in Aufgabenentwürfe umwandelt.';
+      'Wähle das Modell, das das Transkript in Aufgabenentwürfe umwandelt. Du kannst auch einen verbundenen MCP-Agenten bitten, dein Modell auf diesem Gerät einzurichten.';
 
   @override
   String get customDefault => 'Standard · Pomodoist';

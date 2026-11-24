@@ -11,6 +11,62 @@ create function pg_temp.agent(command jsonb) returns jsonb language sql as $$ se
 create function pg_temp.device(command jsonb) returns jsonb language sql as $$ select api_v1.pomodoist_app_settings_device('{"deviceId":"44444444-4444-4444-8444-444444444444","instanceId":"55555555-5555-4555-8555-555555555555"}'::jsonb || command); $$;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","session_id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","role":"authenticated"}',true);
+do $model$
+declare
+ actor uuid := auth.uid();
+ command jsonb := '{"action":"request","operation":"customModel","setting":"customModel","expected_version":"default",
+  "request_id":"cad00000-0000-4000-8000-000000000001","device_id":"44444444-4444-4444-8444-444444444444",
+  "value":{"enabled":true,"baseUrl":"http://localhost:11434/v1","normalModel":"fast","apiKey":"fixture-only"}}';
+ rid uuid := (command->>'request_id')::uuid;
+ secret_id uuid;
+ claim jsonb;
+ result jsonb := '{"status":"applied","setting":"customModel","version":"v2","value":{"enabled":true,
+  "baseUrl":"http://localhost:11434/v1","normalModel":"fast","smartModel":"","hasKey":true}}';
+begin
+ perform pg_temp.device('{"action":"register","name":"Test","platform":"web","capabilities":{"operations":["read","customModel"]}}');
+ assert not (pg_temp.agent('{"action":"list"}')#>'{devices,0,capabilities,operations}' ? 'customModel');
+ begin perform pg_temp.agent(command); raise exception 'Expected unpaid access rejection'; exception when insufficient_privilege then null; end;
+ perform public.link_pomodoist_stripe_customer(actor,'cus_settings');
+ perform public.record_pomodoist_stripe_event('evt_settings','invoice.paid',now(),'sub_settings','cus_settings',actor,
+   'pomodoist.pro.annual','subscription','active',now(),now()+interval '1 month',false,'{}');
+ perform public.record_pomodoist_custom_model_stripe_payment('sub_settings','settings-year','pomodoist.pro.annual',now()-interval '1 year',false);
+ assert pg_temp.agent(command)->>'status'='pending';
+ assert pg_temp.agent(command)->>'status'='pending';
+ select credential_id into strict secret_id from private.pomodoist_app_settings_requests
+ where request_id=rid and not value?'apiKey';
+ assert secret_id is not null;
+ assert exists (select 1 from vault.decrypted_secrets where id=secret_id and decrypted_secret='fixture-only');
+ claim:=pg_temp.device('{"action":"claim"}');
+ assert claim#>>'{commands,0,value,apiKey}'='fixture-only';
+ assert pg_temp.device('{"action":"claim"}')=claim;
+ begin
+  perform pg_temp.device(jsonb_build_object('action','finish','requestId',rid,'result',jsonb_set(result,'{value,apiKey}','"fixture-only"')));
+  raise exception 'Credential in a receipt';
+ exception when invalid_parameter_value then null; end;
+ perform pg_temp.device(jsonb_build_object('action','finish','requestId',rid,'result',result));
+ assert pg_temp.agent(command)->>'status'='applied';
+ assert position('fixture-only' in pg_temp.agent(command)::text)=0;
+ assert not exists (select 1 from vault.secrets where id=secret_id);
+ -- An already completed snapshot also follows later entitlement changes.
+ perform pg_temp.agent('{"action":"request","operation":"read","device_id":"44444444-4444-4444-8444-444444444444","request_id":"cad00000-0000-4000-8000-000000000003"}');
+ perform pg_temp.device('{"action":"claim"}');
+ perform pg_temp.device(jsonb_build_object('action','finish','requestId','cad00000-0000-4000-8000-000000000003',
+  'result',jsonb_build_object('status','applied','values',jsonb_build_object('customModel',result->'value','theme','classic'),
+                              'versions',jsonb_build_object('customModel','v2'),
+                              'capabilities',jsonb_build_object('operations',jsonb_build_array('read','customModel')))));
+ assert pg_temp.agent('{"action":"status","request_id":"cad00000-0000-4000-8000-000000000003"}')#>>'{result,values,customModel,normalModel}'='fast';
+ command:=jsonb_set(command,'{request_id}','"cad00000-0000-4000-8000-000000000002"');
+ perform pg_temp.agent(command);
+ select credential_id into strict secret_id from private.pomodoist_app_settings_requests where request_id=(command->>'request_id')::uuid;
+ perform public.record_pomodoist_custom_model_stripe_payment('sub_settings','settings-year','pomodoist.pro.annual',now(),true);
+ assert pg_temp.device('{"action":"claim"}')->'commands'='[]'::jsonb;
+ assert not (pg_temp.agent(jsonb_build_object('action','status','request_id',rid))#>'{result}' ? 'value');
+ claim:=pg_temp.agent('{"action":"status","request_id":"cad00000-0000-4000-8000-000000000003"}')->'result';
+ assert claim->'values'='{"theme":"classic"}' and claim->'versions'='{}' and claim#>'{capabilities,operations}'='["read"]';
+ assert not exists(select 1 from vault.secrets where id=secret_id);
+end $model$;
+select pass('custom model writes enforce payment on admission and delivery, protect keys and clear them after completion or refund');
+
 do $$
 declare r jsonb; command jsonb := '{"action":"request","request_id":"77777777-7777-4777-8777-777777777777","device_id":"44444444-4444-4444-8444-444444444444","operation":"appearance","setting":"themeMode","value":"dark","expected_version":"v1"}';
 begin

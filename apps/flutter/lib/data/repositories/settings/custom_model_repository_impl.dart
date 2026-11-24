@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import 'package:uuid/uuid.dart';
 import 'package:pomodoist/data/repositories/settings/custom_model_repository.dart';
 import 'package:pomodoist/data/services/local/custom_model_key_store.dart';
 import 'package:pomodoist/data/services/local/preferences_service.dart';
@@ -21,6 +23,9 @@ class StoredCustomModelRepository implements CustomModelRepository {
     if (values[_settings] case final String raw) {
       final json = jsonDecode(raw) as Map;
       return CustomModelConfig(
+        version:
+            json['version'] as String? ??
+            sha256.convert(utf8.encode(raw)).toString(),
         enabled: json['enabled'] == true,
         baseUrl: json['baseUrl'] as String,
         normalModel: json['normalModel'] as String,
@@ -44,8 +49,14 @@ class StoredCustomModelRepository implements CustomModelRepository {
   }
 
   @override
-  Future<CustomModelConfig> save(CustomModelConfig config, {String? apiKey}) {
-    final operation = _pending.then((_) => _save(config, apiKey));
+  Future<CustomModelConfig> save(
+    CustomModelConfig config, {
+    String? apiKey,
+    String? expectedVersion,
+  }) {
+    final operation = _pending.then(
+      (_) => _save(config, apiKey, expectedVersion),
+    );
     _pending = operation.then<void>(
       (_) {},
       onError: (Object _, StackTrace _) {},
@@ -56,8 +67,13 @@ class StoredCustomModelRepository implements CustomModelRepository {
   Future<CustomModelConfig> _save(
     CustomModelConfig config,
     String? apiKey,
+    String? expectedVersion,
   ) async {
     final old = await load();
+    if (expectedVersion != null && old.version != expectedVersion) {
+      throw const CustomModelVersionConflict();
+    }
+    final version = const Uuid().v4();
     final url = config.enabled || config.baseUrl.isNotEmpty
         ? CustomModelClient.parseBaseUrl(config.baseUrl).toString()
         : '';
@@ -86,6 +102,7 @@ class StoredCustomModelRepository implements CustomModelRepository {
     try {
       (await _preferences.write({
         _settings: jsonEncode({
+          'version': version,
           'enabled': config.enabled,
           'baseUrl': url,
           'normalModel': normal,
@@ -98,6 +115,7 @@ class StoredCustomModelRepository implements CustomModelRepository {
       rethrow;
     }
     return CustomModelConfig(
+      version: version,
       enabled: config.enabled,
       baseUrl: url,
       normalModel: normal,

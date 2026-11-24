@@ -2301,7 +2301,7 @@
   "blockingSyncConflictDetails": "このタスクはブロックされていたため、サーバーが完了を拒否しました。タスクの状態は復元され、蓄積された集中時間は保持されています。",
   "blockingSyncConflict": "同期の競合",
   "customAnalysisTitle": "タスク解析用のモデル",
-  "customAnalysisSubtitle": "文字起こしをタスクの下書きに変換するモデルを選択します。",
+  "customAnalysisSubtitle": "文字起こしをタスクの下書きに変換するモデルを選択します。接続済みの MCP エージェントに、この端末で使うモデルの設定を依頼することもできます。",
   "customDefault": "デフォルト · Pomodoist",
   "customEndpoint": "独自の API またはサーバー",
   "customBaseUrl": "OpenAI 互換 API のベース URL",

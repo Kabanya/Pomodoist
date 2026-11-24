@@ -164,36 +164,36 @@ void main() {
     },
   );
 
-  test(
-    'expired access prevents saving and testing a custom route but allows switching to Pomodoist',
-    () async {
-      await repository.save(config(first), apiKey: 'private-token');
-      final container = ProviderContainer(
-        overrides: [
-          customModelRepositoryProvider.overrideWithValue(repository),
-          customModelAccessProvider.overrideWith((_) async => false),
-          customModelProbeProvider.overrideWithValue(
-            ({
-              required baseUrl,
-              required model,
-              required apiKey,
-              required locale,
-              required smart,
-            }) async => fail('probe reached'),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      final controller = container.read(customModelSettingsProvider.notifier);
-      await expectLater(controller.save(config(first)), throwsStateError);
-      await expectLater(
-        controller.check(config(first), locale: 'en'),
-        throwsStateError,
-      );
-      await controller.save(config(first).withEnabled(false));
-      expect((await repository.load()).enabled, isFalse);
-    },
-  );
+  test('expired access prevents probing or changing saved settings', () async {
+    await repository.save(config(first), apiKey: 'private-token');
+    final container = ProviderContainer(
+      overrides: [
+        customModelRepositoryProvider.overrideWithValue(repository),
+        customModelAccessProvider.overrideWith((_) async => false),
+        customModelProbeProvider.overrideWithValue(
+          ({
+            required baseUrl,
+            required model,
+            required apiKey,
+            required locale,
+            required smart,
+          }) async => fail('probe reached'),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(customModelSettingsProvider.notifier);
+    await expectLater(controller.save(config(first)), throwsStateError);
+    await expectLater(
+      controller.check(config(first), locale: 'en'),
+      throwsStateError,
+    );
+    await expectLater(
+      controller.save(config(first).withEnabled(false)),
+      throwsStateError,
+    );
+    expect((await repository.load()).enabled, isTrue);
+  });
 
   testWidgets(
     'editing the URL clears the typed key before testing the newly selected server',

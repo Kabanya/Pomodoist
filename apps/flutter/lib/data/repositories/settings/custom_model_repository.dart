@@ -5,5 +5,9 @@ abstract interface class CustomModelRepository {
   Future<String> apiKeyFor(String baseUrl);
 
   /// An omitted key retains the credential only when the base URL is unchanged.
-  Future<CustomModelConfig> save(CustomModelConfig config, {String? apiKey});
+  Future<CustomModelConfig> save(
+    CustomModelConfig config, {
+    String? apiKey,
+    String? expectedVersion,
+  });
 }

@@ -1690,7 +1690,7 @@
   "blockingSyncConflictDetails": "El servidor rechazó la finalización porque esta tarea estaba bloqueada. Se ha restaurado su estado y se ha conservado el tiempo de concentración acumulado.",
   "blockingSyncConflict": "Conflicto de sincronización",
   "customAnalysisTitle": "Modelo para analizar tareas",
-  "customAnalysisSubtitle": "Elige el modelo que convierte la transcripción en borradores de tareas.",
+  "customAnalysisSubtitle": "Elige el modelo que convierte la transcripción en borradores de tareas. También puedes pedirle a un agente MCP conectado que configure tu modelo en este dispositivo.",
   "customDefault": "Por defecto · Pomodoist",
   "customEndpoint": "API o servidor propio",
   "customBaseUrl": "URL base de la API compatible con OpenAI",

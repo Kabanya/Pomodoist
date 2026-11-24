@@ -20,6 +20,25 @@ const customTheme = z.object({ light: z.record(z.string().max(64), hex).optional
 }).strict();
 const navigation = z.object({ style: z.enum(['soft', 'labels']), destinations: z.array(z.enum(['today', 'upcoming', 'focus', 'inbox', 'projects', 'browse', 'search', 'calendar', 'timeline', 'kanban', 'priorityMatrix', 'reports', 'habits', 'settings'])).max(5).refine(items => new Set(items).size === items.length) }).strict();
 const appearanceValue = z.union([z.string().max(128), z.number().finite(), z.boolean(), customTheme, navigation]);
+const modelId = z.string().trim().min(1).max(256).regex(/^[^\x00-\x1f\x7f]+$/);
+const modelEndpoint = z.string().trim().max(2048).refine(value => {
+  if (/[\s\\?#]/.test(value)) return false;
+  const match = /^https?:\/\/([^/]+)/i.exec(value);
+  if (!match || /[@%<>"^|{}`]/.test(match[1])) return false;
+  try {
+    const url = new URL(value);
+    if (url.port === '0' || match[1].endsWith(':')) return false;
+    const host = match[1].replace(/:\d+$/, '').toLowerCase();
+    return url.protocol === 'https:' || host === 'localhost' ||
+      (host.startsWith('[') && url.hostname === '[::1]') ||
+      (host === url.hostname && /^127\.\d+\.\d+\.\d+$/.test(host));
+  } catch { return false; }
+}, 'Use HTTPS or loopback HTTP, without credentials, query or fragment.');
+const customModelValue = z.discriminatedUnion('enabled', [
+  z.object({ enabled: z.literal(true), baseUrl: modelEndpoint, normalModel: modelId,
+    smartModel: modelId.optional(), apiKey: z.string().max(4096).regex(/^[^\x00-\x1f\x7f]*$/).optional() }).strict(),
+  z.object({ enabled: z.literal(false) }).strict(),
+]);
 const writeBase = { request_id: uuid, device_id: uuid, expected_version: version };
 const outputSchema = outputEnvelope(z.record(z.string(), z.unknown()));
 
@@ -46,5 +65,8 @@ export function registerAppSettingsTools(server: McpServer, auth: PomodoistMcpAu
   register('get_app_settings', z.object({ device_id: uuid }).strict(), true, 'Request a fresh settings snapshot from this online device. Includes values, versions and capabilities; pending returns request_id for status polling.', args => request({ ...args, request_id: crypto.randomUUID(), operation: 'read' }, 15000));
   register('set_app_shortcut', z.object({ ...writeBase, value: shortcutValue }).strict(), false, 'Set one shortcut on the selected online device. Read settings first; expected_version is the shortcuts version. binding:null resets. Internal bindings use physicalKeyId; globalQuickAdd uses the current OS native keyCode shown in the snapshot. Reuse request_id and identical arguments after timeouts; never blindly retry uncertain outcomes.', args => request({ ...args, operation: 'shortcut', setting: 'shortcuts' }, 1000));
   register('set_app_appearance', z.object({ ...writeBase, setting: z.enum(appearanceSettings), value: appearanceValue }).strict(), false, 'Set one appearance group using its fresh expected_version. customTheme accepts partial light/dark role colors, backgrounds, or a public HTTPS image_url with image_palette/image_zone. Settings stay local to this device. Reuse request_id and identical arguments after timeouts; never blindly retry uncertain outcomes.', args => request({ ...args, operation: 'appearance' }, 1000));
+  register('set_app_custom_model', z.object({ ...writeBase, value: customModelValue }).strict(), false,
+    'Configure the OpenAI-compatible model that turns voice transcripts into task drafts on one online device. Read get_app_settings first and use versions.customModel. Requires paid custom model access. Provide baseUrl, normalModel, optional smartModel and write-only apiKey. Omitting the key keeps it only at the same endpoint. Set enabled:false to return to Pomodoist. Poll the receipt for confirmation.',
+    args => request({ ...args, operation: 'customModel', setting: 'customModel' }, 1000));
   register('get_app_settings_request', z.object({ request_id: uuid }).strict(), true, 'Read a settings request receipt. expired means it was not claimed; uncertain means it may have applied: read fresh device settings before deciding.', async args => toolSuccess(await call({ ...args, action: 'status' })));
 }

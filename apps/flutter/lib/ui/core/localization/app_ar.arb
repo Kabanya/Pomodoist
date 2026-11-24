@@ -1690,7 +1690,7 @@
   "blockingSyncConflictDetails": "رفض الخادم إكمال المهمة لأنها كانت محظورة. تمت استعادة حالتها مع الاحتفاظ بوقت التركيز المتراكم.",
   "blockingSyncConflict": "تعارض في المزامنة",
   "customAnalysisTitle": "نموذج تحليل المهام",
-  "customAnalysisSubtitle": "اختر النموذج الذي يحوّل النص المُفرّغ إلى مسودات مهام.",
+  "customAnalysisSubtitle": "اختر النموذج الذي يحوّل النص المُفرّغ إلى مسودات مهام. يمكنك أيضًا أن تطلب من وكيل MCP متصل إعداد نموذجك على هذا الجهاز.",
   "customDefault": "الافتراضي · Pomodoist",
   "customEndpoint": "واجهة API أو خادم خاص",
   "customBaseUrl": "العنوان الأساسي لواجهة API المتوافقة مع OpenAI",

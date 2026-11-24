@@ -12,7 +12,7 @@ void main() {
         instanceId: 'instance',
         name: 'Mac',
         platform: 'macOS',
-        capabilities: {},
+        capabilities: () => {},
         isCurrent: () => true,
         invoke: (body) async {
           events.add(body['action'] as String);
@@ -59,7 +59,7 @@ void main() {
         instanceId: 'i',
         name: 'Web',
         platform: 'web',
-        capabilities: {},
+        capabilities: () => {},
         isCurrent: () => true,
         invoke: (b) async {
           actions.add(b['action'] as String);
@@ -85,7 +85,7 @@ void main() {
         instanceId: 'i',
         name: 'Web',
         platform: 'web',
-        capabilities: {},
+        capabilities: () => {},
         isCurrent: () => true,
         invoke: (b) async {
           if (b['action'] == 'register') return {'registered': true};
@@ -126,7 +126,7 @@ void main() {
         instanceId: 'i',
         name: 'Web',
         platform: 'web',
-        capabilities: {},
+        capabilities: () => {},
         isCurrent: () => current,
         invoke: (b) async {
           if (b['action'] == 'register') return {'registered': true};
@@ -163,7 +163,7 @@ void main() {
         instanceId: 'new',
         name: 'Web',
         platform: 'web',
-        capabilities: {},
+        capabilities: () => {},
         isCurrent: () => true,
         invoke: (b) async =>
             b['action'] == 'register' ? {'registered': true} : {'commands': []},
@@ -208,7 +208,7 @@ void main() {
         instanceId: 'i',
         name: 'Mac',
         platform: 'macOS',
-        capabilities: {},
+        capabilities: () => {},
         isCurrent: () => true,
         invoke: (body) async {
           if (body['action'] == 'register') return {'registered': true};

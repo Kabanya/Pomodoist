@@ -18,7 +18,7 @@ class AgentAppSettingsRuntime {
   });
 
   final String deviceId, instanceId, name, platform;
-  final Map<String, dynamic> capabilities;
+  final Map<String, dynamic> Function() capabilities;
   final bool Function() isCurrent;
   final Future<Map<String, dynamic>> Function(Map<String, dynamic>) invoke;
   final Future<Map<String, dynamic>> Function() snapshot;
@@ -63,7 +63,7 @@ class AgentAppSettingsRuntime {
         ..._body('register'),
         'name': name,
         'platform': platform,
-        'capabilities': capabilities,
+        'capabilities': capabilities(),
       });
       if (!_current || registration['registered'] != true) {
         _registered = false;

@@ -5316,7 +5316,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'Choisissez le modèle qui transforme la transcription en brouillons de tâches.';
+      'Choisissez le modèle qui transforme la transcription en brouillons de tâches. Vous pouvez aussi demander à un agent MCP connecté de configurer votre modèle sur cet appareil.';
 
   @override
   String get customDefault => 'Par défaut · Pomodoist';

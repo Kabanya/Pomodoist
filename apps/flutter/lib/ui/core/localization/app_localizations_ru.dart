@@ -5303,7 +5303,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'Выберите модель, которая превратит расшифровку в черновики задач.';
+      'Выберите модель, которая превратит расшифровку в черновики задач. Настроить свою модель на этом устройстве можно и через подключённого MCP-агента.';
 
   @override
   String get customDefault => 'По умолчанию · Pomodoist';

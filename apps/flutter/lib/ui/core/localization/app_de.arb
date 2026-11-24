@@ -1690,7 +1690,7 @@
   "blockingSyncConflictDetails": "Der Server hat den Abschluss abgelehnt, weil diese Aufgabe blockiert war. Ihr Status wurde wiederhergestellt; die gesammelte Fokuszeit bleibt erhalten.",
   "blockingSyncConflict": "Synchronisierungskonflikt",
   "customAnalysisTitle": "Modell für die Aufgabenanalyse",
-  "customAnalysisSubtitle": "Wähle das Modell, das das Transkript in Aufgabenentwürfe umwandelt.",
+  "customAnalysisSubtitle": "Wähle das Modell, das das Transkript in Aufgabenentwürfe umwandelt. Du kannst auch einen verbundenen MCP-Agenten bitten, dein Modell auf diesem Gerät einzurichten.",
   "customDefault": "Standard · Pomodoist",
   "customEndpoint": "Eigene API oder eigener Server",
   "customBaseUrl": "Basis-URL der OpenAI-kompatiblen API",

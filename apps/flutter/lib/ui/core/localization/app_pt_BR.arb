@@ -539,7 +539,7 @@
   "taskStatusUrgent": "Urgente",
   "settingsVoiceTranscriptionCloudRequiresSignIn": "Para usar a transcrição na nuvem, entre em uma conta com um plano Pro ativo.",
   "customAnalysisTitle": "Modelo para análise de tarefas",
-  "customAnalysisSubtitle": "Escolha o modelo que transforma a transcrição em rascunhos de tarefas.",
+  "customAnalysisSubtitle": "Escolha o modelo que transforma a transcrição em rascunhos de tarefas. Você também pode pedir a um agente MCP conectado que configure seu modelo neste dispositivo.",
   "customDefault": "Padrão · Pomodoist",
   "customEndpoint": "API ou servidor próprio",
   "customBaseUrl": "URL base da API compatível com OpenAI",

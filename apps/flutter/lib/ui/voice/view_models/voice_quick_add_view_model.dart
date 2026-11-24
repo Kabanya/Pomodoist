@@ -391,8 +391,11 @@ class VoiceQuickAddViewModel extends Notifier<VoiceQuickAddState> {
         drafts = tasks.isEmpty ? fallbackQuickAddTasks(transcript) : tasks;
       } else {
         final key = await ref.read(voiceApiKeyProvider)(target.baseUrl);
-        if (!ref.mounted ||
-            accountGeneration != _accountGeneration ||
+        if (!ref.mounted) return;
+        if (!ref.read(verifiedCustomModelAccessProvider)) {
+          throw const _VoiceAccessUnavailable();
+        }
+        if (accountGeneration != _accountGeneration ||
             target != ref.read(voiceTaskTargetProvider(smart)).asData?.value) {
           throw const _VoiceRouteChanged();
         }

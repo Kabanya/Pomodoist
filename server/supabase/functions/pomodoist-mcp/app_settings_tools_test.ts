@@ -44,7 +44,7 @@ Deno.test('shortcut group retains reset and global enabled shape', async () => {
 Deno.test('OpenClaw names retain identical UUID settings gateway without task mutation wrapper', async () => {
   const tools: string[] = [];
   registerAppSettingsTools({ registerTool(name: string) { tools.push(name); } } as unknown as McpServer, { subject: uuid, userId: uuid, sessionId: uuid, clientId: uuid }, { config: {} as any }, 'openclaw_');
-  assertEquals(tools, ['openclaw_list_app_devices','openclaw_get_app_settings','openclaw_set_app_shortcut','openclaw_set_app_appearance','openclaw_get_app_settings_request']);
+  assertEquals(tools, ['openclaw_list_app_devices','openclaw_get_app_settings','openclaw_set_app_shortcut','openclaw_set_app_appearance','openclaw_set_app_custom_model','openclaw_get_app_settings_request']);
 });
 
 Deno.test('appearance schema accepts every adapter group including bottom navigation', async () => {
@@ -75,4 +75,18 @@ Deno.test('device listing preserves explicit online and offline availability', a
   const result = await invoke('list_app_devices', {});
   assertEquals(result.structuredContent.data.devices, devices);
   assertEquals(calls[0].p_command, { action: 'list' });
+});
+
+Deno.test('custom model uses a paid device request and validates both modes', async () => {
+  const { tools, calls, invoke } = fixture();
+  const args = { request_id: uuid, device_id: uuid, expected_version: 'v1' };
+  const value = { enabled: true, baseUrl: 'http://localhost:11434/v1', normalModel: 'llama', apiKey: 'fixture' };
+  await invoke('set_app_custom_model', { ...args, value });
+  assertEquals(calls[0].p_command, { ...args, value, operation: 'customModel', setting: 'customModel', action: 'request' });
+  const schema = tools.get('set_app_custom_model')!.schema;
+  for (const baseUrl of ['http://external.test', 'https://user@provider.test', 'https://provider.test?token=abc', 'http://127.1']) {
+    assert(!schema.safeParse({ ...args, value: { ...value, baseUrl } }).success);
+  }
+  assert(schema.safeParse({ ...args, value: { enabled: false } }).success);
+  assert(!schema.safeParse({ ...args, value: { enabled: false, apiKey: 'x' } }).success);
 });

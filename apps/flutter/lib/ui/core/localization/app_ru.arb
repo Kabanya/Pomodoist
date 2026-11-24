@@ -1690,7 +1690,7 @@
   "focusExtendDuration": "+5 мин",
   "focusFinish": "Завершить",
   "customAnalysisTitle": "Модель для разбора задач",
-  "customAnalysisSubtitle": "Выберите модель, которая превратит расшифровку в черновики задач.",
+  "customAnalysisSubtitle": "Выберите модель, которая превратит расшифровку в черновики задач. Настроить свою модель на этом устройстве можно и через подключённого MCP-агента.",
   "customDefault": "По умолчанию · Pomodoist",
   "customEndpoint": "Свой API или сервер",
   "customBaseUrl": "Базовый URL OpenAI-совместимого API",

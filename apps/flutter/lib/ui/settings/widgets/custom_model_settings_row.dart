@@ -48,6 +48,22 @@ class _EditorState extends ConsumerState<_Editor> {
   bool invalidModel = false;
   Map<String, ModelCheck> checks = {};
   String? feedback;
+  String? savedVersion;
+
+  @override
+  void didUpdateWidget(_Editor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.config.version == widget.config.version) return;
+    custom = widget.config.enabled;
+    url.text = widget.config.baseUrl;
+    normal.text = widget.config.normalModel;
+    smart.text = widget.config.smartModel;
+    secret.clear();
+    keyEdited = false;
+    invalidUrl = invalidModel = false;
+    checks = {};
+    if (widget.config.version != savedVersion) feedback = null;
+  }
 
   @override
   void dispose() {
@@ -79,7 +95,10 @@ class _EditorState extends ConsumerState<_Editor> {
     try {
       await ref
           .read(customModelSettingsProvider.notifier)
-          .save(widget.config.withEnabled(false));
+          .save(
+            widget.config.withEnabled(false),
+            expectedVersion: widget.config.version,
+          );
       if (mounted) {
         setState(() {
           custom = false;
@@ -115,6 +134,7 @@ class _EditorState extends ConsumerState<_Editor> {
       smartModel: smart.text.trim(),
     );
     final key = keyEdited ? secret.text : null;
+    final version = widget.config.version;
     setState(() => busy = true);
     try {
       if (test) {
@@ -123,11 +143,18 @@ class _EditorState extends ConsumerState<_Editor> {
           apiKey: key,
           locale: Localizations.localeOf(context).toLanguageTag(),
         );
-        if (mounted) setState(() => checks = result);
+        if (mounted && widget.config.version == version) {
+          setState(() => checks = result);
+        }
       } else {
-        await controller.save(draft, apiKey: key);
+        final saved = await controller.save(
+          draft,
+          apiKey: key,
+          expectedVersion: version,
+        );
         if (mounted) {
           setState(() {
+            savedVersion = saved.version;
             url.text = base!;
             secret.clear();
             keyEdited = false;
@@ -151,8 +178,6 @@ class _EditorState extends ConsumerState<_Editor> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final access = ref.watch(customModelAccessProvider);
-    final allowed = access is AsyncData<bool> && access.value;
     final helperStyle = Theme.of(context).textTheme.bodySmall;
     Widget field(
       TextEditingController c,
@@ -164,7 +189,7 @@ class _EditorState extends ConsumerState<_Editor> {
       padding: const EdgeInsets.only(top: 12),
       child: TextField(
         controller: c,
-        enabled: !busy && allowed,
+        enabled: !busy,
         obscureText: password,
         autocorrect: false,
         enableSuggestions: false,
@@ -178,7 +203,7 @@ class _EditorState extends ConsumerState<_Editor> {
               ? IconButton(
                   tooltip: l.customRemoveKey,
                   icon: const Icon(LucideIcons.x),
-                  onPressed: busy || !allowed
+                  onPressed: busy
                       ? null
                       : () {
                           keyEdited = true;
@@ -222,7 +247,7 @@ class _EditorState extends ConsumerState<_Editor> {
             ChoiceChip(
               label: Text(l.customEndpoint),
               selected: custom,
-              onSelected: busy || !allowed
+              onSelected: busy
                   ? null
                   : (_) => setState(() {
                       custom = true;
@@ -231,19 +256,7 @@ class _EditorState extends ConsumerState<_Editor> {
             ),
           ],
         ),
-        if (access.isLoading)
-          const LinearProgressIndicator()
-        else if (access.hasError)
-          TextButton(
-            onPressed: () => ref.invalidate(customModelAccessProvider),
-            child: Text(l.commonRetry),
-          )
-        else if (!allowed)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(l.customAccessInfo, style: helperStyle),
-          ),
-        if (custom && allowed) ...[
+        if (custom) ...[
           field(
             url,
             l.customBaseUrl,

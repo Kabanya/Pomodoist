@@ -9096,7 +9096,7 @@ abstract class AppLocalizations {
   /// No description provided for @customAnalysisSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose which model turns the transcript into task drafts.'**
+  /// **'Choose which model turns the transcript into task drafts. You can also ask a connected MCP agent to set up your model on this device.'**
   String get customAnalysisSubtitle;
 
   /// No description provided for @customDefault.

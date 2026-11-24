@@ -338,8 +338,11 @@ class _Settings implements CustomModelRepository {
   }
 
   @override
-  Future<CustomModelConfig> save(CustomModelConfig config, {String? apiKey}) =>
-      throw UnimplementedError();
+  Future<CustomModelConfig> save(
+    CustomModelConfig config, {
+    String? apiKey,
+    String? expectedVersion,
+  }) => throw UnimplementedError();
 }
 
 class _Recognizer extends RecordedVoiceRecognizer {

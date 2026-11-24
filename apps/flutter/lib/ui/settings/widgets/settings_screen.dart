@@ -39,6 +39,7 @@ import 'package:pomodoist/ui/settings/widgets/auth_surfaces.dart';
 import 'package:pomodoist/ui/settings/widgets/account_delete_dialog.dart';
 import 'package:pomodoist/ui/settings/widgets/connected_agents_section.dart';
 import 'package:pomodoist/ui/settings/view_models/connected_agents_view_model.dart';
+import 'package:pomodoist/ui/settings/view_models/custom_model_settings.dart';
 import 'package:pomodoist/ui/settings/view_models/settings_view_model.dart';
 import 'package:pomodoist/ui/settings/view_models/auth_view_model.dart';
 import 'package:pomodoist/ui/settings/widgets/task_list_settings.dart';
@@ -326,7 +327,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             const DateFormatSettings(),
             if (settings.voiceModeSupported)
               const VoiceTranscriptionSettingsCard(),
-            const CustomModelSettingsRow(),
+            if (ref.watch(verifiedCustomModelAccessProvider))
+              const CustomModelSettingsRow(),
             SettingsRow(
               title: l10n.settingsReturnRemindersTitle,
               subtitle: l10n.settingsReturnRemindersSubtitle,

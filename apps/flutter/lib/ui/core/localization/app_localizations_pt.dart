@@ -5318,7 +5318,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'Escolha o modelo que transforma a transcrição em rascunhos de tarefas.';
+      'Escolha o modelo que transforma a transcrição em rascunhos de tarefas. Também pode pedir a um agente MCP ligado que configure o seu modelo neste dispositivo.';
 
   @override
   String get customDefault => 'Predefinido · Pomodoist';
@@ -7062,7 +7062,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get customAnalysisSubtitle =>
-      'Escolha o modelo que transforma a transcrição em rascunhos de tarefas.';
+      'Escolha o modelo que transforma a transcrição em rascunhos de tarefas. Você também pode pedir a um agente MCP conectado que configure seu modelo neste dispositivo.';
 
   @override
   String get customDefault => 'Padrão · Pomodoist';

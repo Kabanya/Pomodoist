@@ -10,7 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/ui/core/widgets/pomodoist_app.dart';
+import 'dart:async';
 import 'package:pomodoist/config/account_providers.dart';
+import 'package:pomodoist/ui/settings/view_models/custom_model_settings.dart';
+import 'package:pomodoist/ui/settings/widgets/custom_model_settings_row.dart';
 import 'package:pomodoist/ui/core/view_models/app_theme_mode_view_model.dart';
 import 'package:pomodoist/config/providers.dart';
 import 'package:pomodoist/config/productivity_dependencies.dart';
@@ -772,6 +775,58 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString(taskTimeDisplayModePreferenceKey), 'startOnly');
   });
+
+  testWidgets(
+    'General only inserts the custom model row after a verified grant',
+    (tester) async {
+      var entitlement = Completer<bool>();
+      final container = ProviderContainer(
+        retry: (_, _) => null,
+        overrides: [
+          pomodoistDeviceIdProvider.overrideWith((_) async => 'device-1'),
+          notificationSchedulerProvider.overrideWithValue(
+            _FakeNotificationScheduler(),
+          ),
+          googleCalendarConnectionProvider.overrideWith(
+            (_) => Stream.value(null),
+          ),
+          customModelAccessProvider.overrideWith((_) => entitlement.future),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            builder: testAppBuilder,
+            home: Scaffold(
+              body: SettingsScreen(
+                location: settingsLocation(SettingsSection.general),
+              ),
+            ),
+          ),
+        ),
+      );
+      final row = find.byType(CustomModelSettingsRow);
+      await tester.pump();
+      expect(row, findsNothing);
+      entitlement.complete(false);
+      await tester.pumpAndSettle();
+      expect(row, findsNothing);
+      entitlement = Completer<bool>()..complete(true);
+      container.invalidate(customModelAccessProvider);
+      await tester.pumpAndSettle();
+      expect(row, findsOneWidget);
+      entitlement = Completer<bool>();
+      container.invalidate(customModelAccessProvider);
+      await tester.pumpAndSettle();
+      expect(row, findsNothing);
+      entitlement.completeError(StateError('Offline'));
+      await tester.pump();
+      expect(row, findsNothing);
+    },
+  );
 
   testWidgets('SettingsScreen shows return reminders enabled by default', (
     tester,

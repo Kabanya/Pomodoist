@@ -110,3 +110,9 @@ final customModelAccessProvider = FutureProvider<bool>((ref) async {
   ref.onDispose(timer.cancel);
   return true;
 });
+
+/// Do not reuse the previous account's value while its grant is reloading.
+final verifiedCustomModelAccessProvider = Provider<bool>((ref) {
+  final access = ref.watch(customModelAccessProvider);
+  return !access.isLoading && access.asData?.value == true;
+});

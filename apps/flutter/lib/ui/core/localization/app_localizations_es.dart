@@ -5307,7 +5307,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get customAnalysisSubtitle =>
-      'Elige el modelo que convierte la transcripción en borradores de tareas.';
+      'Elige el modelo que convierte la transcripción en borradores de tareas. También puedes pedirle a un agente MCP conectado que configure tu modelo en este dispositivo.';
 
   @override
   String get customDefault => 'Por defecto · Pomodoist';

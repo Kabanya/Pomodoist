@@ -16,6 +16,7 @@ test('read mode uses OAuth and an explicit read allowlist', () => {
   for (const name of ['list_app_devices', 'get_app_settings', 'get_app_settings_request']) assert.ok(config.toolFilter.include.includes(`openclaw_${name}`));
   assert.ok(!config.toolFilter.include.includes('openclaw_set_app_appearance'));
   assert.ok(!config.toolFilter.include.includes('openclaw_set_app_shortcut'));
+  assert.ok(!config.toolFilter.include.includes('openclaw_set_app_custom_model'));
   assert.ok(!config.toolFilter.include.includes('openclaw_create_task'));
   assert.ok(!JSON.stringify(config).includes('Authorization'));
 });
@@ -25,6 +26,7 @@ test('write mode permits guarded tools only, never globs or legacy mutations', (
   assert.ok(config.toolFilter.include.includes('openclaw_focus'));
   assert.ok(config.toolFilter.include.includes('openclaw_set_app_appearance'));
   assert.ok(config.toolFilter.include.includes('openclaw_set_app_shortcut'));
+  assert.ok(config.toolFilter.include.includes('openclaw_set_app_custom_model'));
   assert.ok(!config.toolFilter.include.includes('set_app_appearance'));
   assert.ok(config.toolFilter.include.includes('openclaw_set_task_details'));
   assert.ok(!config.toolFilter.include.some(x => x.includes('*')));

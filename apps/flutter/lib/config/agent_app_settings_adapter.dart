@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoist/config/focus_dependencies.dart';
+import 'package:pomodoist/config/custom_model_access.dart';
+import 'package:pomodoist/config/custom_model_settings_dependencies.dart';
+import 'package:pomodoist/domain/models/settings/custom_model_config.dart';
 import 'package:pomodoist/config/keyboard_shortcuts.dart';
 import 'package:pomodoist/config/task_preferences_dependencies.dart';
 import 'package:pomodoist/data/services/platform/global_shortcut_codec.dart';
@@ -56,8 +59,14 @@ class AgentAppSettingsAdapter {
   static Map<String, dynamic> capabilitiesFor(
     TargetPlatform platform, {
     required bool isWeb,
+    bool customModel = false,
   }) => {
-    'operations': ['read', 'shortcut', 'appearance'],
+    'operations': [
+      'read',
+      'shortcut',
+      'appearance',
+      if (customModel) 'customModel',
+    ],
     'shortcuts': {
       'commands': [
         for (final command in AppShortcutCommand.values) command.name,
@@ -256,11 +265,12 @@ class AgentAppSettingsAdapter {
   String _version(Object? value) =>
       sha256.convert(utf8.encode(jsonEncode(_canonical(value)))).toString();
   Map<String, dynamic> _error(Object error) =>
-      error is ThemeSettingsConflictException
+      error is ThemeSettingsConflictException ||
+          error is CustomModelVersionConflict
       ? {
           'status': 'error',
           'code': 'version_conflict',
-          'message': 'Theme settings changed since they were read',
+          'message': 'Settings changed since they were read',
         }
       : error is _SettingsError
       ? {'status': 'error', 'code': error.code, 'message': error.message}
@@ -274,7 +284,9 @@ class AgentAppSettingsAdapter {
           'message': 'Could not apply local settings',
         };
 
-  Future<Map<String, dynamic>> snapshot() async {
+  Future<Map<String, dynamic>> snapshot({
+    bool includeCustomModel = true,
+  }) async {
     try {
       // Hold auto-dispose controllers through their asynchronous native reads.
       final shortcuts = ref.listen(
@@ -302,15 +314,25 @@ class AgentAppSettingsAdapter {
             );
           }
         }
+        final model = includeCustomModel ? await _eligibleModel() : null;
+        _checkCurrent();
         final values = _values(savedTheme: savedTheme);
         return {
           'status': 'applied',
-          'values': values,
+          'values': {
+            ...values,
+            if (model != null) 'customModel': model.publicSettings,
+          },
           'versions': {
             for (final entry in values.entries)
               entry.key: _version(entry.value),
+            if (model != null) 'customModel': model.version,
           },
-          'capabilities': capabilitiesFor(_platform, isWeb: kIsWeb),
+          'capabilities': capabilitiesFor(
+            _platform,
+            isWeb: kIsWeb,
+            customModel: model != null,
+          ),
         };
       } finally {
         shortcuts.close();
@@ -337,6 +359,75 @@ class AgentAppSettingsAdapter {
     }
   }
 
+  Future<CustomModelConfig?> _eligibleModel() async {
+    try {
+      if (!await ref.read(customModelAccessProvider.future)) return null;
+      _checkCurrent();
+      final model = await ref.read(customModelConfigProvider.future);
+      _checkCurrent();
+      return ref.read(verifiedCustomModelAccessProvider) ? model : null;
+    } catch (_) {
+      // An unavailable optional model must not block other settings.
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> _setCustomModel(
+    Map<String, dynamic> command,
+  ) async {
+    final current = await _eligibleModel();
+    _checkCurrent();
+    if (current == null) {
+      throw const _SettingsError(
+        'custom_model_unavailable',
+        'Custom model access is unavailable',
+      );
+    }
+    if (command['expected_version'] != current.version) {
+      throw const CustomModelVersionConflict();
+    }
+    final value = _map(command['value']);
+    final enabled = value['enabled'];
+    if (enabled is! bool) throw const FormatException('Missing enabled');
+    _keys(
+      value,
+      enabled
+          ? {'enabled', 'baseUrl', 'normalModel', 'smartModel', 'apiKey'}
+          : {'enabled'},
+    );
+    final CustomModelConfig next;
+    if (enabled) {
+      if (value['baseUrl'] is! String ||
+          value['normalModel'] is! String ||
+          (value.containsKey('smartModel') && value['smartModel'] is! String) ||
+          (value.containsKey('apiKey') && value['apiKey'] is! String)) {
+        throw const FormatException('Invalid model settings');
+      }
+      next = CustomModelConfig(
+        enabled: true,
+        baseUrl: value['baseUrl'] as String,
+        normalModel: value['normalModel'] as String,
+        smartModel: value['smartModel'] as String? ?? '',
+      );
+    } else {
+      next = current.withEnabled(false);
+    }
+    final saved = await ref
+        .read(customModelConfigProvider.notifier)
+        .save(
+          next,
+          apiKey: value['apiKey'] as String?,
+          expectedVersion: current.version,
+        );
+    _checkCurrent();
+    return {
+      'status': 'applied',
+      'setting': 'customModel',
+      'value': saved.publicSettings,
+      'version': saved.version,
+    };
+  }
+
   Future<Map<String, dynamic>> apply(Map<String, dynamic> command) async {
     final shortcuts = ref.listen(keyboardShortcutsViewModelProvider, (_, _) {});
     final status = _mac ? ref.listen(statusItemStyleProvider, (_, _) {}) : null;
@@ -349,7 +440,11 @@ class AgentAppSettingsAdapter {
         );
       }
       _checkCurrent();
-      final before = await snapshot();
+      if (command['operation'] == 'customModel' &&
+          command['setting'] == 'customModel') {
+        return await _setCustomModel(command);
+      }
+      final before = await snapshot(includeCustomModel: false);
       if (before['status'] != 'applied') return before;
       _checkCurrent();
       final setting = command['setting'];

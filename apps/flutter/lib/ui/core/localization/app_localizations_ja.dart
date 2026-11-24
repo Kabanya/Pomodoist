@@ -5113,7 +5113,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get customAnalysisTitle => 'タスク解析用のモデル';
 
   @override
-  String get customAnalysisSubtitle => '文字起こしをタスクの下書きに変換するモデルを選択します。';
+  String get customAnalysisSubtitle =>
+      '文字起こしをタスクの下書きに変換するモデルを選択します。接続済みの MCP エージェントに、この端末で使うモデルの設定を依頼することもできます。';
 
   @override
   String get customDefault => 'デフォルト · Pomodoist';

@@ -6,6 +6,10 @@ import 'package:pomodoist/data/services/platform/global_shortcut_codec.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pomodoist/config/app_icon_dependencies.dart';
+import 'package:pomodoist/config/custom_model_access.dart';
+import 'package:pomodoist/config/custom_model_settings_dependencies.dart';
+import 'package:pomodoist/config/voice_task_route.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pomodoist/config/status_item_style_dependencies.dart';
 import 'package:pomodoist/data/repositories/settings/status_item_style_repository.dart';
 import 'package:pomodoist/domain/models/settings/status_item_style.dart';
@@ -81,6 +85,7 @@ class StatusRepository implements StatusItemStyleRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  var modelAccess = false;
   ProviderContainer create([TargetPlatform platform = TargetPlatform.android]) {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
@@ -93,6 +98,7 @@ void main() {
         );
     final container = ProviderContainer(
       overrides: [
+        customModelAccessProvider.overrideWith((_) async => modelAccess),
         shortcutTargetPlatformProvider.overrideWithValue(platform),
         appIconRepositoryProvider.overrideWithValue(IconRepository()),
         statusItemStyleRepositoryProvider.overrideWithValue(StatusRepository()),
@@ -101,6 +107,86 @@ void main() {
     addTearDown(container.dispose);
     return container;
   }
+
+  test(
+    'model writes update dictation, keep keys out of receipts and require a current paid grant and version',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final c = create();
+      final adapter = c.read(adapterProvider);
+      const value = {
+        'enabled': true,
+        'baseUrl': 'https://model.example/v1',
+        'normalModel': 'fast',
+        'smartModel': 'deep',
+        'apiKey': 'fixture-key',
+      };
+      Future<Map<String, dynamic>> write(
+        String version,
+        Map<String, Object> value,
+      ) => adapter.apply({
+        'setting': 'customModel',
+        'operation': 'customModel',
+        'expected_version': version,
+        'value': value,
+      });
+      final free = await adapter.snapshot();
+      expect((free['values'] as Map).containsKey('customModel'), isFalse);
+      expect(
+        (await write('default', value))['code'],
+        'custom_model_unavailable',
+      );
+      modelAccess = true;
+      c.invalidate(customModelAccessProvider);
+      final before = await adapter.snapshot();
+      final version = before['versions']['customModel'] as String;
+      final saved = await write(version, value);
+      expect(saved['status'], 'applied');
+      expect(saved['value']['hasKey'], isTrue);
+      expect(jsonEncode(saved), isNot(contains('fixture-key')));
+      expect(
+        jsonEncode(await adapter.snapshot()),
+        isNot(contains('fixture-key')),
+      );
+      expect(await c.read(voiceTaskTargetProvider(true).future), (
+        baseUrl: 'https://model.example/v1',
+        model: 'deep',
+      ));
+      expect(
+        await c
+            .read(customModelRepositoryProvider)
+            .apiKeyFor('https://model.example/v1'),
+        'fixture-key',
+      );
+      expect(
+        (await write(version, {'enabled': false}))['code'],
+        'version_conflict',
+      );
+      modelAccess = false;
+      c.invalidate(customModelAccessProvider);
+      expect(
+        await c.read(voiceTaskTargetProvider(true).future),
+        managedVoiceTarget,
+      );
+      expect(
+        (await write(saved['version'] as String, {'enabled': false}))['code'],
+        'custom_model_unavailable',
+      );
+      expect((await adapter.snapshot())['versions']['customModel'], isNull);
+      modelAccess = true;
+      c.invalidate(customModelAccessProvider);
+      expect(
+        (await write(saved['version'] as String, {
+          'enabled': false,
+        }))['value']['enabled'],
+        isFalse,
+      );
+      expect(
+        await c.read(voiceTaskTargetProvider(false).future),
+        managedVoiceTarget,
+      );
+    },
+  );
 
   test('snapshots hydrate and versions follow writes', () async {
     SharedPreferences.setMockInitialValues({'tasks.listStyle': 'classic'});

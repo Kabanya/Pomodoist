@@ -1690,7 +1690,7 @@
   "blockingSyncConflictDetails": "Le serveur a refusé la finalisation car cette tâche était bloquée. Son état a été rétabli et le temps de concentration cumulé est conservé.",
   "blockingSyncConflict": "Conflit de synchronisation",
   "customAnalysisTitle": "Modèle d’analyse des tâches",
-  "customAnalysisSubtitle": "Choisissez le modèle qui transforme la transcription en brouillons de tâches.",
+  "customAnalysisSubtitle": "Choisissez le modèle qui transforme la transcription en brouillons de tâches. Vous pouvez aussi demander à un agent MCP connecté de configurer votre modèle sur cet appareil.",
   "customDefault": "Par défaut · Pomodoist",
   "customEndpoint": "API ou serveur personnel",
   "customBaseUrl": "URL de base de l’API compatible OpenAI",

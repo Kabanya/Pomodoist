@@ -55,6 +55,7 @@ Deno.test("registers personal tools and shared project collaboration", async () 
       "get_app_settings",
       "set_app_shortcut",
       "set_app_appearance",
+      "set_app_custom_model",
       "get_app_settings_request",
     ]);
     for (const tool of listed.tools) {

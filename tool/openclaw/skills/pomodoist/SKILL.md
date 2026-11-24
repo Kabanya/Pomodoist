@@ -124,6 +124,12 @@ availability. Select the intended online device, then call
 Internal shortcuts use `physicalKeyId`; global Quick Add uses the current OS
 native `keyCode` from its snapshot. A null binding resets the shortcut.
 
+Use `openclaw_set_app_custom_model` with the same request fields and
+`versions.customModel` to connect an OpenAI-compatible voice task model. Its
+value is `{enabled:true,baseUrl,normalModel,smartModel?,apiKey?}` or
+`{enabled:false}`. The setting is present only with a verified paid grant.
+Keep credentials out of summaries.
+
 Settings remain local to the selected running device. Custom theme image imports
 accept public HTTPS URLs; never send bytes, base64 or local file paths.
 Poll `openclaw_get_app_settings_request` after a pending response. Only a terminal
