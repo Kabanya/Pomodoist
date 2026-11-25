@@ -65,10 +65,9 @@ void main() {
   test('preloads config.js before the Flutter bootstrap', () async {
     final index = await File('web/index.html').readAsString();
 
-    expect(index.indexOf('src="config.js"'), greaterThanOrEqualTo(0));
-    expect(
-      index.indexOf('src="config.js"'),
-      lessThan(index.indexOf('src="flutter_bootstrap.js"')),
-    );
+    final config = index.indexOf('src="config.js"');
+    final bootstrap = index.indexOf('{{flutter_bootstrap_js}}');
+    expect(config, greaterThanOrEqualTo(0));
+    expect(bootstrap, greaterThan(config));
   });
 }
