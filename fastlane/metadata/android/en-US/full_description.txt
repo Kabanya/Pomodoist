@@ -1,0 +1,7 @@
+Pomodoist brings a task planner, habit tracker, and Pomodoro timer together. Organize tasks into projects, see what is due today, and review the time you spend in focus sessions.
+
+Tasks, habits, and the timer work locally without an account. Sign in to a Pomodoist account to sync supported data across devices or collaborate in shared projects.
+
+Account features connect to the hosted Pomodoist service and Supabase. Account verification opens Cloudflare Turnstile in your browser. Google and Apple sign-in and Google Calendar and Outlook integrations use those services when you choose to connect them.
+
+This edition has its own Android app ID. It can be installed alongside other Pomodoist editions. Local data is stored separately.

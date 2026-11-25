@@ -231,7 +231,7 @@
         } catch (_) {
           returnTarget = null;
         }
-        const appSchemes = ["pomodoist:", "pomodoist-stg:", "pomodoist-dev:"];
+        const appSchemes = ["pomodoist:", "pomodoist-stg:", "pomodoist-dev:", "pomodoist-fdroid:"];
         const loopbackHosts = ["127.0.0.1", "[::1]"];
         const loopbackPort = Number(returnTarget?.port || "0");
         const customProtocolTarget = returnTarget !== null &&

@@ -1,3 +1,6 @@
+/// True for the separately packaged Android F-Droid distribution.
+const isFdroidBuild = bool.fromEnvironment('POMODOIST_FDROID');
+
 /// Identity of a build flavor.
 ///
 /// Pomodoist ships three builds that must be installable side by side: the
@@ -19,28 +22,37 @@ enum AppFlavor {
   production;
 
   /// Name shown under the app icon and in window titles.
-  String get displayName => switch (this) {
-    AppFlavor.development => 'Pomodoist-Dev',
-    AppFlavor.staging => 'Pomodoist-Stg',
-    AppFlavor.production => 'Pomodoist',
-  };
+  String get displayName {
+    if (isFdroidBuild && isProduction) return 'Pomodoist F-Droid';
+    return switch (this) {
+      AppFlavor.development => 'Pomodoist-Dev',
+      AppFlavor.staging => 'Pomodoist-Stg',
+      AppFlavor.production => 'Pomodoist',
+    };
+  }
 
   /// Platform application identifier (Android `applicationId`, iOS/macOS
   /// bundle identifier, Linux and Windows application id).
   ///
   /// All three desktop platforms and the mobile platforms share this value.
-  String get applicationId => switch (this) {
-    AppFlavor.development => 'com.finchforge.pomodoist.dev',
-    AppFlavor.staging => 'com.finchforge.pomodoist.stg',
-    AppFlavor.production => 'com.finchforge.pomodoist',
-  };
+  String get applicationId {
+    if (isFdroidBuild && isProduction) return 'com.finchforge.pomodoist.fdroid';
+    return switch (this) {
+      AppFlavor.development => 'com.finchforge.pomodoist.dev',
+      AppFlavor.staging => 'com.finchforge.pomodoist.stg',
+      AppFlavor.production => 'com.finchforge.pomodoist',
+    };
+  }
 
   /// Custom URL scheme that routes deep links to this build.
-  String get urlScheme => switch (this) {
-    AppFlavor.development => 'pomodoist-dev',
-    AppFlavor.staging => 'pomodoist-stg',
-    AppFlavor.production => 'pomodoist',
-  };
+  String get urlScheme {
+    if (isFdroidBuild && isProduction) return 'pomodoist-fdroid';
+    return switch (this) {
+      AppFlavor.development => 'pomodoist-dev',
+      AppFlavor.staging => 'pomodoist-stg',
+      AppFlavor.production => 'pomodoist',
+    };
+  }
 
   /// iOS app group shared by the app, its watch app and its focus widget.
   String get appGroup => switch (this) {

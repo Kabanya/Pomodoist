@@ -117,7 +117,7 @@ function challenge(query, state = 's'.repeat(32)) {
   return { document, scripts, get, location, solve(token) { turnstileOptions.callback(token); } };
 }
 test('native CAPTCHA accepts every app flavor and returns the token to that exact scheme', () => {
-  for (const scheme of ['pomodoist', 'pomodoist-stg', 'pomodoist-dev']) {
+  for (const scheme of ['pomodoist', 'pomodoist-stg', 'pomodoist-dev', 'pomodoist-fdroid']) {
     const target = `${scheme}://captcha-callback`;
     const state = '-synthetic_state-for-native-captcha-0123456789';
     const page = challenge(`?returnTo=${encodeURIComponent(target)}&lang=en`, state);
@@ -132,7 +132,7 @@ test('native CAPTCHA accepts every app flavor and returns the token to that exac
 });
 test('native CAPTCHA rejects lookalike schemes and altered callback targets', () => {
   for (const target of [
-    'pomodoist-stg-evil://captcha-callback', 'pomodoist-stg://evil.example',
+    'pomodoist-fdroid-evil://captcha-callback', 'pomodoist-stg-evil://captcha-callback', 'pomodoist-stg://evil.example',
     'pomodoist-stg://captcha-callback/', 'pomodoist-stg://user@captcha-callback',
     'pomodoist-stg://captcha-callback:443', 'pomodoist-stg://captcha-callback?extra=1',
     'pomodoist-stg://captcha-callback#extra',

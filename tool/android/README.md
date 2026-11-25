@@ -318,3 +318,68 @@ Sources: [Flutter Android releases](https://docs.flutter.dev/deployment/android)
 [plugin v21 setup](https://pub.dev/packages/flutter_local_notifications/versions/21.0.0),
 [Flutter deep links](https://docs.flutter.dev/ui/navigation/deep-linking),
 [Android backup rules](https://developer.android.com/identity/data/autobackup).
+
+## F-Droid
+
+The F-Droid edition is **Pomodoist F-Droid** on the device. Its package is
+`com.finchforge.pomodoist.fdroid` and its browser callback scheme is
+`pomodoist-fdroid`. F-Droid signs its APK. The Google Play AAB and the GitHub
+APK continue to use the production package and the existing release workflow.
+
+On Linux, install Python 3, OpenJDK 17, the Flutter version in
+`.fvmrc`, Android SDK platform 36, build-tools 36.0.0, and NDK 28.2.13676358.
+From the repository root, run:
+
+```sh
+bash tool/android/build_fdroid.sh
+```
+
+Set `FLUTTER_BIN` if the pinned Flutter executable is outside `PATH`. The
+script exports the committed source to a temporary directory and writes
+`build/flutter/android/fdroid/Pomodoist-FDroid-unsigned.apk` in the checkout.
+To try uncommitted source, use `--prepare` and then `--build-prepared` in a
+disposable copy of the checkout. Preparation rewrites the copy's Flutter
+manifest and lockfile. The main checkout remains suitable for normal
+development and Play builds.
+
+The F-Droid build uses the same public backend as the production Android
+release. The Turnstile site key in `fdroid-production.json` is public. The
+build leaves Sentry disabled. During preparation the build fetches the pinned
+Flutter packages' source, removes the Android purchase and desktop 3D
+plugin registrations, drops the desktop-only 3D model, and compiles SQLite from a checksum-verified source
+archive. The Apple and regular Android dependency graphs remain under the
+original Flutter lockfile.
+
+### Release acceptance
+
+1. Deploy the CAPTCHA page and both calendar Edge Functions from the matching
+   source. Add `pomodoist-fdroid://login-callback` and
+   `pomodoist-fdroid://captcha-callback` to the live Auth redirect allowlist.
+   On self-hosted installations these are included in the example configuration.
+2. Sign a copy of the F-Droid APK with a temporary test key. Install it and the
+   ordinary production APK on the same Android device. Verify local tasks and
+   Focus in airplane mode, followed by registration, sign-in, password
+   recovery, sync, and the Google and Outlook Calendar browser returns. Verify
+   that each custom scheme resolves to its own edition.
+3. Run the existing Android release workflow to validate the production APK
+   and AAB, including the upload certificate, version code, and application ID.
+   Use its build artifacts to check the AAB before a Play upload.
+4. For a stable `vX.Y.Z` tag on `main`, render the recipe into an fdroiddata
+   checkout. The renderer reads the app version, version code, Flutter version,
+   and commit from the tag. For pre-release local verification use
+   `--test <git-ref>` and point the recipe at a local clone containing the
+   commit.
+
+   ```sh
+   python3 tool/android/render_fdroid_metadata.py vX.Y.Z \
+     > /path/to/fdroiddata/metadata/com.finchforge.pomodoist.fdroid.yml
+   cd /path/to/fdroiddata
+   fdroid lint com.finchforge.pomodoist.fdroid
+   fdroid build --test com.finchforge.pomodoist.fdroid
+   ```
+
+5. Submit the recipe to
+   [fdroiddata](https://gitlab.com/fdroid/fdroiddata). Describe the optional
+   hosted account, Turnstile, and calendar services for the maintainers'
+   Anti-Features review. After publication, install from the F-Droid catalog
+   and record the version, signer fingerprint, and device acceptance results.
