@@ -42,6 +42,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
+      - name: Test the web loader and authentication shell
+        run: node --test apps/flutter/web/test/*.test.mjs
       - name: Test the GNOME companion extension without a desktop session
         run: node --test apps/flutter/linux/gnome-extension/pomo@pomodoist.com/tests/*.test.js
       - name: Validate the GNOME extension entrypoint syntax

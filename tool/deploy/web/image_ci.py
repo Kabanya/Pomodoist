@@ -269,6 +269,36 @@ def deploy(api, uuid, sha, digest, latest, observe, preflight, timeout=300):
     return report
 
 
+def smoke_startup_assets(url):
+    with urllib.request.urlopen(url + '/', timeout=10) as response:
+        index = response.read().decode()
+    assert re.search(r'"useLocalCanvasKit"\s*:\s*true', index), 'CanvasKit is not local'
+    assert '{{flutter_bootstrap_js}}' not in index, 'Flutter bootstrap was not inlined'
+
+    for path in ('/canvaskit/canvaskit.wasm', '/canvaskit/chromium/canvaskit.wasm'):
+        with urllib.request.urlopen(url + path, timeout=10) as response:
+            assert response.headers.get_content_type() == 'application/wasm', path
+            assert response.headers['Cache-Control'] == 'no-cache', path
+            assert response.headers.get('ETag'), path
+            assert response.read(4) == b'\x00asm', path
+    missing_wasm = '/canvaskit/missing.wasm'
+    try:
+        urllib.request.urlopen(url + missing_wasm, timeout=10)
+    except urllib.error.HTTPError as error:
+        assert error.code == 404, missing_wasm
+    else:
+        raise AssertionError(f'Missing WASM served successfully: {missing_wasm}')
+
+    with urllib.request.urlopen(url + '/assets/FontManifest.json', timeout=10) as response:
+        fonts = {entry['family']: entry['fonts'] for entry in json.load(response)}
+    assert 'packages/lucide_icons_flutter/Lucide' in fonts
+    assert not any(re.fullmatch(r'packages/lucide_icons_flutter/Lucide[1-6]00', name)
+                   for name in fonts), 'Unused Lucide weights are loaded during startup'
+    assert fonts.get('Roboto') == [{'asset': 'fonts/fallback/Roboto-Regular.ttf'}]
+    with urllib.request.urlopen(url + '/assets/fonts/fallback/Roboto-Regular.ttf', timeout=10) as response:
+        assert response.read(4) == b'\x00\x01\x00\x00', 'Roboto is not a TrueType font'
+
+
 def smoke(image, sha):
     """The exact same prebuilt image must support both runtime environments."""
     for environment in ('staging', 'production'):
@@ -294,6 +324,7 @@ def smoke(image, sha):
                     time.sleep(1)
             config = urllib.request.urlopen(url + '/config.js', timeout=10).read().decode()
             assert supabase in config and web in config
+            smoke_startup_assets(url)
             for path in ('/main.dart.js.map', '/.env', '/GoogleOAuth.env'):
                 try:
                     urllib.request.urlopen(url + path, timeout=10)

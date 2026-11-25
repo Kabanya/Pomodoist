@@ -210,6 +210,20 @@ recorded immutable digest rather than rebuilding an existing release.
 `POMODOIST_BILLING_CHANNEL: stripe` and `RELEASE_SHA: ${POMODOIST_RELEASE}` and
 supplies the runtime environment separately.
 
+## Startup assets
+
+The release image serves CanvasKit and the startup Roboto font on the
+application origin. CanvasKit filenames stay stable across SDK upgrades, so
+clients can reuse their cached copies after validating them with nginx. The
+release HTML inlines the Flutter bootstrap after loading runtime configuration.
+
+The web build trims unused weighted Lucide families from Flutter's
+`FontManifest.json`. The build stops if the main bundle or a deferred chunk
+references a weight marked for removal. The regular Lucide family, Geist, and
+locale-specific fallback remain available. Flutter's
+`--no-web-resources-cdn` switch adds the bundled Roboto Regular TTF to the font
+manifest. Its Apache 2.0 license ships alongside the font.
+
 ## Checking the contract
 
 ```sh

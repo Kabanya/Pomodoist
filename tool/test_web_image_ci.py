@@ -72,6 +72,7 @@ class ImageCITest(unittest.TestCase):
                      {'environment': 'staging', 'release': SHA},
                      {'environment': 'production', 'release': SHA}]
         with patch.object(ci, 'observe_url', side_effect=responses) as observe, \
+             patch.object(ci, 'smoke_startup_assets') as startup_assets, \
              patch.object(ci.urllib.request, 'urlopen', side_effect=urlopen), \
              patch.object(ci.subprocess, 'check_output', side_effect=output), \
              patch.object(ci.subprocess, 'run', return_value=SimpleNamespace(
@@ -79,6 +80,7 @@ class ImageCITest(unittest.TestCase):
              patch.object(ci.time, 'sleep') as sleep:
             ci.smoke('image', SHA)
         self.assertEqual(observe.call_count, 3)
+        self.assertEqual(startup_assets.call_count, 2)
         sleep.assert_called_once_with(1)
 
     def test_lookup_rejects_a_public_package(self):

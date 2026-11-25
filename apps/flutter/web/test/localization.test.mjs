@@ -5,13 +5,20 @@ import { readFile } from 'node:fs/promises';
 
 const loaderHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const loaderScript = [...loaderHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(source => source.includes('const loader ='));
+test('release HTML inlines the Flutter bootstrap after runtime configuration and the loading shell', () => {
+  const bootstrap = loaderHtml.indexOf('{{flutter_bootstrap_js}}');
+  assert.ok(bootstrap > loaderHtml.indexOf('const loader ='));
+  assert.ok(bootstrap > loaderHtml.indexOf('src="config.js"'));
+  assert.doesNotMatch(loaderHtml, /<script[^>]+src="flutter_bootstrap\.js"/);
+});
+
 const challengeHtml = await readFile(new URL('../auth/challenge.html', import.meta.url), 'utf8');
 const challengeScript = [...challengeHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
 function elements() {
   const nodes = new Map();
   const get = id => {
     if (!nodes.has(id)) nodes.set(id, { hidden: false, textContent: '', listeners: {}, classList: { add() {} },
-      addEventListener(event, fn) { this.listeners[event] = fn; }, replaceChildren() {}, remove() {}, querySelector: () => get('indicator') });
+      addEventListener(event, fn) { this.listeners[event] = fn; }, replaceChildren() {}, remove() { this.removed = true; }, querySelector: () => get('indicator') });
     return nodes.get(id);
   };
   return { nodes, get };
@@ -19,10 +26,35 @@ function elements() {
 function load({ query = '', stored = null, languages = ['en'], inaccessibleStorage = false } = {}) {
   const { get } = elements();
   const document = { documentElement: {}, getElementById: get };
-  const window = { setTimeout() {}, clearTimeout() {}, location: { reload() {} } };
+  const timers = new Map();
+  let elapsed = 0;
+  let nextTimer = 0;
+  let reloadCount = 0;
+  const window = {
+    setTimeout(callback, delay) {
+      timers.set(++nextTimer, { callback, at: elapsed + delay });
+      return nextTimer;
+    },
+    clearTimeout(id) { timers.delete(id); },
+    location: { reload() { reloadCount++; } }
+  };
   vm.runInNewContext(loaderScript, { document, window, URLSearchParams, location: { search: query }, navigator: { languages },
     localStorage: { getItem(key) { if (inaccessibleStorage) throw Error('blocked'); return key === 'flutter.app.language' ? stored : null; } } });
-  return { document, window, stage: get('pomodoist-web-loader-stage'), reload: get('pomodoist-web-loader-reload') };
+  return {
+    document, window, stage: get('pomodoist-web-loader-stage'),
+    loader: get('pomodoist-web-loader'), reload: get('pomodoist-web-loader-reload'),
+    reloadCount: () => reloadCount,
+    advance(to) {
+      while (timers.size) {
+        const [id, timer] = [...timers.entries()].sort(([, a], [, b]) => a.at - b.at)[0];
+        if (timer.at > to) break;
+        elapsed = timer.at;
+        timers.delete(id);
+        timer.callback();
+      }
+      elapsed = to;
+    }
+  };
 }
 test('loader prioritizes valid language query, saved app language, then browser locales', () => {
   for (const [input, expected] of [
@@ -42,6 +74,34 @@ test('loader prioritizes valid language query, saved app language, then browser 
     assert.equal(current.reload.hidden, false);
   }
 });
+test('a slow launch informs the user and offers a reload after 30 seconds', () => {
+  const page = load({ query: '?lang=ru' });
+  assert.equal(page.stage.textContent, 'Загружаем Pomodoist');
+  page.advance(7999);
+  assert.equal(page.stage.textContent, 'Загружаем Pomodoist');
+  page.advance(8000);
+  assert.match(page.stage.textContent, /^Первый запуск/);
+  page.advance(29999);
+  assert.match(page.stage.textContent, /^Первый запуск/);
+  page.advance(30000);
+  assert.match(page.stage.textContent, /^Не удалось запустить Pomodoist/);
+  assert.equal(page.reload.hidden, false);
+  page.reload.listeners.click();
+  assert.equal(page.reloadCount(), 1);
+});
+
+test('the first frame dismisses the loader even after a timeout', () => {
+  for (const time of [100, 30100]) {
+    const page = load();
+    page.advance(time);
+    const copy = page.stage.textContent;
+    page.window.pomodoistHideLoading();
+    page.advance(31000);
+    assert.equal(page.loader.removed, true);
+    assert.equal(page.stage.textContent, copy);
+  }
+});
+
 function challenge(query, state = 's'.repeat(32)) {
   const { get } = elements(), scripts = [];
   const location = { pathname: '/auth/challenge', search: query, hash: `#state=${state}`,
