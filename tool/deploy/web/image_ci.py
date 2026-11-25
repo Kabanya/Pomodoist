@@ -297,6 +297,8 @@ def smoke_startup_assets(url):
     assert fonts.get('Roboto') == [{'asset': 'fonts/fallback/Roboto-Regular.ttf'}]
     with urllib.request.urlopen(url + '/assets/fonts/fallback/Roboto-Regular.ttf', timeout=10) as response:
         assert response.read(4) == b'\x00\x01\x00\x00', 'Roboto is not a TrueType font'
+    with urllib.request.urlopen(url + '/assets/fonts/fallback/Roboto-LICENSE.txt', timeout=10) as response:
+        assert b'Apache License' in response.read(), 'Roboto license is missing'
 
 
 def smoke(image, sha):

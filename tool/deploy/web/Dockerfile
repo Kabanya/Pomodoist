@@ -66,7 +66,8 @@ RUN --mount=type=cache,target=/root/.pub-cache,sharing=locked \
     flutter build web --release --source-maps --pwa-strategy=none --no-web-resources-cdn \
       --dart-define=POMODOIST_BILLING_CHANNEL="$POMODOIST_BILLING_CHANNEL" \
     && dart tool/trim_web_icon_fonts.dart build/web \
-    && cp assets/fonts/roboto/Roboto-LICENSE.txt build/web/assets/fonts/fallback/ \    && dart tool/prepare_sentry_sourcemaps.dart build/web/main.dart.js.map /src/apps/flutter \
+    && cp assets/fonts/roboto/Roboto-LICENSE.txt build/web/assets/fonts/fallback/ \
+    && dart tool/prepare_sentry_sourcemaps.dart build/web/main.dart.js.map /src/apps/flutter \
     && rm -f \
       build/web/flutter_service_worker.js \
       build/web/.last_build_id \
